@@ -2156,35 +2156,3 @@ form#contactform1 {
 }
 
 /* //responsive */
-
-/* Login Button Styles */
-.login-btn {
-    background: #f0546a !important;
-    color: #fff !important;
-    padding: 8px 16px !important;
-    border-radius: 4px !important;
-    font-weight: 500 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    transition: all 0.3s ease !important;
-    border: 2px solid #f0546a !important;
-}
-
-.login-btn:hover {
-    background: transparent !important;
-    color: #f0546a !important;
-    border: 2px solid #f0546a !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(240, 84, 106, 0.3) !important;
-}
-
-/* Responsive login button */
-@media all and (max-width: 768px) {
-    .login-btn {
-        padding: 6px 12px !important;
-        font-size: 12px !important;
-        margin: 5px 0 !important;
-        display: block !important;
-        text-align: center !important;
-    }
-}
