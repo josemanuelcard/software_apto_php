@@ -4,6 +4,8 @@
  * Integrado con base de datos MySQL
  */
 
+session_start();
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -13,6 +15,52 @@ require_once __DIR__ . '/../includes/functions.php';
 // Obtener fechas ocupadas y precio base desde la base de datos
 $occupied_dates = getFechasOcupadas();
 $base_price = 200000;
+
+// Obtener descuentos desde la base de datos
+$descuentos = [];
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    $query = "SELECT tipo_descuento, porcentaje, activo FROM descuentos_config";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $descuentos_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    foreach ($descuentos_db as $descuento) {
+        $descuentos[$descuento['tipo_descuento']] = [
+            'porcentaje' => floatval($descuento['porcentaje']),
+            'activo' => (bool)$descuento['activo']
+        ];
+    }
+} catch (Exception $e) {
+    // Valores por defecto en caso de error
+    $descuentos = [
+        'fidelidad' => ['porcentaje' => 5.0, 'activo' => true],
+        'cumpleanos' => ['porcentaje' => 30.0, 'activo' => true],
+        'promocional' => ['porcentaje' => 0.0, 'activo' => false]
+    ];
+}
+
+// Verificar si el usuario está logueado
+$user_logged_in = isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true;
+$user_name = $user_logged_in ? $_SESSION['user_nombre'] : '';
+$user_role = $user_logged_in ? $_SESSION['user_rol'] : '';
+
+// Obtener datos completos del usuario logueado para prellenar formulario
+$user_data = null;
+if ($user_logged_in && isset($_SESSION['user_id'])) {
+    try {
+        $database = new Database();
+        $db = $database->getConnection();
+        $query = "SELECT nombre, apellido, correo, telefono, fecha_nacimiento FROM usuarios WHERE id_usuario = ?";
+        $stmt = $db->prepare($query);
+        $stmt->execute([$_SESSION['user_id']]);
+        $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // En caso de error, continuar sin datos del usuario
+        $user_data = null;
+    }
+}
 
 ?>
 
@@ -73,6 +121,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 						<h1><a href="index.php">My Suite In Cartagena</a></h1>
 					</div>
 					<!-- //logo -->
+					
+					<!-- //Language Selector -->
 					<!-- nav -->
 					<div class="nav_w3ls">
 						<nav>
@@ -85,8 +135,34 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								<li><a href="tarifas.html">Rates and Cancellations</a></li>
 								<!-- <li><a href="tarifas.html">Testimonios</a></li> -->
 								<li><a href="contactenos.html">Contact Us</a></li>
+								<?php if ($user_logged_in): ?>
+									<?php if ($user_role === 'admin'): ?>
+										<li><a href="../admin/index.php" style="color:rgb(255, 255, 255); ">
+											 Panel
+										</a></li>
+									<?php endif; ?>
+									<li class="dropdown">
+										<a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" style="color: #333; font-weight: bold;">
+											👤 Hello <?php echo htmlspecialchars($user_name); ?>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="#" onclick="showProfileInfo(); return false;">
+												<i class="fas fa-user"></i> My Profile
+											</a></li>
+											<li><a class="dropdown-item" href="#" onclick="showMyReservations(); return false;">
+												<i class="fas fa-calendar-check"></i> My Reservations
+											</a></li>
+											<li><hr class="dropdown-divider"></li>
+											<li><a class="dropdown-item" href="logout.php" style="color: #FF4136;">
+												<i class="fas fa-sign-out-alt"></i> Logout
+											</a></li>
+										</ul>
+									</li>
+								<?php else: ?>
+									<li><a href="login.php">Login</a></li>
+								<?php endif; ?>
 
-								<li>
+								<li>	
 						 <!-- <a  href="https://www.lavozdelospanelerosco.com/"><img src="../../apto/web/images/bcolombia.png" target="self"></a>	 -->							
 							 <a  href="../index.html"><img src="images/bcolombia.png" target="self"></a> 
    							</li>
@@ -108,6 +184,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			</div>
 		</header>
 		<!-- //header -->
+
 
 		<!-- banner -->
 		<div class="banner_w3lspvt">
@@ -200,7 +277,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <span>Check-out</span>
                     </div>
                     <div class="legend-item">
-                        <span class="legend-color in-range" style="font-family: ;"></span>
+                        <span class="legend-color in-range"></span>
                         <span>Rango seleccionado</span>
                     </div>
                 </div>
@@ -275,30 +352,36 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             </div>
             <div class="modal-body">
                 <form id="reservationForm">
+                    <?php if ($user_logged_in && $user_data): ?>
+                    <div class="alert alert-info mb-3" style="background-color: #e3f2fd; border: 1px solid #2196f3; color: #1976d2; padding: 12px; border-radius: 8px;">
+                        <i class="fas fa-user-check"></i> <strong>¡Hola <?php echo htmlspecialchars($user_data['nombre']); ?>!</strong> 
+                        Los campos están prellenados con tus datos. Puedes editarlos si la reserva es para otra persona.
+                    </div>
+                    <?php endif; ?>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="nombres" class="form-label">Nombres *</label>
-                            <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            <input type="text" class="form-control" id="nombres" name="nombres" value="<?php echo $user_data ? htmlspecialchars($user_data['nombre']) : ''; ?>" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="apellidos" class="form-label">Apellidos *</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" value="<?php echo $user_data ? htmlspecialchars($user_data['apellido']) : ''; ?>" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="celular" class="form-label">Celular *</label>
-                            <input type="tel" class="form-control" id="celular" name="celular" required>
+                            <input type="tel" class="form-control" id="celular" name="celular" value="<?php echo $user_data ? htmlspecialchars($user_data['telefono']) : ''; ?>" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="correo" class="form-label">Correo *</label>
-                            <input type="email" class="form-control" id="correo" name="correo" required>
+                            <input type="email" class="form-control" id="correo" name="correo" value="<?php echo $user_data ? htmlspecialchars($user_data['correo']) : ''; ?>" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento">
+                            <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="adultos" class="form-label">Número de Adultos *</label>
@@ -356,13 +439,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="efectivo" value="efectivo">
                                         <label class="form-check-label" for="efectivo">
-                                            💰 Efectivo (3% descuento)
+                                            💰 Efectivo (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% descuento)
                                         </label>
                                     </div>
                                 </div>
                             </div>
                 <div id="descuentoInfo" class="alert alert-success mt-2" style="display: none;">
-                    <small>🎉 ¡Descuento del 3% aplicado por pago en efectivo!</small>
+                    <small>🎉 ¡Descuento del <?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% aplicado por pago en efectivo!</small>
                 </div>
             </div>
         </div>
@@ -401,12 +484,31 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         </div>
                         <div class="row" id="descuentoRow" style="display: none;">
                             <div class="col-6">
-                                <small>Descuento (3%):</small>
+                                <small>Descuento (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>%):</small>
                             </div>
                             <div class="col-6 text-end">
                                 <small class="text-success"><span id="modalDescuento">$0 COP</span></small>
                             </div>
                         </div>
+                        <?php if ($user_logged_in): ?>
+                        <div class="row" id="fidelidadRow">
+                            <div class="col-6">
+                                <small>Descuento Fidelidad (<?php echo isset($descuentos['fidelidad']) ? $descuentos['fidelidad']['porcentaje'] : 5; ?>%):</small>
+                            </div>
+                            <div class="col-6 text-end">
+                                <small class="text-success"><span id="modalFidelidad">$0 COP</span></small>
+                            </div>
+                        </div>
+                        <div class="row" id="cumpleanosRow" style="display: none;">
+                            <div class="col-6">
+                                <small>🎂 Descuento Cumpleaños (<?php echo isset($descuentos['cumpleanos']) ? $descuentos['cumpleanos']['porcentaje'] : 30; ?>%):</small>
+                                <br><small class="text-muted" id="cumpleanosInfo" style="font-size: 11px;"></small>
+                            </div>
+                            <div class="col-6 text-end">
+                                <small class="text-success"><span id="modalCumpleanos">$0 COP</span></small>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <hr>
                         <div class="row">
                             <div class="col-6">
@@ -552,6 +654,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			max-width: 700px;
 			margin-left: auto;
 			margin-right: auto;
+			grid-auto-rows: minmax(60px, auto);
 		}
 		
 		.calendar-day {
@@ -831,6 +934,70 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			}
 		}
 		
+		/* Estilos del Modal de Login */
+		.modal .close:hover {
+			color: #ff6b6b !important;
+		}
+		
+		.modal .input-group input:focus {
+			border-color: #007BFF !important;
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+		}
+		
+		.modal .login-button:hover {
+			background-color: #FF8C00 !important;
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+		}
+		
+		.modal .login-button {
+			transition: all 0.3s ease;
+		}
+		
+		.modal .links a:hover {
+			color: #0056b3 !important;
+			text-decoration: underline !important;
+		}
+		
+		/* Estilos para el dropdown del perfil */
+		.dropdown-menu {
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+			padding: 8px 0;
+			min-width: 200px;
+		}
+		
+		.dropdown-item {
+			padding: 8px 16px;
+			color: #333;
+			text-decoration: none;
+			display: flex;
+			align-items: center;
+			transition: background-color 0.2s ease;
+		}
+		
+		.dropdown-item:hover {
+			background-color: #f8f9fa;
+			color: #007bff;
+		}
+		
+		.dropdown-item i {
+			margin-right: 8px;
+			width: 16px;
+		}
+		
+		.dropdown-divider {
+			margin: 4px 0;
+			border-top: 1px solid #dee2e6;
+		}
+		
+		.dropdown-toggle::after {
+			margin-left: 8px;
+		}
+		
 		/* Responsive Design Mejorado */
 		@media (max-width: 768px) {
 			.calendar-container {
@@ -883,6 +1050,21 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			.detail-item.total {
 				flex-direction: row;
 				justify-content: space-between;
+			}
+			
+			/* Modal responsive */
+			.modal .modal-content {
+				width: 95% !important;
+				margin: 10% auto !important;
+			}
+			
+			.modal .modal-body {
+				padding: 20px !important;
+			}
+			
+			.modal .links {
+				flex-direction: column !important;
+				gap: 10px !important;
 			}
 		}
 		
@@ -942,12 +1124,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			console.log('Calendario inicializado correctamente');
 		}
 		
+		
 		// Renderizar calendario
 		function renderCalendar() {
 			const calendar = document.getElementById('calendar');
 			const monthDisplay = document.getElementById('currentMonth');
 			
 			console.log('Renderizando calendario...', calendar, monthDisplay);
+			console.log('Fecha actual:', currentDate);
+			console.log('Mes actual:', currentDate.getMonth());
+			console.log('Año actual:', currentDate.getFullYear());
 			
 			// Limpiar calendario
 			calendar.innerHTML = '';
@@ -957,7 +1143,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
 				'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 			];
-			monthDisplay.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+			const monthText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+			monthDisplay.textContent = monthText;
+			console.log('Mes mostrado:', monthText);
+			
+			// Grid fijo de 6 filas para mantener estructura consistente
+			calendar.style.gridTemplateRows = 'repeat(6, 1fr)';
 			
 			// Obtener primer día del mes y cuántos días tiene
 			const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -976,11 +1167,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				calendar.appendChild(dayHeader);
 			});
 			
-			// Días del mes anterior
+			// Días del mes anterior (invisibles pero mantienen la estructura)
 			const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 0);
 			for (let i = startingDayOfWeek - 1; i >= 0; i--) {
 				const day = document.createElement('div');
 				day.className = 'calendar-day other-month';
+				day.style.visibility = 'hidden'; // Hacer invisibles pero mantener estructura
 				day.textContent = prevMonth.getDate() - i;
 				calendar.appendChild(day);
 			}
@@ -1002,11 +1194,22 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				
 				console.log('Día creado:', day, 'Elemento:', dayElement);
 				
-				// Verificar si está ocupado
-				if (occupiedDates.includes(dateString)) {
+				// Verificar si es un día pasado
+				const today = new Date();
+				today.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+				const dayDate = new Date(date);
+				dayDate.setHours(0, 0, 0, 0);
+				
+				if (dayDate < today) {
+					// Día pasado - estilo como other-month
+					dayElement.classList.add('other-month');
+					dayElement.title = 'Día pasado';
+				} else if (occupiedDates.includes(dateString)) {
+					// Día ocupado
 					dayElement.classList.add('occupied');
 					dayElement.title = 'No disponible';
 				} else {
+					// Día disponible
 					dayElement.classList.add('available');
 					dayElement.addEventListener('click', () => selectDate(date));
 					
@@ -1020,12 +1223,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				calendar.appendChild(dayElement);
 			}
 			
-			// Días del mes siguiente para completar la grilla
+			// Días del mes siguiente (invisibles pero mantienen la estructura)
 			const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
 			const remainingDays = 42 - (startingDayOfWeek + daysInMonth);
 			for (let day = 1; day <= remainingDays; day++) {
 				const dayElement = document.createElement('div');
 				dayElement.className = 'calendar-day other-month';
+				dayElement.style.visibility = 'hidden'; // Hacer invisibles pero mantener estructura
 				dayElement.textContent = day;
 				calendar.appendChild(dayElement);
 			}
@@ -1041,6 +1245,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				selectedStartDate = date;
 				updateReservationSummary();
 				updateSelectionStates();
+				
 			} else if (selectedEndDate === null) {
 				// Segunda selección (check-out)
 				if (date <= selectedStartDate) {
@@ -1075,6 +1280,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			selectedEndDate = null;
 			updateSelectionStates();
 		}
+		
 		
 		// Validar rango de fechas
 		function validateDateRange(startDate, endDate) {
@@ -1184,13 +1390,38 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		function setupEventListeners() {
 			// Navegación del calendario
 			document.getElementById('prevMonth').addEventListener('click', () => {
+				console.log('Botón anterior clickeado');
 				currentDate.setMonth(currentDate.getMonth() - 1);
+				console.log('Nueva fecha:', currentDate);
 				renderCalendar();
 			});
 			
 			document.getElementById('nextMonth').addEventListener('click', () => {
+				console.log('Botón siguiente clickeado');
 				currentDate.setMonth(currentDate.getMonth() + 1);
+				console.log('Nueva fecha:', currentDate);
 				renderCalendar();
+			});
+			
+			// Deseleccionar al hacer clic fuera del calendario
+			document.addEventListener('click', (e) => {
+				// Si hay una selección activa (check-in seleccionado pero no check-out)
+				if (selectedStartDate && !selectedEndDate) {
+					// Verificar si el clic fue fuera del calendario
+					const calendarContainer = document.querySelector('.calendar-container');
+					const isClickInsideCalendar = calendarContainer && calendarContainer.contains(e.target);
+					
+					// También verificar que no sea clic en botones de navegación del calendario
+					const isNavigationClick = e.target.id === 'prevMonth' || e.target.id === 'nextMonth';
+					
+					// Si el clic fue fuera del calendario y no es navegación
+					if (!isClickInsideCalendar && !isNavigationClick) {
+						console.log('Clic fuera del calendario - deseleccionando check-in');
+						clearSelection();
+						updateReservationSummary();
+						
+					}
+				}
 			});
 			
 			// Botón de cerrar del modal de reserva
@@ -1309,6 +1540,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					}
 				});
 			});
+			
+			// Fecha de nacimiento - actualizar descuento por cumpleaños
+			document.getElementById('fechaNacimiento').addEventListener('change', () => {
+				updateModalCostSummary();
+			});
 		}
 		
 		// Abrir modal de reserva
@@ -1378,27 +1614,89 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			
 			// Verificar método de pago seleccionado
 			const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
-			let descuento = 0;
+			let descuentoEfectivo = 0;
+			let descuentoFidelidad = 0;
+			let descuentoCumpleanos = 0;
 			let total = subtotal;
 			
+			// Descuento por pago en efectivo
 			if (metodoPago === 'efectivo') {
-				descuento = subtotal * 0.03; // 3% descuento
-				total = subtotal - descuento;
+				descuentoEfectivo = subtotal * <?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] / 100 : 0; ?>;
 			}
+			
+			// Descuento por fidelidad - solo para usuarios logueados
+			<?php if ($user_logged_in && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']): ?>
+			descuentoFidelidad = subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>;
+			
+			// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
+			<?php if ($user_data && $user_data['fecha_nacimiento']): ?>
+			// Usar fecha de nacimiento de la BD del usuario logueado (más segura)
+			const fechaNacimientoBD = '<?php echo $user_data['fecha_nacimiento']; ?>';
+			if (fechaNacimientoBD) {
+				const fechaNac = new Date(fechaNacimientoBD);
+				
+				// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
+				const cumpleanosDia = fechaNac.getDate();
+				const cumpleanosMes = fechaNac.getMonth();
+				
+				// Verificar si el cumpleaños está entre las fechas de entrada y salida
+				const fechaEntrada = new Date(selectedStartDate);
+				const fechaSalida = new Date(selectedEndDate);
+				
+				// Crear fecha de cumpleaños para el año de la reserva
+				const añoReserva = fechaEntrada.getFullYear();
+				const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
+				
+				// Verificar si el cumpleaños está dentro del rango de la reserva
+				if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
+					descuentoCumpleanos = subtotal * <?php echo isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo'] ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>; // Descuento por cumpleaños
+				}
+			}
+			<?php endif; ?>
+			<?php endif; ?>
+			
+			// Calcular total con todos los descuentos
+			total = subtotal - descuentoEfectivo - descuentoFidelidad - descuentoCumpleanos;
 			
 			// Actualizar elementos del modal
 			document.getElementById('modalNights').textContent = nights;
 			document.getElementById('modalSubtotal').textContent = '$' + subtotal.toLocaleString('es-CO') + ' COP';
-			document.getElementById('modalDescuento').textContent = '$' + descuento.toLocaleString('es-CO') + ' COP';
+			document.getElementById('modalDescuento').textContent = '$' + descuentoEfectivo.toLocaleString('es-CO') + ' COP';
 			document.getElementById('modalTotal').textContent = '$' + total.toLocaleString('es-CO') + ' COP';
 			
-			// Mostrar/ocultar fila de descuento
+			// Mostrar/ocultar fila de descuento por efectivo
 			const descuentoRow = document.getElementById('descuentoRow');
-			if (metodoPago === 'efectivo' && descuento > 0) {
+			if (metodoPago === 'efectivo' && descuentoEfectivo > 0) {
 				descuentoRow.style.display = 'flex';
 			} else {
 				descuentoRow.style.display = 'none';
 			}
+			
+			// Mostrar descuento por fidelidad si el usuario está logueado
+			<?php if ($user_logged_in): ?>
+			document.getElementById('modalFidelidad').textContent = '$' + descuentoFidelidad.toLocaleString('es-CO') + ' COP';
+			
+			// Mostrar/ocultar descuento por cumpleaños
+			const cumpleanosRow = document.getElementById('cumpleanosRow');
+			if (descuentoCumpleanos > 0) {
+				cumpleanosRow.style.display = 'flex';
+				document.getElementById('modalCumpleanos').textContent = '$' + descuentoCumpleanos.toLocaleString('es-CO') + ' COP';
+				
+				// Mostrar información sobre el cumpleaños
+				<?php if ($user_data && $user_data['fecha_nacimiento']): ?>
+				const fechaNacimientoBD = '<?php echo $user_data['fecha_nacimiento']; ?>';
+				if (fechaNacimientoBD) {
+					const fechaNac = new Date(fechaNacimientoBD);
+					const cumpleanosDia = fechaNac.getDate();
+					const cumpleanosMes = fechaNac.getMonth();
+					const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+					document.getElementById('cumpleanosInfo').textContent = `Tu cumpleaños (${cumpleanosDia} de ${meses[cumpleanosMes]}) está en el rango de fechas seleccionado`;
+				}
+				<?php endif; ?>
+			} else {
+				cumpleanosRow.style.display = 'none';
+			}
+			<?php endif; ?>
 		}
 		
 		// Enviar reserva
@@ -1415,7 +1713,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Recopilar datos
 			const reservationData = {
 				id_apartamento: 1,
-				id_usuario: null,
+				id_usuario: <?php echo $user_logged_in && isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>,
 				nombre: formData.get('nombres'),
 				apellido: formData.get('apellidos'),
 				correo: formData.get('correo'),
@@ -1428,11 +1726,125 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				vive_palmira: formData.get('vivePalmira') === 'on',
 				metodo_pago: formData.get('metodoPago'),
 				costo_base: (Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24))) * basePrice,
-				descuento_fidelizacion: 0,
-				descuento_cumpleanios: 0,
-				descuento_promocional: formData.get('metodoPago') === 'efectivo' ? (Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24))) * basePrice * 0.03 : 0,
-				total: formData.get('metodoPago') === 'efectivo' ? (Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24))) * basePrice * 0.97 : (Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24))) * basePrice
+				descuento_fidelizacion: (() => {
+					<?php if ($user_logged_in): ?>
+					// Calcular descuento por fidelidad como monto en pesos
+					const nights = Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24));
+					const subtotal = nights * basePrice;
+					return subtotal * <?php echo isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo'] ? $descuentos['fidelidad']['porcentaje'] / 100 : 0; ?>; // Descuento por fidelidad
+					<?php endif; ?>
+					return 0;
+				})(),
+				descuento_cumpleanios: (() => {
+					<?php if ($user_logged_in && $user_data && $user_data['fecha_nacimiento']): ?>
+					// Usar fecha de nacimiento de la BD del usuario logueado (más segura)
+					const fechaNacimientoBD = '<?php echo $user_data['fecha_nacimiento']; ?>';
+					if (fechaNacimientoBD) {
+						const fechaNac = new Date(fechaNacimientoBD);
+						
+						// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
+						const cumpleanosDia = fechaNac.getDate();
+						const cumpleanosMes = fechaNac.getMonth();
+						
+						// Verificar si el cumpleaños está entre las fechas de entrada y salida
+						const fechaEntrada = new Date(selectedStartDate);
+						const fechaSalida = new Date(selectedEndDate);
+						
+						// Crear fecha de cumpleaños para el año de la reserva
+						const añoReserva = fechaEntrada.getFullYear();
+						const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
+						
+						// Verificar si el cumpleaños está dentro del rango de la reserva
+						if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
+							// Calcular descuento por cumpleaños como monto en pesos
+							const nights = Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24));
+							const subtotal = nights * basePrice;
+							return subtotal * <?php echo isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo'] ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>; // Descuento por cumpleaños
+						}
+					}
+					<?php endif; ?>
+					return 0;
+				})(),
+				descuento_promocional: formData.get('metodoPago') === 'efectivo' ? (Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24))) * basePrice * <?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?> : 0,
+				total: (() => {
+					const nights = Math.ceil((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 3600 * 24));
+					const subtotal = nights * basePrice;
+					let total = subtotal;
+					
+					// Descuento por pago en efectivo (3%)
+					if (formData.get('metodoPago') === 'efectivo') {
+						total = total * (1 - <?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
+					}
+					
+					<?php if ($user_logged_in): ?>
+					// Descuento por fidelidad
+					total = total * (1 - <?php echo isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo'] ? $descuentos['fidelidad']['porcentaje'] / 100 : 0.05; ?>);
+					
+					// Descuento por cumpleaños (30%) - verificar si está dentro del rango de fechas
+					<?php if ($user_data && $user_data['fecha_nacimiento']): ?>
+					const fechaNacimientoBD = '<?php echo $user_data['fecha_nacimiento']; ?>';
+					if (fechaNacimientoBD) {
+						const fechaNac = new Date(fechaNacimientoBD);
+						
+						// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
+						const cumpleanosDia = fechaNac.getDate();
+						const cumpleanosMes = fechaNac.getMonth();
+						
+						// Verificar si el cumpleaños está entre las fechas de entrada y salida
+						const fechaEntrada = new Date(selectedStartDate);
+						const fechaSalida = new Date(selectedEndDate);
+						
+						// Crear fecha de cumpleaños para el año de la reserva
+						const añoReserva = fechaEntrada.getFullYear();
+						const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
+						
+						// Verificar si el cumpleaños está dentro del rango de la reserva
+						if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
+							total = total * (1 - <?php echo isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo'] ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>); // Descuento adicional por cumpleaños
+						}
+					}
+					<?php endif; ?>
+					<?php endif; ?>
+					
+					return total;
+				})()
 			};
+			
+		// Debug: Mostrar datos que se van a enviar
+		console.log('=== DATOS DE RESERVA ===');
+		console.log('Costo base:', reservationData.costo_base);
+		console.log('Descuento fidelización:', reservationData.descuento_fidelizacion);
+		console.log('Descuento cumpleaños:', reservationData.descuento_cumpleanios);
+		console.log('Descuento promocional:', reservationData.descuento_promocional);
+		console.log('Total:', reservationData.total);
+		
+		// Funciones del perfil de usuario
+		function showProfileInfo() {
+			<?php if ($user_logged_in && $user_data): ?>
+			const userInfo = {
+				nombre: '<?php echo htmlspecialchars($user_data['nombre']); ?>',
+				apellido: '<?php echo htmlspecialchars($user_data['apellido']); ?>',
+				correo: '<?php echo htmlspecialchars($user_data['correo']); ?>',
+				telefono: '<?php echo htmlspecialchars($user_data['telefono']); ?>',
+				fechaNacimiento: '<?php echo $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : 'No registrada'; ?>'
+			};
+			
+			alert(`👤 MY PROFILE\n\n` +
+				  `Name: ${userInfo.nombre} ${userInfo.apellido}\n` +
+				  `Email: ${userInfo.correo}\n` +
+				  `Phone: ${userInfo.telefono}\n` +
+				  `Birthday: ${userInfo.fechaNacimiento}\n\n` +
+				  `🎂 Available Discounts:\n` +
+				  `• Fidelity: <?php echo isset($descuentos['fidelidad']) ? $descuentos['fidelidad']['porcentaje'] : 5; ?>% (always)\n` +
+				  `• Birthday: <?php echo isset($descuentos['cumpleanos']) ? $descuentos['cumpleanos']['porcentaje'] : 30; ?>% (if your birthday is in the date range)`);
+			<?php endif; ?>
+		}
+		
+		function showMyReservations() {
+			alert('📅 MY RESERVATIONS\n\n' +
+				  'This functionality will be available soon.\n' +
+				  'You will be able to view your reservation history and status.');
+		}
 			
 			// Enviar datos al servidor PHP
 			fetch('process_reservation.php', {
@@ -1467,6 +1879,57 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		// Inicializar cuando el DOM esté listo
 		document.addEventListener('DOMContentLoaded', initCalendar);
 	</script>
+
+	<?php if ($user_logged_in && $user_role !== 'admin'): ?>
+	<!-- Modal de descuento para usuarios logueados -->
+	<div id="discountModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+		<div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: none; border-radius: 15px; width: 80%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+			<div style="color: #FFA500; font-size: 48px; margin-bottom: 15px;">🎉</div>
+			<h2 style="color: #007BFF; margin-bottom: 15px;">¡Bienvenido de vuelta!</h2>
+			<p style="font-size: 18px; color: #333; margin-bottom: 20px;">
+				Gracias por iniciar sesión, <strong><?php echo htmlspecialchars($user_name); ?></strong>.
+			</p>
+			<div style="background: linear-gradient(135deg, #FFA500, #FF8C00); color: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+				<h3 style="margin: 0; font-size: 28px;"><?php echo isset($descuentos['fidelidad']) ? $descuentos['fidelidad']['porcentaje'] : 5; ?>% DE DESCUENTO</h3>
+				<p style="margin: 10px 0 0 0; font-size: 16px;">en tu próxima reserva</p>
+			</div>
+			<p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+				Este descuento se aplicará automáticamente al hacer tu reserva.
+			</p>
+			<button onclick="closeDiscountModal()" style="background: #007BFF; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.3s;">
+				¡Genial, gracias!
+			</button>
+		</div>
+	</div>
+
+	<script>
+		// Mostrar modal de descuento después de 2 segundos
+		setTimeout(function() {
+			document.getElementById('discountModal').style.display = 'block';
+		}, 2000);
+
+		function closeDiscountModal() {
+			document.getElementById('discountModal').style.display = 'none';
+		}
+
+		// Cerrar modal al hacer clic fuera de él
+		window.onclick = function(event) {
+			const modal = document.getElementById('discountModal');
+			if (event.target == modal) {
+				modal.style.display = 'none';
+			}
+		}
+	</script>
+	<?php endif; ?>
+
+
+<script>
+// Función para abrir el modal de login
+// Función eliminada - ahora se usa login.php
+
+// Funciones del modal eliminadas - ahora se usa login.php
+</script>
+
 
 </body>
 

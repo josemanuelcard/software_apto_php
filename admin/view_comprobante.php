@@ -8,7 +8,7 @@ session_start();
 
 // Verificar si el usuario está logueado como admin
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
+    header('Location: ../en/login.php');
     exit;
 }
 
