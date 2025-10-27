@@ -7,7 +7,7 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Obtener fechas ocupadas para el calendario
+ * Obtener fechas ocupadas para el calendario (reservas + fechas bloqueadas)
  */
 function getFechasOcupadas($apartamento_id = 1) {
     $database = new Database();
@@ -19,7 +19,10 @@ function getFechasOcupadas($apartamento_id = 1) {
     }
     
     try {
-        $query = "
+        $fechas_ocupadas = [];
+        
+        // 1. Obtener fechas de reservas aprobadas
+        $query_reservas = "
             SELECT DISTINCT fecha_entrada, fecha_salida 
             FROM reservas 
             WHERE id_apartamento = :apartamento_id 
@@ -27,11 +30,10 @@ function getFechasOcupadas($apartamento_id = 1) {
             AND fecha_salida >= CURDATE()
         ";
         
-        $stmt = $db->prepare($query);
+        $stmt = $db->prepare($query_reservas);
         $stmt->bindParam(':apartamento_id', $apartamento_id);
         $stmt->execute();
         
-        $fechas_ocupadas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $inicio = new DateTime($row['fecha_entrada']);
             $fin = new DateTime($row['fecha_salida']);
@@ -41,6 +43,31 @@ function getFechasOcupadas($apartamento_id = 1) {
                 $inicio->add(new DateInterval('P1D'));
             }
         }
+        
+        // 2. Obtener fechas bloqueadas manualmente
+        $query_bloqueadas = "
+            SELECT fecha_inicio, fecha_fin 
+            FROM fechas_bloqueadas 
+            WHERE activo = 1
+            AND fecha_fin >= CURDATE()
+        ";
+        
+        $stmt = $db->prepare($query_bloqueadas);
+        $stmt->execute();
+        
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $inicio = new DateTime($row['fecha_inicio']);
+            $fin = new DateTime($row['fecha_fin']);
+            
+            while ($inicio <= $fin) {
+                $fechas_ocupadas[] = $inicio->format('Y-m-d');
+                $inicio->add(new DateInterval('P1D'));
+            }
+        }
+        
+        // Eliminar duplicados y ordenar
+        $fechas_ocupadas = array_unique($fechas_ocupadas);
+        sort($fechas_ocupadas);
         
         return $fechas_ocupadas;
     } catch (Exception $e) {
