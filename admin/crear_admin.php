@@ -22,7 +22,7 @@ try {
     if ($admin_exists) {
         echo "<h2>⚠️ Usuario Administrador ya existe</h2>";
         echo "<p>Ya existe un usuario administrador en el sistema.</p>";
-        echo "<p><a href='login.php'>Ir al Login</a></p>";
+        echo "<p><a href='../en/login.php'>Ir al Login</a></p>";
         exit;
     }
     
@@ -45,7 +45,7 @@ try {
         echo "<p><strong>Correo:</strong> admin@gmail.com</p>";
         echo "<p><strong>Contraseña:</strong> 123456</p>";
         echo "</div>";
-        echo "<p><a href='login.php' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Ir al Login</a></p>";
+        echo "<p><a href='../en/login.php' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Ir al Login</a></p>";
     } else {
         throw new Exception("Error al crear el usuario administrador");
     }

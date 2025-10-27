@@ -19,6 +19,7 @@ CREATE TABLE usuarios (
   correo VARCHAR(150) NOT NULL UNIQUE,
   contrasena VARCHAR(255) NOT NULL,
   telefono VARCHAR(20),
+  ciudad VARCHAR(100) DEFAULT 'Cartagena',
   fecha_nacimiento DATE,
   rol ENUM('admin','cliente') DEFAULT 'cliente',
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -55,12 +56,12 @@ CREATE TABLE tarifas (
 -- ==========================================================
 CREATE TABLE fechas_bloqueadas (
   id_bloqueo INT AUTO_INCREMENT PRIMARY KEY,
-  id_apartamento INT NOT NULL,
   fecha_inicio DATE NOT NULL,
   fecha_fin DATE NOT NULL,
-  motivo VARCHAR(255),
-  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (id_apartamento) REFERENCES apartamentos(id_apartamento) ON DELETE CASCADE
+  motivo ENUM('mantenimiento','uso_interno','evento_especial','limpieza','reparacion','otro') NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN DEFAULT TRUE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==========================================================
@@ -112,17 +113,19 @@ CREATE TABLE reservas (
 -- ==========================================================
 -- TRIGGER: actualizar disponibilidad cuando se aprueba reserva
 -- ==========================================================
-DELIMITER $$
-CREATE TRIGGER tr_bloquear_fechas_reserva
-AFTER UPDATE ON reservas
-FOR EACH ROW
-BEGIN
-  IF NEW.estado = 'aprobada' THEN
-    INSERT INTO fechas_bloqueadas (id_apartamento, fecha_inicio, fecha_fin, motivo)
-    VALUES (NEW.id_apartamento, NEW.fecha_entrada, NEW.fecha_salida, 'Reserva aprobada');
-  END IF;
-END$$
-DELIMITER ;
+-- TRIGGER ELIMINADO: Este trigger causaba duplicación de fechas bloqueadas
+-- Las reservas aprobadas se muestran directamente en el calendario sin crear fechas bloqueadas
+-- DELIMITER $$
+-- CREATE TRIGGER tr_bloquear_fechas_reserva
+-- AFTER UPDATE ON reservas
+-- FOR EACH ROW
+-- BEGIN
+--   IF NEW.estado = 'aprobada' THEN
+--     INSERT INTO fechas_bloqueadas (id_apartamento, fecha_inicio, fecha_fin, motivo)
+--     VALUES (NEW.id_apartamento, NEW.fecha_entrada, NEW.fecha_salida, 'Reserva aprobada');
+--   END IF;
+-- END$$
+-- DELIMITER ;
 
 -- ==========================================================
 -- VISTA: disponibilidad del calendario
@@ -149,6 +152,12 @@ SELECT
   END AS estado
 FROM tarifas t
 INNER JOIN apartamentos a ON a.id_apartamento = t.id_apartamento;
+
+-- ==========================================================
+-- TABLA: fechas_bloqueadas (fechas bloqueadas manualmente)
+-- ==========================================================
+-- NOTA: La tabla fechas_bloqueadas ya está definida arriba
+-- Esta definición duplicada ha sido removida para evitar conflictos
 
 -- ==========================================================
 -- DATOS INICIALES

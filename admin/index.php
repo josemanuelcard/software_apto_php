@@ -7,8 +7,13 @@
 session_start();
 
 // Verificar si el usuario está logueado como admin
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
+if ((isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) ||
+    (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true && 
+     isset($_SESSION['user_rol']) && $_SESSION['user_rol'] === 'admin')) {
+    // Usuario logueado correctamente, continuar
+} else {
+    // No está logueado, redirigir al login principal
+    header('Location: ../en/login.php');
     exit;
 }
 
@@ -28,6 +33,8 @@ $reservas_recientes = getReservasRecientes(10);
     <title>Panel de Administración - My Suite In Cartagena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         .sidebar {
             min-height: 100vh;
@@ -102,20 +109,23 @@ $reservas_recientes = getReservasRecientes(10);
                         <a class="nav-link" href="calendario.php">
                             <i class="fas fa-calendar-alt me-2"></i> Calendario
                         </a>
-                        <a class="nav-link" href="usuarios.php">
-                            <i class="fas fa-users me-2"></i> Usuarios
+                        <a class="nav-link" href="#" onclick="showPalmiraFilter()">
+                            <i class="fas fa-map-marker-alt me-2"></i> Clientes Palmira
+                        </a>
+                        <a class="nav-link" href="#" onclick="showDateBlocking()">
+                            <i class="fas fa-calendar-times me-2"></i> Bloquear Fechas
+                        </a>
+                        <a class="nav-link" href="#" onclick="showClientManagement()">
+                            <i class="fas fa-users me-2"></i> Usuarios Registrados
                         </a>
                         <a class="nav-link" href="descuentos.php">
                             <i class="fas fa-percentage me-2"></i> Descuentos
-                        </a>
-                        <a class="nav-link" href="configuracion.php">
-                            <i class="fas fa-cog me-2"></i> Configuración
                         </a>
                         <hr class="text-white-50">
                         <a class="nav-link" href="../en/index.php" target="_blank">
                             <i class="fas fa-external-link-alt me-2"></i> Ver Sitio Web
                         </a>
-                        <a class="nav-link" href="logout.php">
+                        <a class="nav-link" href="../en/logout.php">
                             <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
                         </a>
                     </nav>
@@ -127,7 +137,21 @@ $reservas_recientes = getReservasRecientes(10);
                 <div class="p-4">
                     <!-- Header -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h2>
+                        <div>
+                            <h2><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h2>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-user me-1"></i>
+                                Bienvenido, <?php 
+                                    if (isset($_SESSION['admin_nombre'])) {
+                                        echo $_SESSION['admin_nombre'];
+                                    } elseif (isset($_SESSION['user_nombre'])) {
+                                        echo $_SESSION['user_nombre'];
+                                    } else {
+                                        echo 'Administrador';
+                                    }
+                                ?>
+                            </p>
+                        </div>
                         <div class="text-muted">
                             <i class="fas fa-calendar me-1"></i>
                             <?php echo date('d/m/Y H:i'); ?>
@@ -469,6 +493,519 @@ $reservas_recientes = getReservasRecientes(10);
                 }
             }
         });
+    </script>
+
+    <!-- Modales para nuevas funcionalidades -->
+    
+    <!-- Modal Clientes Palmira -->
+    <div class="modal fade" id="palmiraModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Clientes que viven en Palmira
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="palmiraTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Reservas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Bloqueo de Fechas -->
+    <div class="modal fade" id="dateBlockingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-times me-2"></i>
+                        Bloquear Fechas Manualmente
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dateBlockingForm">
+                        <div class="mb-3">
+                            <label for="blockStartDate" class="form-label">Fecha de Inicio</label>
+                            <input type="date" class="form-control" id="blockStartDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="blockEndDate" class="form-label">Fecha de Fin</label>
+                            <input type="date" class="form-control" id="blockEndDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="blockReason" class="form-label">Motivo del Bloqueo</label>
+                            <select class="form-control" id="blockReason" required>
+                                <option value="">Seleccionar motivo...</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="uso_interno">Uso Interno</option>
+                                <option value="evento_especial">Evento Especial</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="blockDescription" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" id="blockDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="blockDates()">
+                        <i class="fas fa-lock me-2"></i>Bloquear Fechas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestión de Clientes -->
+    <div class="modal fade" id="clientManagementModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users me-2"></i>
+                        Usuarios Registrados
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="clientSearch" placeholder="Buscar cliente por nombre o email...">
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary" onclick="searchClients()">
+                                <i class="fas fa-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Fecha Nacimiento</th>
+                                    <th>Reservas</th>
+                                    <th>Descuentos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript para las nuevas funcionalidades -->
+    <script>
+        // Esperar a que el DOM esté listo
+        $(document).ready(function() {
+            console.log('DOM cargado, funciones disponibles');
+        });
+        
+        // Mostrar modal de clientes Palmira
+        function showPalmiraFilter() {
+            console.log('Ejecutando showPalmiraFilter');
+            $('#palmiraModal').modal('show');
+            loadPalmiraClients();
+        }
+
+        // Mostrar modal de bloqueo de fechas
+        function showDateBlocking() {
+            console.log('Ejecutando showDateBlocking');
+            $('#dateBlockingModal').modal('show');
+        }
+
+        // Mostrar modal de gestión de clientes
+        function showClientManagement() {
+            console.log('Ejecutando showClientManagement');
+            $('#clientManagementModal').modal('show');
+            loadAllClients();
+        }
+
+        // Cargar clientes de Palmira
+        function loadPalmiraClients() {
+            fetch('get_palmira_clients.php')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#palmiraTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.success && data.clients.length > 0) {
+                        data.clients.forEach(client => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${client.id_usuario}</td>
+                                <td>${client.nombre} ${client.apellido}</td>
+                                <td>${client.correo}</td>
+                                <td>${client.telefono}</td>
+                                <td>${client.fecha_registro}</td>
+                                <td>${client.total_reservas}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay clientes registrados en Palmira</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.querySelector('#palmiraTable tbody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar los datos</td></tr>';
+                });
+        }
+
+        // Cargar todos los clientes
+        function loadAllClients() {
+            fetch('get_all_clients.php')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#clientsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.success && data.clients.length > 0) {
+                        data.clients.forEach(client => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${client.id_usuario}</td>
+                                <td>${client.nombre} ${client.apellido}</td>
+                                <td>${client.correo}</td>
+                                <td>${client.telefono}</td>
+                                <td>${client.fecha_nacimiento || 'No registrada'}</td>
+                                <td>${client.total_reservas}</td>
+                                <td>
+                                    <span class="badge bg-success">Fidelidad: 5%</span>
+                                    <span class="badge bg-warning">Cumpleaños: 30%</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewClientDetails(${client.id_usuario})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registrados</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.querySelector('#clientsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar los datos</td></tr>';
+                });
+        }
+
+        // Bloquear fechas
+        function blockDates() {
+            const startDate = document.getElementById('blockStartDate').value;
+            const endDate = document.getElementById('blockEndDate').value;
+            const reason = document.getElementById('blockReason').value;
+            const description = document.getElementById('blockDescription').value;
+
+            if (!startDate || !endDate || !reason) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('start_date', startDate);
+            formData.append('end_date', endDate);
+            formData.append('reason', reason);
+            formData.append('description', description);
+
+            fetch('block_dates.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Fechas bloqueadas exitosamente');
+                    $('#dateBlockingModal').modal('hide');
+                    document.getElementById('dateBlockingForm').reset();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al bloquear las fechas');
+            });
+        }
+
+        // Buscar clientes
+        function searchClients() {
+            const searchTerm = document.getElementById('clientSearch').value;
+            if (!searchTerm.trim()) {
+                loadAllClients();
+                return;
+            }
+
+            fetch(`search_clients.php?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#clientsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.success && data.clients.length > 0) {
+                        data.clients.forEach(client => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${client.id_usuario}</td>
+                                <td>${client.nombre} ${client.apellido}</td>
+                                <td>${client.correo}</td>
+                                <td>${client.telefono}</td>
+                                <td>${client.fecha_nacimiento || 'No registrada'}</td>
+                                <td>${client.total_reservas}</td>
+                                <td>
+                                    <span class="badge bg-success">Fidelidad: 5%</span>
+                                    <span class="badge bg-warning">Cumpleaños: 30%</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewClientDetails(${client.id_usuario})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron clientes</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.querySelector('#clientsTable tbody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al buscar clientes</td></tr>';
+                });
+        }
+
+        // Ver detalles del cliente
+        function viewClientDetails(clientId) {
+            console.log('Cargando detalles del cliente ID:', clientId);
+            
+            // Crear modal dinámico
+            const modalHtml = `
+                <div class="modal fade" id="clientDetailsModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-user me-2"></i>
+                                    Detalles del Cliente
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" id="clientDetailsContent">
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="mt-2">Cargando detalles del cliente...</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal anterior si existe
+            const existingModal = document.getElementById('clientDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Agregar modal al DOM
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('clientDetailsModal'));
+            modal.show();
+            
+            // Cargar detalles del cliente
+            loadClientDetails(clientId);
+        }
+        
+        // Cargar detalles del cliente
+        function loadClientDetails(clientId) {
+            fetch(`get_client_details.php?id=${clientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('clientDetailsContent');
+                    
+                    if (data.success) {
+                        const client = data.client;
+                        const reservations = data.reservations || [];
+                        
+                        content.innerHTML = `
+                            <div class="row mb-4">
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0"><i class="fas fa-user me-2"></i>Información Personal</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td class="fw-bold" style="width: 40%;">ID:</td>
+                                                    <td><span class="badge bg-secondary">${client.id_usuario}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Nombre:</td>
+                                                    <td>${client.nombre} ${client.apellido}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Email:</td>
+                                                    <td><a href="mailto:${client.correo}" class="text-decoration-none">${client.correo}</a></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Teléfono:</td>
+                                                    <td>${client.telefono || '<span class="text-muted">No registrado</span>'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Ciudad:</td>
+                                                    <td><span class="badge bg-info">${client.ciudad || 'No registrada'}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Fecha Nacimiento:</td>
+                                                    <td>${client.fecha_nacimiento || '<span class="text-muted">No registrada</span>'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Fecha Registro:</td>
+                                                    <td>${client.fecha_registro}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Estadísticas</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4">
+                                                    <div class="border rounded p-2">
+                                                        <h4 class="text-primary mb-0">${client.total_reservas}</h4>
+                                                        <small class="text-muted">Total Reservas</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="border rounded p-2">
+                                                        <h4 class="text-success mb-0">${client.reservas_confirmadas || 0}</h4>
+                                                        <small class="text-muted">Confirmadas</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="border rounded p-2">
+                                                        <h4 class="text-warning mb-0">${client.reservas_pendientes || 0}</h4>
+                                                        <small class="text-muted">Pendientes</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <h6 class="fw-bold mb-3">Descuentos Aplicables:</h6>
+                                            <div class="d-flex gap-2 flex-wrap">
+                                                <span class="badge bg-success fs-6">Fidelidad: 5%</span>
+                                                <span class="badge bg-warning fs-6">Cumpleaños: 30%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Historial de Reservas</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            ${reservations.length > 0 ? `
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>ID Reserva</th>
+                                                                <th>Fecha Entrada</th>
+                                                                <th>Fecha Salida</th>
+                                                                <th>Estado</th>
+                                                                <th>Total</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            ${reservations.map(res => `
+                                                                <tr>
+                                                                    <td><span class="badge bg-secondary">${res.id_reserva}</span></td>
+                                                                    <td>${res.fecha_entrada}</td>
+                                                                    <td>${res.fecha_salida}</td>
+                                                                    <td><span class="badge ${res.estado === 'confirmada' ? 'bg-success' : res.estado === 'pendiente' ? 'bg-warning' : 'bg-secondary'}">${res.estado}</span></td>
+                                                                    <td class="fw-bold">$${parseFloat(res.total).toLocaleString('es-CO')} COP</td>
+                                                                </tr>
+                                                            `).join('')}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ` : '<div class="text-center py-4"><i class="fas fa-calendar-times fa-3x text-muted mb-3"></i><p class="text-muted fs-5">No hay reservas registradas</p></div>'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        content.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Error al cargar los detalles: ${data.message}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('clientDetailsContent').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error al cargar los detalles del cliente
+                        </div>
+                    `;
+                });
+        }
     </script>
 </body>
 </html>
