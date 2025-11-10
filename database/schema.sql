@@ -103,7 +103,7 @@ CREATE TABLE reservas (
   descuento_cumpleanios DECIMAL(10,2) DEFAULT 0,
   descuento_promocional DECIMAL(10,2) DEFAULT 0,
   total DECIMAL(10,2) NOT NULL,
-  estado ENUM('pendiente','aprobada','rechazada','cancelada') DEFAULT 'pendiente',
+  estado ENUM('pendiente','aprobada','abonada','rechazada','cancelada') DEFAULT 'pendiente',
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
@@ -165,9 +165,15 @@ INNER JOIN apartamentos a ON a.id_apartamento = t.id_apartamento;
 INSERT INTO apartamentos (nombre, descripcion, capacidad_adultos, capacidad_ninos)
 VALUES ('Apartamento Principal', 'Apartamento turístico en Palmira', 8, 4);
 
+-- Administradores del sistema (3 administradores únicos)
+-- NOTA: Los apellidos y teléfonos de Carlos y root se actualizarán después
 INSERT INTO usuarios (nombre, apellido, correo, contrasena, rol)
-VALUES ('Jose', 'Cardenas', 'admin@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+VALUES 
+('Carlos', 'Por definir', 'admin1@apto.com', '$2y$10$X0xw.P2eKi44YMKhCD8oj.39nW1syjky07uv8EJdQmjofZBLUjqtG', 'admin'),
+('Andrés', 'Diaz', 'admin2@apto.com', '$2y$10$LNIUVVcgiDon.v6BcXSVyuyu37EvFn8jp/c7pwzxUiTWSqdqIDui6', 'admin'),
+('root', 'Por definir', 'admin3@apto.com', '$2y$10$M7UY3X2kY5PpwKRmpnMzoOBcN9LwROJs4WeSYu5TGnDZUbx/twK4m', 'admin');
 
+-- Cliente de ejemplo
 INSERT INTO usuarios (nombre, apellido, correo, contrasena, telefono, rol)
 VALUES ('Sergio', 'Sanchez', 'sergio@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '3189974656', 'cliente');
 
