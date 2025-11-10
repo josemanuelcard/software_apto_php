@@ -74,6 +74,34 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<link href="<?php echo I18n::cssPath('font-awesome.min.css'); ?>" rel="stylesheet">
 	<!-- Font-Awesome-Icons-CSS -->
 	<!-- //Custom-Files -->
+	
+	<!-- Estilos para imágenes del banner principal -->
+	<style>
+		/* Imagen de fondo para banner_w3lspvt-2 (páginas internas) */
+		.banner_w3lspvt-2 {
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
+			background-size: cover !important;
+			background-position: center !important;
+			background-repeat: no-repeat !important;
+		}
+		
+		/* Imágenes de fondo para cada slide del carrusel */
+		.banner_w3lspvt .csslider > ul > li:first-child {
+			background-image: url('<?php echo I18n::sharedAsset('1.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(2) {
+			background-image: url('<?php echo I18n::sharedAsset('2.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(3) {
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(4) {
+			background-image: url('<?php echo I18n::sharedAsset('4.webp'); ?>') !important;
+		}
+	</style>
 
 	<!-- Web-Fonts -->
 	<link href="//fonts.googleapis.com/css?family=Crimson+Text:400,400i,600,600i,700,700i" rel="stylesheet">
@@ -156,7 +184,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			<div class="row">
 				<div class="col-lg-4 price-mobamus">
 					<div class="price-top">
-						<img src="<?php echo I18n::sharedAsset('price1.jpg'); ?>" alt="" class="img-fluid" />
+						<img src="<?php echo I18n::sharedAsset('price1.webp'); ?>" alt="" class="img-fluid" />
 					</div>
 					<div class="price-w3ls-bottom p-4">
 						<strong><h4 class="my-2"><?php echo __('rates.high_season_a'); ?></h4></strong>
@@ -179,7 +207,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				</div>
 				<div class="col-lg-4 price-mobamus my-lg-0 my-5">
 					<div class="price-top">
-						<img src="<?php echo I18n::sharedAsset('price2.jpg'); ?>" alt="" class="img-fluid" />
+						<img src="<?php echo I18n::sharedAsset('price2.webp'); ?>" alt="" class="img-fluid" />
 					</div>
 					<div class="price-w3ls-bottom p-4">
 						<strong><h4 class="my-2"><?php echo __('rates.high_season_b'); ?></h4></strong>
@@ -205,7 +233,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				</div>
 				<div class="col-lg-4 price-mobamus">
 					<div class="price-top">
-							<img src="<?php echo I18n::sharedAsset('price3.jpg'); ?>" alt="" class="img-fluid" />
+							<img src="<?php echo I18n::sharedAsset('price3.webp'); ?>" alt="" class="img-fluid" />
 					</div>
 					<div class="price-w3ls-bottom p-4">
 						<strong><h4 class="my-2"><?php echo __('rates.low_season'); ?></h4></strong>
@@ -265,7 +293,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								</a>
 								<li>
 								<a href="https://wa.me/+573015193163" target="_blank">
-									<img src="<?php echo I18n::sharedAsset('whatsapp.png'); ?>" width="35" height="35" >
+									<img src="<?php echo I18n::sharedAsset('whatsapp.webp'); ?>" width="35" height="35" >
 								</a>
 							</li>
 							</li>

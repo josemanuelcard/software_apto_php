@@ -103,7 +103,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		<!-- header -->
 		<header>
 			<label for="drop" class="toggle mobile-toggle">
-				<img src="<?php echo I18n::sharedAsset('menu.png'); ?>" alt="Menu" class="menu-icon">
+                                <img src="<?php echo I18n::sharedAsset('menu.webp'); ?>" alt="Menu" class="menu-icon">
 			</label>
 			<input type="checkbox" id="drop" />
 			<div class="container-fluid">
@@ -141,16 +141,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 										</a>
 										<ul class="dropdown-menu" id="profileDropdownMenu" style="display: none; position: absolute; background: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px 0; min-width: 200px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">
 											<li><a class="dropdown-item" href="#" onclick="event.preventDefault(); closeProfileDropdown(); showProfileInfo();" style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #333; text-decoration: none;">
-												<img src="<?php echo I18n::sharedAsset('hombre.png'); ?>" alt="Profile" style="width: 20px; height: 20px; object-fit: contain;">
+												<img src="<?php echo I18n::sharedAsset('hombre.webp'); ?>" alt="Profile" style="width: 20px; height: 20px; object-fit: contain;">
 												<?php echo __('nav.my_profile'); ?>
 											</a></li>
 											<li><a class="dropdown-item" href="#" onclick="event.preventDefault(); closeProfileDropdown(); showMyReservations();" style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #333; text-decoration: none;">
-												<img src="<?php echo I18n::sharedAsset('calendario.png'); ?>" alt="Reservations" style="width: 20px; height: 20px; object-fit: contain;">
+												<img src="<?php echo I18n::sharedAsset('calendario.webp'); ?>" alt="Reservations" style="width: 20px; height: 20px; object-fit: contain;">
 												<?php echo __('nav.my_reservations'); ?>
 											</a></li>
 											<li><hr class="dropdown-divider" style="margin: 10px 0; border-top: 1px solid #ddd;"></li>
 											<li><a class="dropdown-item" href="../../app/controllers/auth/logout.php?lang=<?php echo I18n::getLanguage(); ?>" style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #FF4136; text-decoration: none;">
-												<img src="<?php echo I18n::sharedAsset('salida.png'); ?>" alt="Logout" style="width: 20px; height: 20px; object-fit: contain;">
+												<img src="<?php echo I18n::sharedAsset('salida.webp'); ?>" alt="Logout" style="width: 20px; height: 20px; object-fit: contain;">
 												<?php echo __('nav.logout'); ?>
 											</a></li>
 										</ul>
@@ -271,13 +271,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             <div id="blogCarousel" class="carousel slide" data-bs-ride="false" style="max-width: 100%; margin-right: 30px;">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <img src="<?php echo I18n::sharedAsset('blog1.jpg'); ?>" class="d-block w-100" alt="Blog 1" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
+                        <img src="<?php echo I18n::sharedAsset('blog1.webp'); ?>" class="d-block w-100" alt="Blog 1" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
                     </div>
                     <div class="carousel-item">
-                        <img src="<?php echo I18n::sharedAsset('blog8.jpg'); ?>" class="d-block w-100" alt="Blog 8" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
+                        <img src="<?php echo I18n::sharedAsset('blog8.webp'); ?>" class="d-block w-100" alt="Blog 8" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
                     </div>
                     <div class="carousel-item">
-                        <img src="<?php echo I18n::sharedAsset('blog3.jpg'); ?>" class="d-block w-100" alt="Blog 3" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
+                        <img src="<?php echo I18n::sharedAsset('blog3.webp'); ?>" class="d-block w-100" alt="Blog 3" style="border-radius: 1px; object-fit: cover; height: 700px; width: 100%;">
                     </div>
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev" style="background: none; border: none;">
@@ -292,7 +292,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 </div>
 <!-- //Sección Texto y Carrusel -->
 <!-- Sección de Llamado a la Acción -->
-<div class="cta-section-new" style="position: relative; background-image: url('<?php echo I18n::sharedAsset('piesplaya.jpg'); ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 150px 20px; text-align: center; margin-top: 0; margin-bottom: 0; min-height: 600px; display: flex; align-items: center; justify-content: center;">
+<div class="cta-section-new" style="position: relative; background-image: url('<?php echo I18n::sharedAsset('piesplaya.webp'); ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 150px 20px; text-align: center; margin-top: 0; margin-bottom: 0; min-height: 600px; display: flex; align-items: center; justify-content: center;">
     
     <!-- Contenido -->
     <div style="position: relative; z-index: 2; max-width: 900px; margin: 0 auto; width: 100%;">
@@ -499,7 +499,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="nombres"><?php echo __('form.first_name'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('avatar.png'); ?>" alt="avatar" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('avatar.webp'); ?>" alt="avatar" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <input type="text" class="form-control" id="nombres" name="nombres" placeholder="Nombre" value="<?php echo $user_data ? htmlspecialchars($user_data['nombre']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
                             </div>
                             <span class="error-message" id="nombresError"></span>
@@ -517,7 +517,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="celular"><?php echo __('form.phone'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('receptor-de-telefono.png'); ?>" alt="teléfono" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('receptor-de-telefono.webp'); ?>" alt="teléfono" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <select id="codigoPais" name="codigoPais" class="form-control" style="width: auto; min-width: 80px; flex-shrink: 0;" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?>>
                                     <option value="+57" selected>+57</option>
                                     <option value="+56">+56</option>
@@ -564,7 +564,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="adultos"><?php echo __('form.adults'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('hombre.png'); ?>" alt="adultos" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('hombre.webp'); ?>" alt="adultos" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <select class="form-control" id="adultos" name="adultos" required>
                                     <option value="" disabled selected>Adultos</option>
                                     <option value="1">1</option>
@@ -583,7 +583,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="ninos"><?php echo __('form.children'); ?></label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('ninos.png'); ?>" alt="niños" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('ninos.webp'); ?>" alt="niños" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <select class="form-control" id="ninos" name="ninos">
                                     <option value="0" selected>Niños</option>
                                     <option value="1">1</option>
@@ -883,7 +883,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								<span class="fa fa-instagram"></span>
 							</a>
 							<a href="https://wa.me/+573015193163" target="_blank" class="social-icon">
-								<img src="<?php echo I18n::sharedAsset('whatsapp.png'); ?>" alt="WhatsApp" class="whatsapp-icon">
+								<img src="<?php echo I18n::sharedAsset('whatsapp.webp'); ?>" alt="WhatsApp" class="whatsapp-icon">
 							</a>
 						</div>
 					</div>
@@ -893,7 +893,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				<div class="col-md-4 footer-column footer-transport">
 					<div class="footer-content">
 						<div class="transport-image-container">
-							<img src="<?php echo I18n::sharedAsset('optra.png'); ?>" alt="Transporte Optra" class="transport-image">
+							<img src="<?php echo I18n::sharedAsset('optra.webp'); ?>" alt="Transporte Optra" class="transport-image">
 						</div>
 						<h3 class="footer-subtitle"><?php echo __('footer.transport_subtitle'); ?></h3>
 						<h2 class="footer-title"><?php echo __('footer.transport_title'); ?></h2>
@@ -1478,19 +1478,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		/* Imágenes de fondo para cada slide del carrusel */
 		.banner_w3lspvt .csslider > ul > li:first-child {
-			background-image: url('<?php echo I18n::sharedAsset('1.jpg'); ?>') !important;
+			background-image: url('<?php echo I18n::sharedAsset('1.webp'); ?>') !important;
 		}
 		
 		.banner_w3lspvt .csslider > ul > li:nth-child(2) {
-			background-image: url('<?php echo I18n::sharedAsset('2.jpg'); ?>') !important;
+			background-image: url('<?php echo I18n::sharedAsset('2.webp'); ?>') !important;
 		}
 		
 		.banner_w3lspvt .csslider > ul > li:nth-child(3) {
-			background-image: url('<?php echo I18n::sharedAsset('3.jpg'); ?>') !important;
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
 		}
 		
 		.banner_w3lspvt .csslider > ul > li:nth-child(4) {
-			background-image: url('<?php echo I18n::sharedAsset('4.jpg'); ?>') !important;
+			background-image: url('<?php echo I18n::sharedAsset('4.webp'); ?>') !important;
 		}
 		
 		/* CSS para el carrusel con inputs de radio - Control de visibilidad */

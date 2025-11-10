@@ -72,6 +72,17 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<link href="<?php echo I18n::cssPath('font-awesome.min.css'); ?>" rel="stylesheet">
 	<!-- Font-Awesome-Icons-CSS -->
 	<!-- //Custom-Files -->
+	
+	<!-- Estilos para imágenes del banner principal -->
+	<style>
+		/* Imagen de fondo para banner_w3lspvt-2 (páginas internas) */
+		.banner_w3lspvt-2 {
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
+			background-size: cover !important;
+			background-position: center !important;
+			background-repeat: no-repeat !important;
+		}
+	</style>
 
 	<!-- Web-Fonts -->
 	<link href="//fonts.googleapis.com/css?family=Crimson+Text:400,400i,600,600i,700,700i" rel="stylesheet">
@@ -215,7 +226,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								</a>
 								<li>
 								<a href="https://wa.me/+573015193163" target="_blank">
-									<img src="<?php echo I18n::sharedAsset('whatsapp.png'); ?>" width="35" height="35" >
+									<img src="<?php echo I18n::sharedAsset('whatsapp.webp'); ?>" width="35" height="35" >
 								</a>
 							</li>
 							</li>
