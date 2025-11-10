@@ -111,65 +111,147 @@ function getTarifaPorFecha($fecha, $apartamento_id = 1) {
 }
 
 /**
- * Guardar reserva
+ * Guardar reserva en la base de datos
+ * Versión simplificada y robusta
  */
 function guardarReserva($datos) {
+    // Validar que los datos requeridos estén presentes
+    $campos_requeridos = ['nombre', 'apellido', 'correo', 'telefono', 'fecha_entrada', 'fecha_salida', 'num_adultos', 'metodo_pago', 'total'];
+    foreach ($campos_requeridos as $campo) {
+        if (!isset($datos[$campo])) {
+            error_log("Error: Campo requerido '$campo' no está presente en guardarReserva");
+            return false;
+        }
+    }
+    
+    // Crear conexión a la base de datos
     $database = new Database();
     $db = $database->getConnection();
     
     if (!$db) {
+        error_log("Error: No se pudo conectar a la base de datos en guardarReserva");
         return false;
     }
     
     try {
+        // Iniciar transacción
         $db->beginTransaction();
         
-        $query = "
-            INSERT INTO reservas (
-                id_apartamento, id_usuario, nombre, apellido, correo, telefono,
-                fecha_nacimiento, fecha_entrada, fecha_salida, num_adultos, num_ninos,
-                vive_palmira, metodo_pago, costo_base, descuento_fidelizacion, descuento_cumpleanios,
-                descuento_promocional, total, estado
-            ) VALUES (
-                :id_apartamento, :id_usuario, :nombre, :apellido, :correo, :telefono,
-                :fecha_nacimiento, :fecha_entrada, :fecha_salida, :num_adultos, :num_ninos,
-                :vive_palmira, :metodo_pago, :costo_base, :descuento_fidelizacion, :descuento_cumpleanios,
-                :descuento_promocional, :total, 'pendiente'
-            )
-        ";
+        // Preparar query de inserción
+        $query = "INSERT INTO reservas (
+            id_apartamento, 
+            id_usuario, 
+            nombre, 
+            apellido, 
+            correo, 
+            telefono,
+            fecha_nacimiento, 
+            fecha_entrada, 
+            fecha_salida, 
+            num_adultos, 
+            num_ninos,
+            vive_palmira, 
+            metodo_pago, 
+            costo_base, 
+            descuento_fidelizacion, 
+            descuento_cumpleanios,
+            descuento_promocional, 
+            total, 
+            estado
+        ) VALUES (
+            :id_apartamento, 
+            :id_usuario, 
+            :nombre, 
+            :apellido, 
+            :correo, 
+            :telefono,
+            :fecha_nacimiento, 
+            :fecha_entrada, 
+            :fecha_salida, 
+            :num_adultos, 
+            :num_ninos,
+            :vive_palmira, 
+            :metodo_pago, 
+            :costo_base, 
+            :descuento_fidelizacion, 
+            :descuento_cumpleanios,
+            :descuento_promocional, 
+            :total, 
+            'pendiente'
+        )";
         
         $stmt = $db->prepare($query);
-        $stmt->bindParam(':id_apartamento', $datos['id_apartamento']);
-        $stmt->bindParam(':id_usuario', $datos['id_usuario']);
-        $stmt->bindParam(':nombre', $datos['nombre']);
-        $stmt->bindParam(':apellido', $datos['apellido']);
-        $stmt->bindParam(':correo', $datos['correo']);
-        $stmt->bindParam(':telefono', $datos['telefono']);
-        $stmt->bindParam(':fecha_nacimiento', $datos['fecha_nacimiento']);
-        $stmt->bindParam(':fecha_entrada', $datos['fecha_entrada']);
-        $stmt->bindParam(':fecha_salida', $datos['fecha_salida']);
-        $stmt->bindParam(':num_adultos', $datos['num_adultos']);
-        $stmt->bindParam(':num_ninos', $datos['num_ninos']);
-        $stmt->bindParam(':vive_palmira', $datos['vive_palmira']);
-        $stmt->bindParam(':metodo_pago', $datos['metodo_pago']);
-        $stmt->bindParam(':costo_base', $datos['costo_base']);
-        $stmt->bindParam(':descuento_fidelizacion', $datos['descuento_fidelizacion']);
-        $stmt->bindParam(':descuento_cumpleanios', $datos['descuento_cumpleanios']);
-        $stmt->bindParam(':descuento_promocional', $datos['descuento_promocional']);
-        $stmt->bindParam(':total', $datos['total']);
         
+        // Bind de parámetros
+        $id_apartamento = isset($datos['id_apartamento']) ? (int)$datos['id_apartamento'] : 1;
+        $id_usuario = isset($datos['id_usuario']) && !empty($datos['id_usuario']) ? (int)$datos['id_usuario'] : null;
+        $nombre = trim($datos['nombre']);
+        $apellido = trim($datos['apellido']);
+        $correo = trim($datos['correo']);
+        $telefono = trim($datos['telefono']);
+        $fecha_nacimiento = isset($datos['fecha_nacimiento']) && !empty($datos['fecha_nacimiento']) ? $datos['fecha_nacimiento'] : null;
+        $fecha_entrada = $datos['fecha_entrada'];
+        $fecha_salida = $datos['fecha_salida'];
+        $num_adultos = (int)$datos['num_adultos'];
+        $num_ninos = isset($datos['num_ninos']) ? (int)$datos['num_ninos'] : 0;
+        $vive_palmira = isset($datos['vive_palmira']) && $datos['vive_palmira'] ? 1 : 0;
+        $metodo_pago = $datos['metodo_pago'];
+        $costo_base = isset($datos['costo_base']) ? (float)$datos['costo_base'] : 0;
+        $descuento_fidelizacion = isset($datos['descuento_fidelizacion']) ? (float)$datos['descuento_fidelizacion'] : 0;
+        $descuento_cumpleanios = isset($datos['descuento_cumpleanios']) ? (float)$datos['descuento_cumpleanios'] : 0;
+        $descuento_promocional = isset($datos['descuento_promocional']) ? (float)$datos['descuento_promocional'] : 0;
+        $total = (float)$datos['total'];
+        
+        $stmt->bindParam(':id_apartamento', $id_apartamento, PDO::PARAM_INT);
+        $stmt->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
+        $stmt->bindParam(':nombre', $nombre, PDO::PARAM_STR);
+        $stmt->bindParam(':apellido', $apellido, PDO::PARAM_STR);
+        $stmt->bindParam(':correo', $correo, PDO::PARAM_STR);
+        $stmt->bindParam(':telefono', $telefono, PDO::PARAM_STR);
+        $stmt->bindParam(':fecha_nacimiento', $fecha_nacimiento, PDO::PARAM_STR);
+        $stmt->bindParam(':fecha_entrada', $fecha_entrada, PDO::PARAM_STR);
+        $stmt->bindParam(':fecha_salida', $fecha_salida, PDO::PARAM_STR);
+        $stmt->bindParam(':num_adultos', $num_adultos, PDO::PARAM_INT);
+        $stmt->bindParam(':num_ninos', $num_ninos, PDO::PARAM_INT);
+        $stmt->bindParam(':vive_palmira', $vive_palmira, PDO::PARAM_INT);
+        $stmt->bindParam(':metodo_pago', $metodo_pago, PDO::PARAM_STR);
+        $stmt->bindParam(':costo_base', $costo_base, PDO::PARAM_STR);
+        $stmt->bindParam(':descuento_fidelizacion', $descuento_fidelizacion, PDO::PARAM_STR);
+        $stmt->bindParam(':descuento_cumpleanios', $descuento_cumpleanios, PDO::PARAM_STR);
+        $stmt->bindParam(':descuento_promocional', $descuento_promocional, PDO::PARAM_STR);
+        $stmt->bindParam(':total', $total, PDO::PARAM_STR);
+        
+        // Ejecutar inserción
         $stmt->execute();
+        
+        // Obtener ID de la reserva insertada
         $reserva_id = $db->lastInsertId();
         
+        // Confirmar transacción
         $db->commit();
         
-        // Enviar email de notificación
-        enviarEmailConfirmacion($datos, $reserva_id);
+        // Intentar enviar email (no crítico, no debe fallar la reserva si falla el email)
+        try {
+            enviarEmailConfirmacion($datos, $reserva_id);
+        } catch (Exception $emailError) {
+            error_log("Error al enviar email de confirmación (no crítico): " . $emailError->getMessage());
+        }
         
         return $reserva_id;
         
+    } catch (PDOException $e) {
+        // Rollback en caso de error
+        if ($db->inTransaction()) {
+            $db->rollback();
+        }
+        error_log("Error PDO en guardarReserva: " . $e->getMessage());
+        error_log("SQL State: " . $e->getCode());
+        return false;
     } catch (Exception $e) {
-        $db->rollback();
+        // Rollback en caso de error
+        if ($db->inTransaction()) {
+            $db->rollback();
+        }
         error_log("Error en guardarReserva: " . $e->getMessage());
         return false;
     }
@@ -189,14 +271,14 @@ function enviarEmailConfirmacion($datos, $reserva_id) {
     <p><strong>Nombre:</strong> {$datos['nombre']} {$datos['apellido']}</p>
     <p><strong>Email:</strong> {$datos['correo']}</p>
     <p><strong>Teléfono:</strong> {$datos['telefono']}</p>
-    <p><strong>Fecha de Nacimiento:</strong> {$datos['fecha_nacimiento']}</p>
+    <p><strong>Fecha de Nacimiento:</strong> " . (isset($datos['fecha_nacimiento']) ? $datos['fecha_nacimiento'] : 'N/A') . "</p>
     
     <h3>Detalles de la Reserva:</h3>
     <p><strong>Fecha de Entrada:</strong> {$datos['fecha_entrada']}</p>
     <p><strong>Fecha de Salida:</strong> {$datos['fecha_salida']}</p>
     <p><strong>Adultos:</strong> {$datos['num_adultos']}</p>
-    <p><strong>Niños:</strong> {$datos['num_ninos']}</p>
-    <p><strong>Vive en Palmira:</strong> " . ($datos['vive_palmira'] ? 'Sí' : 'No') . "</p>
+    <p><strong>Niños:</strong> " . (isset($datos['num_ninos']) ? $datos['num_ninos'] : 0) . "</p>
+    <p><strong>Vive en Palmira:</strong> " . (isset($datos['vive_palmira']) && $datos['vive_palmira'] ? 'Sí' : 'No') . "</p>
     <p><strong>Método de Pago:</strong> {$datos['metodo_pago']}</p>
     
     <h3>Resumen Financiero:</h3>
@@ -218,94 +300,6 @@ function enviarEmailConfirmacion($datos, $reserva_id) {
 }
 
 /**
- * Validar código promocional
- */
-function validarCodigoPromocion($codigo) {
-    $database = new Database();
-    $db = $database->getConnection();
-    
-    if (!$db) {
-        return false;
-    }
-    
-    try {
-        $query = "
-            SELECT * FROM descuentos 
-            WHERE codigo = :codigo 
-            AND activo = 1 
-            AND (fecha_inicio IS NULL OR fecha_inicio <= CURDATE()) 
-            AND (fecha_fin IS NULL OR fecha_fin >= CURDATE())
-            AND tipo = 'promocional'
-        ";
-        
-        $stmt = $db->prepare($query);
-        $stmt->bindParam(':codigo', $codigo);
-        $stmt->execute();
-        
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en validarCodigoPromocion: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Calcular descuentos
- */
-function calcularDescuentos($subtotal, $usuario_id = null, $codigo_promocion = null, $metodo_pago = 'tarjeta_credito') {
-    $descuentos = [
-        'fidelidad' => 0,
-        'cumpleanos' => 0,
-        'vendedores' => 0,
-        'promocion' => 0,
-        'efectivo' => 0
-    ];
-    
-    // Descuento por fidelización (si está registrado)
-    if ($usuario_id) {
-        $descuentos['fidelidad'] = $subtotal * 0.05; // 5%
-        
-        // Descuento por cumpleaños
-        $database = new Database();
-        $db = $database->getConnection();
-        if ($db) {
-            try {
-                $query = "SELECT fecha_nacimiento FROM usuarios WHERE id_usuario = :usuario_id";
-                $stmt = $db->prepare($query);
-                $stmt->bindParam(':usuario_id', $usuario_id);
-                $stmt->execute();
-                $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($usuario && $usuario['fecha_nacimiento']) {
-                    $fecha_nacimiento = new DateTime($usuario['fecha_nacimiento']);
-                    $hoy = new DateTime();
-                    if ($fecha_nacimiento->format('m-d') == $hoy->format('m-d')) {
-                        $descuentos['cumpleanos'] = $subtotal * 0.30; // 30%
-                    }
-                }
-            } catch (Exception $e) {
-                error_log("Error en calcularDescuentos: " . $e->getMessage());
-            }
-        }
-    }
-    
-    // Descuento por código promocional
-    if ($codigo_promocion) {
-        $codigo = validarCodigoPromocion($codigo_promocion);
-        if ($codigo) {
-            $descuentos['promocion'] = $subtotal * ($codigo['porcentaje'] / 100);
-        }
-    }
-    
-    // Descuento por pago en efectivo
-    if ($metodo_pago == 'efectivo') {
-        $descuentos['efectivo'] = $subtotal * 0.03; // 3%
-    }
-    
-    return $descuentos;
-}
-
-/**
  * Obtener estadísticas de reservas
  */
 function getEstadisticasReservas() {
@@ -316,103 +310,99 @@ function getEstadisticasReservas() {
         return [
             'total_reservas' => 0,
             'reservas_pendientes' => 0,
-            'ingresos_mes' => 0
+            'reservas_aprobadas' => 0,
+            'reservas_rechazadas' => 0,
+            'reservas_canceladas' => 0,
+            'ingresos_totales' => 0
         ];
     }
     
-    $stats = [];
-    
     try {
+        $estadisticas = [];
+        
         // Total de reservas
-        $query = "SELECT COUNT(*) as total FROM reservas";
-        $stmt = $db->prepare($query);
+        $query_total = "SELECT COUNT(*) as total FROM reservas";
+        $stmt = $db->prepare($query_total);
         $stmt->execute();
-        $stats['total_reservas'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['total_reservas'] = (int)$result['total'];
         
-        // Reservas por estado
-        $query = "SELECT estado, COUNT(*) as cantidad FROM reservas GROUP BY estado";
-        $stmt = $db->prepare($query);
+        // Reservas pendientes
+        $query_pendientes = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'pendiente'";
+        $stmt = $db->prepare($query_pendientes);
         $stmt->execute();
-        $estados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['reservas_pendientes'] = (int)$result['total'];
         
-        $stats['reservas_pendientes'] = 0;
-        $stats['reservas_aprobadas'] = 0;
-        $stats['reservas_rechazadas'] = 0;
-        $stats['reservas_canceladas'] = 0;
-        
-        foreach ($estados as $estado) {
-            switch ($estado['estado']) {
-                case 'pendiente':
-                    $stats['reservas_pendientes'] = $estado['cantidad'];
-                    break;
-                case 'aprobada':
-                    $stats['reservas_aprobadas'] = $estado['cantidad'];
-                    break;
-                case 'rechazada':
-                    $stats['reservas_rechazadas'] = $estado['cantidad'];
-                    break;
-                case 'cancelada':
-                    $stats['reservas_canceladas'] = $estado['cantidad'];
-                    break;
-            }
-        }
-        
-        // Ingresos totales
-        $query = "SELECT SUM(total) as ingresos FROM reservas WHERE estado = 'aprobada'";
-        $stmt = $db->prepare($query);
+        // Reservas aprobadas
+        $query_aprobadas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'aprobada'";
+        $stmt = $db->prepare($query_aprobadas);
         $stmt->execute();
-        $stats['ingresos_totales'] = $stmt->fetch(PDO::FETCH_ASSOC)['ingresos'] ?? 0;
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['reservas_aprobadas'] = (int)$result['total'];
         
-        // Métodos de pago
-        $query = "SELECT metodo_pago, COUNT(*) as cantidad FROM reservas GROUP BY metodo_pago";
-        $stmt = $db->prepare($query);
+        // Reservas rechazadas
+        $query_rechazadas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'rechazada'";
+        $stmt = $db->prepare($query_rechazadas);
         $stmt->execute();
-        $metodos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['reservas_rechazadas'] = (int)$result['total'];
         
-        $stats['metodo_tarjeta'] = 0;
-        $stats['metodo_efectivo'] = 0;
+        // Reservas canceladas
+        $query_canceladas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'cancelada'";
+        $stmt = $db->prepare($query_canceladas);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['reservas_canceladas'] = (int)$result['total'];
         
-        foreach ($metodos as $metodo) {
-            if ($metodo['metodo_pago'] === 'tarjeta_credito') {
-                $stats['metodo_tarjeta'] = $metodo['cantidad'];
-            } elseif ($metodo['metodo_pago'] === 'efectivo') {
-                $stats['metodo_efectivo'] = $metodo['cantidad'];
-            }
-        }
+        // Ingresos totales (solo reservas aprobadas)
+        $query_ingresos = "SELECT SUM(total) as ingresos FROM reservas WHERE estado = 'aprobada'";
+        $stmt = $db->prepare($query_ingresos);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['ingresos_totales'] = (float)($result['ingresos'] ?? 0);
         
+        return $estadisticas;
     } catch (Exception $e) {
         error_log("Error en getEstadisticasReservas: " . $e->getMessage());
-        $stats = [
+        return [
             'total_reservas' => 0,
             'reservas_pendientes' => 0,
             'reservas_aprobadas' => 0,
             'reservas_rechazadas' => 0,
             'reservas_canceladas' => 0,
-            'ingresos_totales' => 0,
-            'metodo_tarjeta' => 0,
-            'metodo_efectivo' => 0
+            'ingresos_totales' => 0
         ];
     }
-    
-    return $stats;
 }
 
 /**
  * Obtener reservas recientes
  */
 function getReservasRecientes($limite = 10) {
-    global $db;
+    $database = new Database();
+    $db = $database->getConnection();
     
     if (!$db) {
         return [];
     }
     
     try {
-        $stmt = $db->prepare("SELECT * FROM reservas ORDER BY creado_en DESC LIMIT ?");
-        $stmt->execute([$limite]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $query = "
+            SELECT r.*, a.nombre as apartamento_nombre 
+            FROM reservas r 
+            LEFT JOIN apartamentos a ON r.id_apartamento = a.id_apartamento 
+            ORDER BY r.creado_en DESC 
+            LIMIT :limite
+        ";
         
+        $stmt = $db->prepare($query);
+        $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
+        error_log("Error en getReservasRecientes: " . $e->getMessage());
         return [];
     }
 }
