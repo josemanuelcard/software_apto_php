@@ -72,6 +72,34 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<link href="<?php echo I18n::cssPath('font-awesome.min.css'); ?>" rel="stylesheet">
 	<!-- Font-Awesome-Icons-CSS -->
 	<!-- //Custom-Files -->
+	
+	<!-- Estilos para imágenes del banner principal -->
+	<style>
+		/* Imagen de fondo para banner_w3lspvt-2 (páginas internas) */
+		.banner_w3lspvt-2 {
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
+			background-size: cover !important;
+			background-position: center !important;
+			background-repeat: no-repeat !important;
+		}
+		
+		/* Imágenes de fondo para cada slide del carrusel */
+		.banner_w3lspvt .csslider > ul > li:first-child {
+			background-image: url('<?php echo I18n::sharedAsset('1.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(2) {
+			background-image: url('<?php echo I18n::sharedAsset('2.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(3) {
+			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
+		}
+		
+		.banner_w3lspvt .csslider > ul > li:nth-child(4) {
+			background-image: url('<?php echo I18n::sharedAsset('4.webp'); ?>') !important;
+		}
+	</style>
 
 	<!-- Web-Fonts -->
 	<link href="//fonts.googleapis.com/css?family=Crimson+Text:400,400i,600,600i,700,700i" rel="stylesheet">
@@ -149,13 +177,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			<p class="sub-tittle text-center mt-2 mb-sm-5 mb-4 pb-xl-3"><?php echo __('facilities.subtitle'); ?></p>
 			 <div class="row news-grids no-gutters text-center">
 				<div class="col-md-4 gal-img">
-				<a><img src="<?php echo I18n::sharedAsset('blog1.jpg'); ?>" alt="Gallery Image" class="img-fluid"></a>
+				<a><img src="<?php echo I18n::sharedAsset('blog1.webp'); ?>" alt="Gallery Image" class="img-fluid"></a>
 				</div>
 				<div class="col-md-4 gal-img">
-					<a><img src="<?php echo I18n::sharedAsset('blog2.jpg'); ?>" alt="Gallery Image" class="img-fluid"></a>
+					<a><img src="<?php echo I18n::sharedAsset('blog2.webp'); ?>" alt="Gallery Image" class="img-fluid"></a>
 				</div>
 				<div class="col-md-4 gal-img">
-				<a><img src="<?php echo I18n::sharedAsset('blog8.jpg'); ?>" alt="Gallery Image" class="img-fluid"></a>
+				<a><img src="<?php echo I18n::sharedAsset('blog8.webp'); ?>" alt="Gallery Image" class="img-fluid"></a>
 				</div>
 			</div>
 			</div>
@@ -165,7 +193,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal1" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('blog1.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('blog1.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -173,7 +201,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal2" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('price1.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('price1.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -181,7 +209,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal3" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('blog2.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('blog2.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -189,7 +217,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal4" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('price2.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('price2.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -197,7 +225,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal5" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('blog3.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('blog3.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -205,7 +233,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<!-- popup-->
 	<div id="gal6" class="pop-overlay animate">
 		<div class="popup">
-			<img src="<?php echo I18n::sharedAsset('price3.jpg'); ?>" alt="Popup Image" class="img-fluid" />
+			<img src="<?php echo I18n::sharedAsset('price3.webp'); ?>" alt="Popup Image" class="img-fluid" />
 			<a class="close" href="#gallery">&times;</a>
 		</div>
 	</div>
@@ -234,7 +262,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								</a>
 								<li>
 								<a href="https://wa.me/+573015193163" target="_blank">
-									<img src="<?php echo I18n::sharedAsset('whatsapp.png'); ?>" width="35" height="35" >
+									<img src="<?php echo I18n::sharedAsset('whatsapp.webp'); ?>" width="35" height="35" >
 								</a>
 							</li>
 							</li>

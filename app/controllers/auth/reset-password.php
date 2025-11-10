@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: url('../../../assets/shared/cartagena.jpg');
+            background: url('../../../assets/shared/cartagena.webp');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;

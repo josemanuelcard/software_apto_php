@@ -17,11 +17,12 @@ CREATE TABLE usuarios (
   nombre VARCHAR(100) NOT NULL,
   apellido VARCHAR(100) NOT NULL,
   correo VARCHAR(150) NOT NULL UNIQUE,
-  contrasena VARCHAR(255) NOT NULL,
+  contrasena VARCHAR(255),
   telefono VARCHAR(20),
   ciudad VARCHAR(100) DEFAULT 'Cartagena',
   fecha_nacimiento DATE,
   rol ENUM('admin','cliente') DEFAULT 'cliente',
+  login_method VARCHAR(50),
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -56,12 +57,14 @@ CREATE TABLE tarifas (
 -- ==========================================================
 CREATE TABLE fechas_bloqueadas (
   id_bloqueo INT AUTO_INCREMENT PRIMARY KEY,
+  id_apartamento INT NOT NULL,
   fecha_inicio DATE NOT NULL,
   fecha_fin DATE NOT NULL,
   motivo ENUM('mantenimiento','uso_interno','evento_especial','limpieza','reparacion','otro') NOT NULL,
   descripcion TEXT,
   activo BOOLEAN DEFAULT TRUE,
-  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_apartamento) REFERENCES apartamentos(id_apartamento) ON DELETE CASCADE
 );
 
 -- ==========================================================
@@ -104,6 +107,9 @@ CREATE TABLE reservas (
   descuento_promocional DECIMAL(10,2) DEFAULT 0,
   total DECIMAL(10,2) NOT NULL,
   estado ENUM('pendiente','aprobada','abonada','rechazada','cancelada') DEFAULT 'pendiente',
+  estado_pago ENUM('pendiente','pagada') DEFAULT 'pendiente',
+  fecha_pago_confirmado TIMESTAMP NULL,
+  email_enviado BOOLEAN DEFAULT FALSE,
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
@@ -140,12 +146,13 @@ SELECT
     WHEN EXISTS (
       SELECT 1 FROM reservas r
       WHERE r.id_apartamento = a.id_apartamento
-        AND r.estado = 'aprobada'
+        AND r.estado IN ('aprobada', 'abonada')
         AND t.fecha >= r.fecha_entrada AND t.fecha < r.fecha_salida
     ) THEN 'Ocupado'
     WHEN EXISTS (
       SELECT 1 FROM fechas_bloqueadas fb
       WHERE fb.id_apartamento = a.id_apartamento
+        AND fb.activo = 1
         AND t.fecha BETWEEN fb.fecha_inicio AND fb.fecha_fin
     ) THEN 'Bloqueado'
     ELSE 'Disponible'
@@ -154,10 +161,32 @@ FROM tarifas t
 INNER JOIN apartamentos a ON a.id_apartamento = t.id_apartamento;
 
 -- ==========================================================
--- TABLA: fechas_bloqueadas (fechas bloqueadas manualmente)
+-- TABLA: password_reset_tokens (tokens para recuperación de contraseña)
 -- ==========================================================
--- NOTA: La tabla fechas_bloqueadas ya está definida arriba
--- Esta definición duplicada ha sido removida para evitar conflictos
+CREATE TABLE password_reset_tokens (
+  id_token INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  verification_code VARCHAR(6) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  INDEX idx_token (token),
+  INDEX idx_user_id (user_id)
+);
+
+-- ==========================================================
+-- TABLA: descuentos_config (configuración de descuentos)
+-- ==========================================================
+CREATE TABLE descuentos_config (
+  id_config INT AUTO_INCREMENT PRIMARY KEY,
+  tipo_descuento ENUM('fidelidad','cumpleanos','vendedor','promocional') NOT NULL UNIQUE,
+  porcentaje DECIMAL(5,2) NOT NULL,
+  activo BOOLEAN DEFAULT TRUE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- ==========================================================
 -- DATOS INICIALES
@@ -183,6 +212,14 @@ VALUES
 ('Cumpleaños', 'cumpleanios', 30.00, NULL, NULL, NULL),
 ('Vendedor', 'vendedor', 5.00, NULL, NULL, NULL),
 ('Promocional', 'promocional', 10.00, 'PROMO2025', '2025-11-01', '2026-01-15');
+
+-- Configuración inicial de descuentos
+INSERT INTO descuentos_config (tipo_descuento, porcentaje, activo)
+VALUES 
+('fidelidad', 5.00, TRUE),
+('cumpleanos', 30.00, TRUE),
+('vendedor', 5.00, TRUE),
+('promocional', 10.00, TRUE);
 
 -- Insertar tarifas base para los próximos 365 días
 INSERT INTO tarifas (id_apartamento, fecha, precio, temporada)
