@@ -101,7 +101,6 @@ class GmailSender {
             $mail->Password = $this->smtp_password;
             $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS; // TLS para puerto 587, o ENCRYPTION_SMTPS para puerto 465
             $mail->Port = $this->smtp_port;
-            $mail->CharSet = 'UTF-8';
             
             // Configuraciones adicionales para cPanel (puede requerir certificados autofirmados)
             $mail->SMTPOptions = array(
@@ -117,7 +116,11 @@ class GmailSender {
             $mail->addAddress($to);
             $mail->addReplyTo($this->from_email, $this->from_name);
             
-            // Agregar imagen incrustada si se proporciona
+            // Configurar HTML antes de agregar imágenes
+            $mail->isHTML($is_html);
+            $mail->CharSet = 'UTF-8';
+            
+            // Agregar imagen incrustada si se proporciona (DEBE ser ANTES de establecer el Body)
             if ($image_path) {
                 // Normalizar la ruta
                 $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $image_path);
@@ -128,9 +131,22 @@ class GmailSender {
                         $image_info = getimagesize($normalized_path);
                         $mime_type = $image_info ? $image_info['mime'] : 'image/png';
                         
-                        // Agregar la imagen incrustada
-                        $mail->addEmbeddedImage($normalized_path, 'hotel_logo', 'hotel_logo.png', 'base64', $mime_type);
-                        error_log("✅ Imagen incrustada correctamente: $normalized_path (Tamaño: " . filesize($normalized_path) . " bytes, MIME: $mime_type)");
+                        // El CID debe ser exactamente 'hotel_logo' (sin 'cid:') para que coincida con el HTML
+                        // Firma: addEmbeddedImage(path, cid, name, encoding, type, disposition)
+                        $result = $mail->addEmbeddedImage(
+                            $normalized_path,  // Ruta del archivo
+                            'hotel_logo',      // CID (debe coincidir con cid:hotel_logo en el HTML)
+                            'hotel_logo.png',  // Nombre del archivo
+                            'base64',          // Encoding
+                            $mime_type,        // Tipo MIME
+                            'inline'           // Disposición
+                        );
+                        
+                        if ($result) {
+                            error_log("✅ Imagen incrustada correctamente: $normalized_path (Tamaño: " . filesize($normalized_path) . " bytes, MIME: $mime_type, CID: hotel_logo)");
+                        } else {
+                            error_log("⚠️ addEmbeddedImage retornó false para: $normalized_path");
+                        }
                     } catch (Exception $e) {
                         error_log("❌ Error al incrustar imagen: " . $e->getMessage());
                         error_log("Stack trace: " . $e->getTraceAsString());
@@ -150,8 +166,7 @@ class GmailSender {
                 error_log("⚠️ Ruta de imagen no proporcionada (null)");
             }
             
-            // Contenido
-            $mail->isHTML($is_html);
+            // Establecer contenido DESPUÉS de agregar las imágenes
             $mail->Subject = $subject;
             $mail->Body = $message;
             
@@ -254,6 +269,12 @@ class GmailSender {
         
         // Obtener ruta de la imagen del hotel de forma robusta
         $hotel_image_path = $this->getHotelImagePath();
+        
+        if ($hotel_image_path) {
+            error_log("📧 Enviando email de aprobación con imagen: $hotel_image_path");
+        } else {
+            error_log("⚠️ Enviando email de aprobación SIN imagen (ruta no encontrada)");
+        }
         
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
