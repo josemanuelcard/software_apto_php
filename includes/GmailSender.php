@@ -219,34 +219,70 @@ class GmailSender {
     
     /**
      * Obtener ruta de la imagen del hotel de forma robusta
+     * Método público para que pueda ser usado desde otros archivos
      */
-    private function getHotelImagePath() {
-        // Intentar diferentes rutas posibles
-        $possible_paths = [
-            __DIR__ . '/../../assets/shared/HOTEL_CARTAGENA_silueta[1].png',
-            dirname(__DIR__) . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png',
-            dirname(dirname(__DIR__)) . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png',
-        ];
+    public function getHotelImagePath() {
+        $image_filename = 'HOTEL_CARTAGENA_silueta[1].png';
+        $possible_paths = [];
         
-        // Si DOCUMENT_ROOT está disponible, agregarlo también
+        // 1. Rutas relativas desde el archivo actual (GmailSender.php está en includes/)
+        $possible_paths[] = __DIR__ . '/../assets/shared/' . $image_filename;
+        $possible_paths[] = __DIR__ . '/../../assets/shared/' . $image_filename;
+        $possible_paths[] = dirname(__DIR__) . '/assets/shared/' . $image_filename;
+        $possible_paths[] = dirname(dirname(__DIR__)) . '/assets/shared/' . $image_filename;
+        
+        // 2. Rutas basadas en DOCUMENT_ROOT (común en producción)
         if (isset($_SERVER['DOCUMENT_ROOT']) && !empty($_SERVER['DOCUMENT_ROOT'])) {
-            $possible_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png';
-            $possible_paths[] = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'shared' . DIRECTORY_SEPARATOR . 'HOTEL_CARTAGENA_silueta[1].png';
+            $doc_root = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
+            $possible_paths[] = $doc_root . '/assets/shared/' . $image_filename;
+            $possible_paths[] = $doc_root . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'shared' . DIRECTORY_SEPARATOR . $image_filename;
+            
+            // También intentar con posibles subdirectorios comunes
+            $possible_paths[] = $doc_root . '/software_apto_php/assets/shared/' . $image_filename;
+            $possible_paths[] = $doc_root . '/public_html/assets/shared/' . $image_filename;
+            $possible_paths[] = $doc_root . '/www/assets/shared/' . $image_filename;
         }
         
+        // 3. Rutas basadas en SCRIPT_FILENAME (donde se ejecuta el script)
+        if (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) {
+            $script_dir = dirname($_SERVER['SCRIPT_FILENAME']);
+            $possible_paths[] = $script_dir . '/assets/shared/' . $image_filename;
+            $possible_paths[] = dirname($script_dir) . '/assets/shared/' . $image_filename;
+            $possible_paths[] = dirname(dirname($script_dir)) . '/assets/shared/' . $image_filename;
+        }
+        
+        // 4. Buscar desde la raíz del proyecto usando getcwd() si está disponible
+        $current_dir = getcwd();
+        if ($current_dir !== false) {
+            $possible_paths[] = $current_dir . '/assets/shared/' . $image_filename;
+            $possible_paths[] = dirname($current_dir) . '/assets/shared/' . $image_filename;
+        }
+        
+        // 5. Buscar usando rutas absolutas basadas en el directorio del archivo actual
+        $base_dir = dirname(dirname(__DIR__));
+        $possible_paths[] = $base_dir . '/assets/shared/' . $image_filename;
+        $base_dir_real = realpath($base_dir);
+        if ($base_dir_real !== false) {
+            $possible_paths[] = $base_dir_real . '/assets/shared/' . $image_filename;
+        }
+        
+        // Eliminar duplicados y normalizar
+        $possible_paths = array_unique($possible_paths);
+        
         foreach ($possible_paths as $path) {
-            // Normalizar la ruta
+            // Normalizar la ruta (convertir / y \ a DIRECTORY_SEPARATOR)
             $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
             
-            // Intentar obtener la ruta real (resuelve symlinks y rutas relativas)
+            // Intentar obtener la ruta real (resuelve symlinks, .., etc.)
             $real_path = realpath($normalized_path);
             if ($real_path === false) {
+                // Si realpath falla, intentar con la ruta normalizada
                 $real_path = $normalized_path;
             }
             
             // Verificar si el archivo existe y es legible
             if (file_exists($real_path) && is_readable($real_path) && is_file($real_path)) {
-                error_log("✅ Imagen del hotel encontrada en: $real_path (ruta original: $normalized_path)");
+                error_log("✅ Imagen del hotel encontrada en: $real_path");
                 return $real_path;
             }
         }
@@ -255,9 +291,13 @@ class GmailSender {
         error_log("⚠️ No se encontró la imagen del hotel en ninguna de las rutas probadas:");
         foreach ($possible_paths as $path) {
             $normalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-            $exists = file_exists($normalized) ? 'existe' : 'no existe';
-            error_log("   - $normalized ($exists)");
+            $real = realpath($normalized);
+            $check_path = $real !== false ? $real : $normalized;
+            $exists = file_exists($check_path) ? 'existe' : 'no existe';
+            $readable = ($exists === 'existe' && is_readable($check_path)) ? ' (legible)' : ' (no legible)';
+            error_log("   - $check_path ($exists$readable)");
         }
+        
         return null;
     }
     

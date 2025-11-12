@@ -11,6 +11,26 @@ if (!isset($descuentos) || !is_array($descuentos)) {
 if (!isset($user_data)) {
     $user_data = null;
 }
+// Asegurar que $user_logged_in siempre esté definido
+if (!isset($user_logged_in)) {
+    $user_logged_in = false;
+}
+// Asegurar que $occupied_dates siempre esté definido
+if (!isset($occupied_dates) || !is_array($occupied_dates)) {
+    $occupied_dates = [];
+}
+// Asegurar que $base_price siempre esté definido
+if (!isset($base_price)) {
+    $base_price = 200000;
+}
+// Asegurar que $total_usuarios siempre esté definido
+if (!isset($total_usuarios)) {
+    $total_usuarios = 0;
+}
+// Asegurar que $ultimo_usuario_id siempre esté definido
+if (!isset($ultimo_usuario_id)) {
+    $ultimo_usuario_id = null;
+}
 // Suprimir warnings que puedan aparecer antes del JSON
 $old_error_reporting = error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 $old_display_errors = ini_get('display_errors');
