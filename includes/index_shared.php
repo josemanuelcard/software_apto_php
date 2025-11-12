@@ -521,25 +521,49 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                 <?php
                                 $codigoPaisValue = '+57';
                                 $celularValue = '';
+                                $isReadonly = ($user_logged_in && $user_data);
+                                
                                 if ($user_data && isset($user_data['telefono']) && $user_data['telefono']) {
                                     $telefono = trim($user_data['telefono']);
-                                    // Intentar extraer código de país (formato: +57 3001234567 o +573001234567)
-                                    if (preg_match('/^(\+\d{1,4})\s*(.+)$/', $telefono, $matches)) {
+                                    
+                                    // Intentar extraer código de país y número
+                                    // Formatos posibles: "+57 3001234567", "+573001234567", "573001234567", "3001234567"
+                                    
+                                    // Caso 1: Formato con espacio "+57 3001234567"
+                                    if (preg_match('/^(\+\d{1,4})\s+(.+)$/', $telefono, $matches)) {
                                         $codigoPaisValue = $matches[1];
                                         $celularValue = $matches[2];
-                                    } elseif (preg_match('/^(\+\d{1,4})(\d+)$/', $telefono, $matches)) {
+                                    }
+                                    // Caso 2: Formato sin espacio pero con + "+573001234567"
+                                    elseif (preg_match('/^(\+\d{1,4})(\d{7,15})$/', $telefono, $matches)) {
                                         $codigoPaisValue = $matches[1];
                                         $celularValue = $matches[2];
-                                    } elseif (preg_match('/^\+?\d+/', $telefono, $matches)) {
-                                        $codigoPaisValue = $matches[0];
-                                        $celularValue = preg_replace('/^\+?\d+/', '', $telefono);
-                                    } else {
+                                    }
+                                    // Caso 3: Solo números sin + (asumir código de país por defecto)
+                                    elseif (preg_match('/^(\d{7,15})$/', $telefono, $matches)) {
+                                        // Si tiene 10 dígitos, probablemente es colombiano (sin código de país)
+                                        $codigoPaisValue = '+57';
                                         $celularValue = $telefono;
                                     }
+                                    // Caso 4: Cualquier otro formato, intentar extraer lo que parezca código de país
+                                    else {
+                                        // Intentar encontrar código de país al inicio
+                                        if (preg_match('/^(\+\d{1,4})/', $telefono, $matches)) {
+                                            $codigoPaisValue = $matches[1];
+                                            $celularValue = preg_replace('/^' . preg_quote($matches[1], '/') . '/', '', $telefono);
+                                        } else {
+                                            // Si no tiene código de país, usar el número completo y código por defecto
+                                            $codigoPaisValue = '+57';
+                                            $celularValue = preg_replace('/^\+?/', '', $telefono);
+                                        }
+                                    }
+                                    
+                                    // Limpiar el número de celular (solo dígitos)
+                                    $celularValue = preg_replace('/\D/', '', $celularValue);
                                 }
                                 ?>
-                                <input type="text" id="codigoPais" name="codigoPais" class="form-control" placeholder="+57" style="width: 60px; flex-shrink: 0; maxlength: 5; padding: 10px 5px;" value="<?php echo htmlspecialchars($codigoPaisValue); ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
-                                <input type="tel" class="form-control" id="celular" name="celular" placeholder="3001234567" pattern="[0-9]*" inputmode="numeric" maxlength="15" value="<?php echo htmlspecialchars($celularValue); ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                                <input type="text" id="codigoPais" name="codigoPais" class="form-control" placeholder="+57" style="width: 60px; flex-shrink: 0; maxlength: 5; padding: 10px 5px;" value="<?php echo htmlspecialchars($codigoPaisValue); ?>" <?php echo $isReadonly ? 'readonly' : ''; ?> <?php echo $isReadonly ? '' : 'required'; ?>>
+                                <input type="tel" class="form-control" id="celular" name="celular" placeholder="3001234567" pattern="[0-9]*" inputmode="numeric" maxlength="15" value="<?php echo htmlspecialchars($celularValue); ?>" <?php echo $isReadonly ? 'readonly' : ''; ?> <?php echo $isReadonly ? '' : 'required'; ?>>
                             </div>
                             <span class="error-message" id="celularError"></span>
                         </div>
@@ -5727,7 +5751,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				// Validar nombres, apellidos y celular
 				const nombres = document.getElementById('nombres').value.trim();
 				const apellidos = document.getElementById('apellidos').value.trim();
-				const celular = document.getElementById('celular').value.trim();
+				const celularInput = document.getElementById('celular');
+				const codigoPaisInput = document.getElementById('codigoPais');
+				const celular = celularInput.value.trim();
+				const isReadonly = celularInput.hasAttribute('readonly');
 				
 				if (!nombres) {
 					document.getElementById('nombresError').textContent = 'El nombre es requerido';
@@ -5741,31 +5768,39 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					isValid = false;
 				}
 				
-				if (!celular) {
-					document.getElementById('celularError').textContent = 'El celular es requerido';
-					document.getElementById('celular').classList.add('error');
-					isValid = false;
+				// Solo validar celular si no es readonly (usuario no logueado o datos editables)
+				if (!isReadonly) {
+					if (!celular) {
+						document.getElementById('celularError').textContent = 'El celular es requerido';
+						celularInput.classList.add('error');
+						isValid = false;
+					} else {
+						// Validar código de país
+						const codigoPais = codigoPaisInput.value.trim();
+						if (!codigoPais || !codigoPais.startsWith('+')) {
+							document.getElementById('celularError').textContent = 'El código de país debe empezar con +';
+							codigoPaisInput.classList.add('error');
+							isValid = false;
+						} else {
+							codigoPaisInput.classList.remove('error');
+						}
+						
+						// Validar número de celular (debe tener entre 7 y 15 dígitos)
+						const celularLimpio = celular.replace(/\D/g, ''); // Solo números
+						if (celularLimpio.length < 7 || celularLimpio.length > 15) {
+							document.getElementById('celularError').textContent = 'El número de celular debe tener entre 7 y 15 dígitos';
+							celularInput.classList.add('error');
+							isValid = false;
+						} else {
+							document.getElementById('celularError').textContent = '';
+							celularInput.classList.remove('error');
+						}
+					}
 				} else {
-					// Validar código de país
-					const codigoPais = document.getElementById('codigoPais').value.trim();
-					if (!codigoPais || !codigoPais.startsWith('+')) {
-						document.getElementById('celularError').textContent = 'El código de país debe empezar con +';
-						document.getElementById('codigoPais').classList.add('error');
-						isValid = false;
-					} else {
-						document.getElementById('codigoPais').classList.remove('error');
-					}
-					
-					// Validar número de celular (debe tener entre 7 y 15 dígitos)
-					const celularLimpio = celular.replace(/\D/g, ''); // Solo números
-					if (celularLimpio.length < 7 || celularLimpio.length > 15) {
-						document.getElementById('celularError').textContent = 'El número de celular debe tener entre 7 y 15 dígitos';
-						document.getElementById('celular').classList.add('error');
-						isValid = false;
-					} else {
-						document.getElementById('celularError').textContent = '';
-						document.getElementById('celular').classList.remove('error');
-					}
+					// Si es readonly, limpiar errores (los datos ya están validados)
+					document.getElementById('celularError').textContent = '';
+					celularInput.classList.remove('error');
+					codigoPaisInput.classList.remove('error');
 				}
 				
 				// Validar fecha de nacimiento
@@ -6890,4 +6925,5 @@ window.addEventListener('scroll', revealOnScroll);
 
 </body>
 
+</html>
 </html>
