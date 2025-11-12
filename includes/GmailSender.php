@@ -5,10 +5,30 @@
  * Usa PHPMailer para SMTP (cPanel)
  */
 
-// Incluir PHPMailer
-require_once __DIR__ . '/../vendor/autoload.php';
+// Verificar e incluir PHPMailer de forma segura
+$vendor_autoload = __DIR__ . '/../vendor/autoload.php';
+$GLOBALS['phpmailer_available'] = false;
+
+if (file_exists($vendor_autoload)) {
+    try {
+        require_once $vendor_autoload;
+        // Verificar que PHPMailer esté disponible
+        if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            $GLOBALS['phpmailer_available'] = true;
+        } else {
+            error_log("Advertencia: vendor/autoload.php existe pero PHPMailer no está disponible");
+        }
+    } catch (Exception $e) {
+        error_log("Error al cargar vendor/autoload.php: " . $e->getMessage());
+    } catch (Error $e) {
+        error_log("Error fatal al cargar vendor/autoload.php: " . $e->getMessage());
+    }
+} else {
+    error_log("Advertencia: vendor/autoload.php no encontrado en: $vendor_autoload");
+}
 
 class GmailSender {
+    private static $phpmailer_available = null;
     private $smtp_host;
     private $smtp_port;
     private $smtp_username;
@@ -27,15 +47,36 @@ class GmailSender {
     }
     
     /**
+     * Verificar si PHPMailer está disponible
+     */
+    private static function isPHPMailerAvailable() {
+        if (self::$phpmailer_available === null) {
+            self::$phpmailer_available = isset($GLOBALS['phpmailer_available']) && $GLOBALS['phpmailer_available'] === true;
+        }
+        return self::$phpmailer_available;
+    }
+    
+    /**
      * Enviar email usando SMTP (cPanel)
      */
     public function sendEmail($to, $subject, $message, $is_html = true, $image_path = null) {
         try {
-            // Usar PHPMailer siempre (ya está instalado)
-            return $this->sendWithPHPMailer($to, $subject, $message, $is_html, $image_path);
+            // Intentar usar PHPMailer si está disponible
+            if (self::isPHPMailerAvailable()) {
+                return $this->sendWithPHPMailer($to, $subject, $message, $is_html, $image_path);
+            } else {
+                // Fallback a método básico si PHPMailer no está disponible
+                error_log("PHPMailer no disponible, usando método básico para enviar email");
+                return $this->sendWithBasic($to, $subject, $message, $is_html);
+            }
             
         } catch (Exception $e) {
             error_log("Error en GmailSender: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return false;
+        } catch (Error $e) {
+            error_log("Error fatal en GmailSender: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -45,6 +86,11 @@ class GmailSender {
      */
     private function sendWithPHPMailer($to, $subject, $message, $is_html, $image_path = null) {
         try {
+            if (!self::isPHPMailerAvailable() || !class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+                error_log("PHPMailer no disponible, no se puede enviar email");
+                return false;
+            }
+            
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             
             // Configuración SMTP para cPanel
@@ -72,15 +118,36 @@ class GmailSender {
             $mail->addReplyTo($this->from_email, $this->from_name);
             
             // Agregar imagen incrustada si se proporciona
-            if ($image_path && file_exists($image_path)) {
-                try {
-                    $mail->addEmbeddedImage($image_path, 'hotel_logo', 'hotel_logo.png', 'base64', 'image/png');
-                    error_log("✅ Imagen incrustada correctamente: $image_path");
-                } catch (Exception $e) {
-                    error_log("❌ Error al incrustar imagen: " . $e->getMessage());
+            if ($image_path) {
+                // Normalizar la ruta
+                $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $image_path);
+                
+                if (file_exists($normalized_path) && is_readable($normalized_path)) {
+                    try {
+                        // Leer el archivo y determinar el tipo MIME
+                        $image_info = getimagesize($normalized_path);
+                        $mime_type = $image_info ? $image_info['mime'] : 'image/png';
+                        
+                        // Agregar la imagen incrustada
+                        $mail->addEmbeddedImage($normalized_path, 'hotel_logo', 'hotel_logo.png', 'base64', $mime_type);
+                        error_log("✅ Imagen incrustada correctamente: $normalized_path (Tamaño: " . filesize($normalized_path) . " bytes, MIME: $mime_type)");
+                    } catch (Exception $e) {
+                        error_log("❌ Error al incrustar imagen: " . $e->getMessage());
+                        error_log("Stack trace: " . $e->getTraceAsString());
+                    } catch (Error $e) {
+                        error_log("❌ Error fatal al incrustar imagen: " . $e->getMessage());
+                        error_log("Stack trace: " . $e->getTraceAsString());
+                    }
+                } else {
+                    error_log("⚠️ Imagen no encontrada o no es legible: $normalized_path");
+                    if (file_exists($normalized_path)) {
+                        error_log("   - El archivo existe pero no es legible. Permisos: " . substr(sprintf('%o', fileperms($normalized_path)), -4));
+                    } else {
+                        error_log("   - El archivo no existe en la ruta especificada");
+                    }
                 }
             } else {
-                error_log("⚠️ Imagen no encontrada o ruta no proporcionada: " . ($image_path ?? 'null'));
+                error_log("⚠️ Ruta de imagen no proporcionada (null)");
             }
             
             // Contenido
@@ -136,13 +203,57 @@ class GmailSender {
     }
     
     /**
+     * Obtener ruta de la imagen del hotel de forma robusta
+     */
+    private function getHotelImagePath() {
+        // Intentar diferentes rutas posibles
+        $possible_paths = [
+            __DIR__ . '/../../assets/shared/HOTEL_CARTAGENA_silueta[1].png',
+            dirname(__DIR__) . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png',
+            dirname(dirname(__DIR__)) . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png',
+        ];
+        
+        // Si DOCUMENT_ROOT está disponible, agregarlo también
+        if (isset($_SERVER['DOCUMENT_ROOT']) && !empty($_SERVER['DOCUMENT_ROOT'])) {
+            $possible_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/assets/shared/HOTEL_CARTAGENA_silueta[1].png';
+            $possible_paths[] = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'shared' . DIRECTORY_SEPARATOR . 'HOTEL_CARTAGENA_silueta[1].png';
+        }
+        
+        foreach ($possible_paths as $path) {
+            // Normalizar la ruta
+            $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+            
+            // Intentar obtener la ruta real (resuelve symlinks y rutas relativas)
+            $real_path = realpath($normalized_path);
+            if ($real_path === false) {
+                $real_path = $normalized_path;
+            }
+            
+            // Verificar si el archivo existe y es legible
+            if (file_exists($real_path) && is_readable($real_path) && is_file($real_path)) {
+                error_log("✅ Imagen del hotel encontrada en: $real_path (ruta original: $normalized_path)");
+                return $real_path;
+            }
+        }
+        
+        // Si no se encuentra, loggear advertencia con todas las rutas probadas
+        error_log("⚠️ No se encontró la imagen del hotel en ninguna de las rutas probadas:");
+        foreach ($possible_paths as $path) {
+            $normalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+            $exists = file_exists($normalized) ? 'existe' : 'no existe';
+            error_log("   - $normalized ($exists)");
+        }
+        return null;
+    }
+    
+    /**
      * Enviar email de aprobación de reserva
      */
     public function sendReservaAprobada($reserva) {
         $subject = "✅ Reserva Aprobada - My Suite in Cartagena #" . $reserva['id_reserva'];
         
-        // Ruta de la imagen del hotel
-        $hotel_image_path = __DIR__ . '/../../assets/shared/HOTEL_CARTAGENA_silueta[1].png';
+        // Obtener ruta de la imagen del hotel de forma robusta
+        $hotel_image_path = $this->getHotelImagePath();
         
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
@@ -164,8 +275,8 @@ class GmailSender {
     public function sendReservaRechazada($reserva_rechazada, $reserva_aprobada) {
         $subject = "⚠️ Reserva No Disponible - My Suite in Cartagena #" . $reserva_rechazada['id_reserva'];
         
-        // Ruta de la imagen del hotel
-        $hotel_image_path = __DIR__ . '/../../assets/shared/HOTEL_CARTAGENA_silueta[1].png';
+        // Obtener ruta de la imagen del hotel de forma robusta
+        $hotel_image_path = $this->getHotelImagePath();
         
         $fecha_entrada_rechazada = date('d/m/Y', strtotime($reserva_rechazada['fecha_entrada']));
         $fecha_salida_rechazada = date('d/m/Y', strtotime($reserva_rechazada['fecha_salida']));
