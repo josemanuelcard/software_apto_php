@@ -5,10 +5,10 @@
  */
 
 class Database {
-    private $host = 'localhost:3306';
-    private $db_name = 'softwarePHP';
-    private $username = 'root';
-    private $password = '';
+    private $host = 'mysuiteincartagena.com.co';
+    private $db_name = 'mysgd5s3m2re_MySuiteBD';
+    private $username = 'mysgd5s3m2re';
+    private $password = 'MyS2.025InCartagena';
     private $conn;
 
     public function getConnection() {

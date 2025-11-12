@@ -14,10 +14,10 @@ require_once __DIR__ . '/../../../config/database.php';
 $database = new Database();
 $pdo = $database->getConnection();
 
-// Obtener descuentos actuales
+// Obtener descuentos actuales (excluyendo el descuento por vendedor)
 $descuentos = [];
 if ($pdo) {
-    $stmt = $pdo->query("SELECT * FROM descuentos_config ORDER BY tipo_descuento");
+    $stmt = $pdo->query("SELECT * FROM descuentos_config WHERE tipo_descuento != 'vendedor' ORDER BY tipo_descuento");
     $descuentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
@@ -321,7 +321,12 @@ if ($pdo) {
                             </div>
                             <div class="card-body">
                                 <form id="descuentosForm">
-                                    <?php foreach ($descuentos as $descuento): ?>
+                                    <?php foreach ($descuentos as $descuento): 
+                                        // Saltar el descuento por vendedor si existe
+                                        if (isset($descuento['tipo_descuento']) && $descuento['tipo_descuento'] === 'vendedor') {
+                                            continue;
+                                        }
+                                    ?>
                                         <div class="row mb-4">
                                             <div class="col-md-4">
                                                 <div class="card h-100">
@@ -334,7 +339,8 @@ if ($pdo) {
                                                                 'cumpleanos' => 'Descuento por Cumpleaños',
                                                                 'promocional' => 'Descuento por Pago en Efectivo'
                                                             ];
-                                                            echo $nombres[$descuento['tipo_descuento']];
+                                                            $tipo = isset($descuento['tipo_descuento']) ? $descuento['tipo_descuento'] : 'promocional';
+                                                            echo isset($nombres[$tipo]) ? $nombres[$tipo] : 'Descuento';
                                                             ?>
                                                         </h6>
                                                     </div>
@@ -443,21 +449,37 @@ if ($pdo) {
                                 <div class="mb-3">
                                     <h6><i class="fas fa-chart-line me-2"></i>Estadísticas Actuales</h6>
                                     <div class="row text-center">
+                                        <?php 
+                                        // Buscar cada tipo de descuento en el array
+                                        $fidelidad = null;
+                                        $cumpleanos = null;
+                                        $promocional = null;
+                                        
+                                        foreach ($descuentos as $desc) {
+                                            if ($desc['tipo_descuento'] === 'fidelidad') {
+                                                $fidelidad = $desc;
+                                            } elseif ($desc['tipo_descuento'] === 'cumpleanos') {
+                                                $cumpleanos = $desc;
+                                            } elseif ($desc['tipo_descuento'] === 'promocional') {
+                                                $promocional = $desc;
+                                            }
+                                        }
+                                        ?>
                                         <div class="col-4">
                                             <div class="border rounded p-2">
-                                                <h5 class="text-success mb-0"><?php echo $descuentos[0]['porcentaje']; ?>%</h5>
+                                                <h5 class="text-success mb-0"><?php echo $fidelidad ? $fidelidad['porcentaje'] : '0'; ?>%</h5>
                                                 <small class="text-muted">Fidelidad</small>
                                             </div>
                                         </div>
                                         <div class="col-4">
                                             <div class="border rounded p-2">
-                                                <h5 class="text-warning mb-0"><?php echo $descuentos[1]['porcentaje']; ?>%</h5>
+                                                <h5 class="text-warning mb-0"><?php echo $cumpleanos ? $cumpleanos['porcentaje'] : '0'; ?>%</h5>
                                                 <small class="text-muted">Cumpleaños</small>
                                             </div>
                                         </div>
                                         <div class="col-4">
                                             <div class="border rounded p-2">
-                                                <h5 class="text-primary mb-0"><?php echo $descuentos[2]['porcentaje']; ?>%</h5>
+                                                <h5 class="text-primary mb-0"><?php echo $promocional ? $promocional['porcentaje'] : '0'; ?>%</h5>
                                                 <small class="text-muted">Efectivo</small>
                                             </div>
                                         </div>
