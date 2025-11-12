@@ -518,33 +518,40 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                             <label for="celular"><?php echo __('form.phone'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <img src="<?php echo I18n::sharedAsset('receptor-de-telefono.webp'); ?>" alt="teléfono" style="width: 24px; height: 24px; flex-shrink: 0;">
-                                <select id="codigoPais" name="codigoPais" class="form-control" style="width: auto; min-width: 80px; flex-shrink: 0;" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?>>
-                                    <option value="+57" selected>+57</option>
-                                    <option value="+56">+56</option>
-                                    <option value="+1">+1</option>
-                                    <option value="+52">+52</option>
-                                    <option value="+51">+51</option>
-                                    <option value="+54">+54</option>
-                                    <option value="+55">+55</option>
-                                    <option value="+34">+34</option>
-                                    <option value="+39">+39</option>
-                                    <option value="+33">+33</option>
-                                    <option value="+44">+44</option>
-                                    <option value="+49">+49</option>
-                                    <option value="+86">+86</option>
-                                    <option value="+81">+81</option>
-                                    <option value="+91">+91</option>
-                                </select>
-                                <input type="tel" class="form-control" id="celular" name="celular" placeholder="3001234567" pattern="[0-9]*" inputmode="numeric" maxlength="15" value="<?php echo $user_data ? htmlspecialchars($user_data['telefono']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                                <?php
+                                $codigoPaisValue = '+57';
+                                $celularValue = '';
+                                if ($user_data && isset($user_data['telefono']) && $user_data['telefono']) {
+                                    $telefono = trim($user_data['telefono']);
+                                    // Intentar extraer código de país (formato: +57 3001234567 o +573001234567)
+                                    if (preg_match('/^(\+\d{1,4})\s*(.+)$/', $telefono, $matches)) {
+                                        $codigoPaisValue = $matches[1];
+                                        $celularValue = $matches[2];
+                                    } elseif (preg_match('/^(\+\d{1,4})(\d+)$/', $telefono, $matches)) {
+                                        $codigoPaisValue = $matches[1];
+                                        $celularValue = $matches[2];
+                                    } elseif (preg_match('/^\+?\d+/', $telefono, $matches)) {
+                                        $codigoPaisValue = $matches[0];
+                                        $celularValue = preg_replace('/^\+?\d+/', '', $telefono);
+                                    } else {
+                                        $celularValue = $telefono;
+                                    }
+                                }
+                                ?>
+                                <input type="text" id="codigoPais" name="codigoPais" class="form-control" placeholder="+57" style="width: 60px; flex-shrink: 0; maxlength: 5; padding: 10px 5px;" value="<?php echo htmlspecialchars($codigoPaisValue); ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                                <input type="tel" class="form-control" id="celular" name="celular" placeholder="3001234567" pattern="[0-9]*" inputmode="numeric" maxlength="15" value="<?php echo htmlspecialchars($celularValue); ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
                             </div>
                             <span class="error-message" id="celularError"></span>
                         </div>
                         
                         <div class="input-group-ihg">
-                            <label for="fechaNacimiento"><?php echo __('form.birthday'); ?></label>
-                            <div style="display: flex; align-items: center; gap: 10px;">
+                            <label for="fechaNacimiento"><?php echo __('form.birthday'); ?> *</label>
+                            <div style="display: flex; align-items: center; gap: 10px; position: relative; flex: 1;">
                                 <img src="https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png" alt="calendario" style="width: 24px; height: 24px; flex-shrink: 0; opacity: 0.7;">
-                                <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" placeholder="Fecha de Nacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?>>
+                                <div style="position: relative; flex: 1;">
+                                    <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : 'required'; ?> style="position: relative; z-index: 0;">
+                                    <span class="date-placeholder" id="fechaNacimientoPlaceholder" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; pointer-events: none; font-family: 'Oxygen', sans-serif; z-index: 2; white-space: nowrap; background: transparent; <?php echo ($user_data && $user_data['fecha_nacimiento']) ? 'opacity: 0; visibility: hidden;' : 'opacity: 1; visibility: visible;'; ?>"><?php echo __('form.birthday_placeholder'); ?></span>
+                                </div>
                             </div>
                             <span class="error-message" id="fechaNacimientoError"></span>
                         </div>
@@ -736,8 +743,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         </div>
                         
                         <div class="form-check mt-3">
-                            <input class="form-check-input" type="checkbox" id="aceptaPolitica" name="aceptaPolitica" required>
-                            <label class="form-check-label" for="aceptaPolitica">
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-link p-0 text-primary" id="btnLeerTerminos" style="text-decoration: underline; font-size: 0.95rem; border: none; background: none; cursor: pointer;">
+                                    📄 <?php echo __('form.read_terms'); ?>
+                                </button>
+                                <span class="text-muted" id="terminosStatus" style="font-size: 0.85rem; margin-left: 10px;">
+                                    <i class="fa fa-times-circle text-danger"></i> <?php echo __('form.terms_not_read'); ?>
+                                </span>
+                            </div>
+                            <input class="form-check-input" type="checkbox" id="aceptaPolitica" name="aceptaPolitica" required disabled>
+                            <label class="form-check-label" for="aceptaPolitica" style="cursor: not-allowed; opacity: 0.6;">
                                 <?php echo __('form.accept_policy'); ?> *
                             </label>
                             <span class="error-message" id="aceptaPoliticaError"></span>
@@ -752,6 +767,41 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancelReservation" data-bs-dismiss="modal"><?php echo __('form.cancel'); ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Términos y Condiciones - Pantalla Completa -->
+<div class="modal fade" id="terminosModal" tabindex="-1" aria-labelledby="terminosModalLabel" aria-hidden="true" style="z-index: 10003;">
+    <div class="modal-dialog modal-fullscreen" style="margin: 0; width: 100%; max-width: 100%; height: 100vh; max-height: 100vh;">
+        <div class="modal-content" style="border-radius: 0; border: none; box-shadow: none; display: flex; flex-direction: column; height: 100vh; max-height: 100vh; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 0; flex-shrink: 0; padding: 1.25rem; border-bottom: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 15px;">
+                <img src="<?php echo I18n::sharedAsset('HOTEL_CARTAGENA_silueta[1].png'); ?>" alt="My Suite In Cartagena" style="height: 50px; width: auto; object-fit: contain;">
+                <h5 class="modal-title" id="terminosModalLabel" style="font-weight: 600; font-size: 1.5rem; margin: 0; flex: 1;">
+                    <i class="fa fa-file-text-o" style="margin-right: 8px;"></i><?php echo __('form.terms_and_conditions'); ?>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="closeTerminosModal" style="opacity: 0.9; font-size: 1.2rem;"></button>
+            </div>
+            <div class="modal-body" style="flex: 1 1 auto; overflow-y: auto; padding: 30px; background: #fff; position: relative; min-height: 0;">
+                <div id="terminosContent" style="line-height: 1.8; color: #333; font-size: 1rem; max-width: 900px; margin: 0 auto;">
+                    <!-- El contenido de términos y condiciones se cargará aquí -->
+                </div>
+            </div>
+            <div class="modal-footer" style="flex-shrink: 0; border-top: 2px solid #e9ecef; padding: 1.5rem; background: #f8f9fa; border-radius: 0;">
+                <div class="w-100" style="max-width: 900px; margin: 0 auto;">
+                    <div class="progress mb-3" style="height: 10px; border-radius: 5px; background: #e9ecef;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="readingProgress" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span id="readingStatus" class="text-muted" style="font-size: 1rem; flex: 1;">
+                            <i class="fa fa-info-circle"></i> <span id="readingStatusText"><?php echo __('form.please_read_document'); ?></span>
+                        </span>
+                        <button type="button" class="btn btn-primary btn-lg" id="btnAceptarTerminos" style="min-width: 250px; font-weight: 600; padding: 0.875rem 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3); font-size: 1.1rem; cursor: not-allowed; opacity: 0.6;" disabled>
+                            <i class="fa fa-check-circle"></i> <?php echo __('form.accept_terms_button'); ?>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2383,9 +2433,21 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			border: 1px solid #e1e5e9 !important;
 		}
 		.legend-color.occupied { 
-			background: #ffffff !important;
-			border: 1px solid #e1e5e9 !important;
-			opacity: 0.5;
+			background: transparent !important;
+			border: none !important;
+			opacity: 1;
+			position: relative;
+		}
+		.legend-color.occupied::after {
+			content: '';
+			position: absolute;
+			top: 50%;
+			left: 0;
+			right: 0;
+			height: 2px;
+			background: #dc3545;
+			transform: translateY(-50%);
+			z-index: 10;
 		}
 		.legend-color.checkin { 
 			background: #ffffff !important;
@@ -2718,11 +2780,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			box-shadow: none !important;
 		}
 		
-		#reserveBtn:hover:not(:disabled) {
-			background: transparent !important;
-			border-bottom: 3px solid #333 !important;
+		#reserveBtn:not(:disabled) {
+			background-color: #FFE082 !important;
+			border-bottom: 3px solid #FFC107 !important;
 			color: #333 !important;
-			transform: none !important;
+			cursor: pointer;
+		}
+		
+		#reserveBtn:hover:not(:disabled) {
+			background-color: #FFD54F !important;
+			border-bottom: 3px solid #FFC107 !important;
+			color: #333 !important;
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 			font-weight: 700 !important;
 		}
 		
@@ -2983,6 +3053,44 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			pointer-events: none !important;
 		}
 		
+		/* Placeholder para fecha de nacimiento */
+		.date-placeholder {
+			transition: opacity 0.2s ease, visibility 0.2s ease;
+			user-select: none;
+		}
+		
+		/* Mostrar placeholder cuando el campo está vacío */
+		#reservationModal input[type="date"]:empty + .date-placeholder,
+		#reservationModal input[type="date"]:not([value]) + .date-placeholder,
+		#reservationModal input[type="date"][value=""] + .date-placeholder {
+			opacity: 1 !important;
+			visibility: visible !important;
+		}
+		
+		/* Ocultar placeholder cuando tiene valor o está en focus */
+		#reservationModal input[type="date"].has-value + .date-placeholder,
+		#reservationModal input[type="date"]:focus + .date-placeholder,
+		#reservationModal input[type="date"][value]:not([value=""]) + .date-placeholder {
+			opacity: 0 !important;
+			visibility: hidden !important;
+		}
+		
+		/* Asegurar que el input date tenga el mismo estilo que otros inputs */
+		#reservationModal input[type="date"].form-control {
+			color: transparent !important;
+			padding-left: 0 !important;
+		}
+		
+		#reservationModal input[type="date"].form-control:focus,
+		#reservationModal input[type="date"].form-control.has-value {
+			color: #333 !important;
+		}
+		
+		/* Asegurar que el placeholder sea visible */
+		#reservationModal #fechaNacimientoPlaceholder {
+			display: block !important;
+		}
+		
 		/* Estilos para select y textarea - línea única */
 		#reservationModal select.form-control,
 		#reservationModal select,
@@ -2995,6 +3103,18 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			background-color: transparent !important;
 			padding: 10px 0 !important;
 			box-shadow: none !important;
+			cursor: default !important;
+		}
+		
+		/* Estilos específicos para selects de adultos y niños - cursor normal */
+		#reservationModal #adultos,
+		#reservationModal #ninos {
+			cursor: default !important;
+		}
+		
+		#reservationModal #adultos:hover,
+		#reservationModal #ninos:hover {
+			cursor: default !important;
 		}
 		
 		#reservationModal select.form-control:focus,
@@ -3007,17 +3127,26 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			box-shadow: none !important;
 		}
 		
-		/* Estilo específico para el selector de código de país */
+		/* Estilo específico para el input de código de país */
 		#reservationModal #codigoPais {
 			border-bottom: 1px solid #e1e5e9 !important;
-			padding: 10px 5px !important;
-			font-size: 16px;
-			cursor: pointer;
+			padding: 10px 3px !important;
+			font-size: 15px;
+			cursor: text;
+			text-align: center;
+			width: 60px !important;
+			min-width: 60px !important;
+			max-width: 60px !important;
 		}
 		
 		#reservationModal #codigoPais:focus {
 			border-bottom: 1px solid #333 !important;
 			outline: none !important;
+		}
+		
+		#reservationModal #codigoPais::placeholder {
+			color: #999;
+			opacity: 0.7;
 		}
 		
 		/* Estilos para form-check */
@@ -4199,7 +4328,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		// Cargar tarifas basándose en el mes visible actual del calendario
 		function loadTarifas() {
-			console.log('=== LOAD TARIFAS ===');
 			// Calcular rango basado en el mes visible (currentDate) + meses adyacentes
 			const year = currentDate.getFullYear();
 			const month = currentDate.getMonth();
@@ -4212,20 +4340,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
 			const fechaFinStr = fechaFin.toISOString().split('T')[0];
 			
-			console.log('Cargando tarifas desde', fechaInicioStr, 'hasta', fechaFinStr);
-			
 			// Renderizar calendario inmediatamente sin esperar las tarifas
-			console.log('Renderizando calendario inmediatamente...');
 			renderCalendar();
 			
 			// Cargar tarifas en segundo plano
 			fetch(`../app/api/admin/get_tarifas_range.php?fecha_inicio=${fechaInicioStr}&fecha_fin=${fechaFinStr}&apartamento_id=1`)
 				.then(response => {
-					console.log('Respuesta recibida:', response);
 					return response.json();
 				})
 				.then(data => {
-					console.log('Datos de tarifas:', data);
 					if (data.success && data.tarifas) {
 						// Limpiar cache para el rango de fechas que se está cargando
 						// y luego actualizar con las nuevas tarifas (esto sobrescribe valores antiguos)
@@ -4239,23 +4362,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 							// Guardar el precio incluso si es 0 (0 es un valor válido)
 							tarifasCache[fecha] = typeof precio === 'number' ? precio : parseFloat(precio) || 0;
 						});
-						console.log('Tarifas cargadas:', Object.keys(data.tarifas).length, 'fechas');
-						console.log('Cache actualizado. Total en cache:', Object.keys(tarifasCache).length, 'fechas');
-						// Verificar precios 0 en el cache
-						const preciosCero = Object.keys(tarifasCache).filter(fecha => tarifasCache[fecha] === 0);
-						if (preciosCero.length > 0) {
-							console.log('Precios en 0 encontrados:', preciosCero);
-						}
 						// Re-renderizar calendario con precios actualizados
 						renderCalendar();
 					} else {
-						console.error('Error al cargar tarifas:', data.message);
 						// Renderizar calendario de todas formas aunque falle la carga de tarifas
 						renderCalendar();
 					}
 				})
 				.catch(error => {
-					console.error('Error al cargar tarifas:', error);
 					// Renderizar calendario de todas formas aunque falle la carga de tarifas
 					renderCalendar();
 				});
@@ -4264,29 +4378,17 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		// Inicializar calendario
 		function initCalendar() {
-			console.log('=== INIT CALENDAR ===');
-			console.log('Inicializando calendario...');
-			
 			// Verificar que el elemento del calendario existe
 			const calendar = document.getElementById('calendar');
 			if (!calendar) {
-				console.error('ERROR: Elemento calendar no encontrado en el DOM');
-				console.error('Intentando de nuevo en 500ms...');
 				setTimeout(initCalendar, 500);
 				return;
 			}
 			
-			console.log('✅ Elemento calendar encontrado:', calendar);
-			
 			// Verificar que translations existe
 			if (!translations) {
-				console.error('ERROR: translations no está definido');
 				return;
 			}
-			
-			console.log('✅ translations existe:', translations);
-			console.log('✅ translations.months:', translations.months);
-			console.log('✅ translations.days:', translations.days);
 			
 			// Reiniciar variables globales
 			currentDate = new Date();
@@ -4299,16 +4401,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Resetear flag de event listeners para permitir reconfiguración
 			eventListenersSetup = false;
 			
-			console.log('Fechas ocupadas:', occupiedDates);
-			console.log('currentDate:', currentDate);
-			
 			// Cargar tarifas primero (loadTarifas() ya llama a renderCalendar())
-			console.log('Llamando a loadTarifas()...');
 			loadTarifas();
 			
-			console.log('Configurando event listeners...');
 			setupEventListeners();
-			console.log('✅ Calendario inicializado correctamente');
 		}
 		
 		
@@ -4319,26 +4415,18 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				const monthDisplay = document.getElementById('currentMonth');
 				
 				if (!calendar) {
-					console.error('Elemento calendar no encontrado en renderCalendar');
 					return;
 				}
 				
 				if (!monthDisplay) {
-					console.error('Elemento currentMonth no encontrado en renderCalendar');
 					return;
 				}
-				
-				console.log('Renderizando calendario...', calendar, monthDisplay);
-				console.log('Fecha actual:', currentDate);
-				console.log('Mes actual:', currentDate.getMonth());
-				console.log('Año actual:', currentDate.getFullYear());
 				
 				// Limpiar calendario
 				calendar.innerHTML = '';
 				
 				// Verificar que translations existe y tiene months
 				if (!translations || !translations.months) {
-					console.error('translations.months no está disponible:', translations);
 					return;
 				}
 				
@@ -4346,7 +4434,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				const monthNames = translations.months;
 				const monthText = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 				monthDisplay.textContent = monthText;
-				console.log('Month displayed:', monthText);
 				
 				// Grid fijo de 6 filas para mantener estructura consistente
 				calendar.style.gridTemplateRows = 'repeat(6, 1fr)';
@@ -4359,7 +4446,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				
 				// Verificar que translations.days existe
 				if (!translations.days) {
-					console.error('translations.days no está disponible:', translations);
 					return;
 				}
 				
@@ -4398,8 +4484,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					dayNumber.className = 'day-number';
 					dayNumber.textContent = day;
 					dayElement.appendChild(dayNumber);
-					
-					console.log('Día creado:', day, 'Elemento:', dayElement);
 					
 					// Verificar si es un día pasado
 					const today = new Date();
@@ -4456,8 +4540,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				// Aplicar estados de selección
 				updateSelectionStates();
 			} catch (error) {
-				console.error('Error en renderCalendar:', error);
-				console.error('Stack trace:', error.stack);
+				// Error silencioso
 			}
 		}
 		
@@ -4768,7 +4851,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				
 				newPrevBtn.addEventListener('click', (e) => {
 					e.preventDefault();
-					console.log('Botón anterior clickeado');
 					const year = currentDate.getFullYear();
 					const month = currentDate.getMonth();
 					
@@ -4783,8 +4865,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					
 					// Crear nueva fecha
 					currentDate = new Date(newYear, newMonth, 1);
-					console.log('Nueva fecha (anterior):', currentDate);
-					console.log('Mes:', currentDate.getMonth(), 'Año:', currentDate.getFullYear());
 					
 					// Recargar tarifas para el nuevo mes visible
 					loadTarifas();
@@ -4798,7 +4878,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				
 				newNextBtn.addEventListener('click', (e) => {
 					e.preventDefault();
-					console.log('Botón siguiente clickeado');
 					const year = currentDate.getFullYear();
 					const month = currentDate.getMonth();
 					
@@ -4813,8 +4892,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					
 					// Crear nueva fecha
 					currentDate = new Date(newYear, newMonth, 1);
-					console.log('Nueva fecha (siguiente):', currentDate);
-					console.log('Mes:', currentDate.getMonth(), 'Año:', currentDate.getFullYear());
 					
 					// Recargar tarifas para el nuevo mes visible
 					loadTarifas();
@@ -4835,7 +4912,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 						
 						// Si el clic fue fuera del calendario y no es navegación
 						if (!isClickInsideCalendar && !isNavigationClick) {
-							console.log('Click outside calendar - deselecting check-in');
 							clearSelection();
 							updateReservationSummary();
 						}
@@ -4913,7 +4989,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Botón de reserva
 			const reserveBtn = document.getElementById('reserveBtn');
 			if (reserveBtn) {
-				console.log('Botón reserveBtn encontrado, agregando listener...');
 				// Remover listener anterior si existe (usando cloneNode para limpiar)
 				const newReserveBtn = reserveBtn.cloneNode(true);
 				reserveBtn.parentNode.replaceChild(newReserveBtn, reserveBtn);
@@ -4922,27 +4997,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				newReserveBtn.addEventListener('mousedown', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
-					console.log('=== CLICK EN BOTÓN RESERVAR AHORA (mousedown) ===');
-					console.log('Botón disabled?', newReserveBtn.disabled);
-					console.log('selectedStartDate:', selectedStartDate);
-					console.log('selectedEndDate:', selectedEndDate);
 					
 					// Si está deshabilitado, no hacer nada
 					if (newReserveBtn.disabled) {
-						console.log('Botón deshabilitado, ignorando click');
 						return;
 					}
 					
 					if (selectedStartDate && selectedEndDate) {
-						console.log('✅ Fechas válidas, llamando openReservationModal...');
 						try {
 							openReservationModal();
 						} catch (error) {
-							console.error('❌ Error al abrir modal:', error);
 							alert('Error al abrir el formulario. Por favor recarga la página.');
 						}
 					} else {
-						console.log('❌ No hay fechas seleccionadas');
 						alert('Por favor selecciona las fechas de check-in y check-out en el calendario.');
 					}
 				});
@@ -4951,24 +5018,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				newReserveBtn.addEventListener('click', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
-					console.log('=== CLICK EN BOTÓN RESERVAR AHORA (click) ===');
 					
 					// Si está deshabilitado, no hacer nada
 					if (newReserveBtn.disabled) {
-						console.log('Botón deshabilitado, ignorando click');
 						return;
 					}
 					
 					if (selectedStartDate && selectedEndDate) {
-						console.log('✅ Fechas válidas, llamando openReservationModal...');
 						try {
 							openReservationModal();
 						} catch (error) {
-							console.error('❌ Error al abrir modal:', error);
 							alert('Error al abrir el formulario. Por favor recarga la página.');
 						}
 					} else {
-						console.log('❌ No hay fechas seleccionadas');
 						alert('Por favor selecciona las fechas de check-in y check-out en el calendario.');
 					}
 				});
@@ -4977,15 +5039,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				newReserveBtn.onclick = function(e) {
 					e.preventDefault();
 					e.stopPropagation();
-					console.log('onclick handler ejecutado');
 					if (selectedStartDate && selectedEndDate) {
 						openReservationModal();
 					}
 				};
-				
-				console.log('✅ Listener agregado al botón reserveBtn');
-			} else {
-				console.error('❌ Botón reserveBtn NO encontrado en el DOM');
 			}
 			
 			// Modal de reserva - Botón final de envío
@@ -5065,49 +5122,505 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				});
 			});
 			
-			// Fecha de nacimiento - actualizar descuento por cumpleaños
-			document.getElementById('fechaNacimiento').addEventListener('change', () => {
-				updateModalCostSummary();
-			});
+			// Fecha de nacimiento - actualizar descuento por cumpleaños y manejar placeholder
+			const fechaNacimientoInput = document.getElementById('fechaNacimiento');
+			const fechaNacimientoPlaceholder = document.getElementById('fechaNacimientoPlaceholder');
+			
+			// Función para mostrar/ocultar placeholder
+			function toggleFechaPlaceholder() {
+				if (fechaNacimientoInput && fechaNacimientoPlaceholder) {
+					const hasValue = fechaNacimientoInput.value && fechaNacimientoInput.value.trim() !== '';
+					
+					if (hasValue) {
+						fechaNacimientoPlaceholder.style.opacity = '0';
+						fechaNacimientoPlaceholder.style.visibility = 'hidden';
+						fechaNacimientoInput.classList.add('has-value');
+						fechaNacimientoInput.style.color = '#333';
+					} else {
+						fechaNacimientoPlaceholder.style.opacity = '1';
+						fechaNacimientoPlaceholder.style.visibility = 'visible';
+						fechaNacimientoInput.classList.remove('has-value');
+						fechaNacimientoInput.style.color = 'transparent';
+					}
+				}
+			}
+			
+			// Función para inicializar el placeholder de fecha de nacimiento
+			function initFechaPlaceholder() {
+				const fechaInput = document.getElementById('fechaNacimiento');
+				const fechaPlaceholder = document.getElementById('fechaNacimientoPlaceholder');
+				
+				if (fechaInput && fechaPlaceholder) {
+					toggleFechaPlaceholder();
+				}
+			}
+			
+			// Verificar estado inicial al cargar
+			if (fechaNacimientoInput && fechaNacimientoPlaceholder) {
+				// Esperar a que el DOM esté completamente cargado
+				setTimeout(() => {
+					initFechaPlaceholder();
+				}, 100);
+				
+				// Ocultar placeholder al hacer focus
+				fechaNacimientoInput.addEventListener('focus', () => {
+					if (fechaNacimientoPlaceholder) {
+						fechaNacimientoPlaceholder.style.opacity = '0';
+						fechaNacimientoPlaceholder.style.visibility = 'hidden';
+						fechaNacimientoInput.style.color = '#333';
+					}
+				});
+				
+				// Mostrar/ocultar placeholder al cambiar valor
+				fechaNacimientoInput.addEventListener('change', () => {
+					updateModalCostSummary();
+					toggleFechaPlaceholder();
+				});
+				
+				// Mostrar placeholder si está vacío al perder focus
+				fechaNacimientoInput.addEventListener('blur', () => {
+					toggleFechaPlaceholder();
+				});
+				
+				// También escuchar el evento input para detectar cambios inmediatos
+				fechaNacimientoInput.addEventListener('input', () => {
+					toggleFechaPlaceholder();
+				});
+			}
+			
+			// Hacer la función accesible globalmente para inicializar cuando se abre el modal
+			window.initFechaPlaceholder = initFechaPlaceholder;
+			
+			// ==========================================================
+			// FUNCIONALIDAD DE TÉRMINOS Y CONDICIONES
+			// ==========================================================
+			let terminosLeidos = false;
+			let scrollCheckInterval = null;
+			let readingTimer = null;
+			
+			// Contenido de términos y condiciones
+			const terminosHTML = `
+				<div style="padding: 25px; max-width: 800px; margin: 0 auto;">
+					<div style="text-align: center; margin-bottom: 30px;">
+						<h2 style="color: #1e3c72; margin-bottom: 10px; font-size: 1.8rem;">MY SUITE IN CARTAGENA</h2>
+						<p style="color: #666; font-size: 0.95rem; margin: 0;">Autorización para el Tratamiento de Datos Personales</p>
+					</div>
+					
+					<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #1e3c72;">
+						<p style="line-height: 1.8; color: #333; margin: 0; text-align: justify;">
+							Dando cumplimiento a lo dispuesto en la <strong>Ley 1581 de 2012</strong>, "Por el cual se dictan disposiciones generales para la protección de datos personales" y de conformidad con lo señalado en el <strong>Decreto 1377 de 2013</strong>, con la firma de este documento manifiesto que he sido informado por <strong>My Suite In Cartagena (MSIC)</strong> de lo siguiente:
+						</p>
+					</div>
+					
+					<ol style="line-height: 1.9; color: #333; padding-left: 25px; margin: 0;">
+						<li style="margin-bottom: 18px; text-align: justify;">
+							<strong>MSIC</strong> actuará como <strong>Responsable del Tratamiento</strong> de datos personales de los cuales soy titular y que, conjunta o separadamente podrá recolectar, usar y tratar mis datos personales conforme la <strong>Política de Tratamiento de Datos Personales MSIC</strong> disponible en página web de la entidad.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Que me ha sido informada la(s) finalidad(es) de la recolección de los datos personales, la cual consiste en: <strong>NOMBRE COMPLETO, CORREO ELECTRÓNICO, NÚMERO DE TELÉFONO CELULAR Y FECHA DE NACIMIENTO</strong>.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Es de carácter <strong>facultativo o voluntario</strong> responder preguntas que versen sobre Datos Sensibles o sobre menores de edad.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Mis derechos como titular de los datos son los previstos en la Constitución y la ley, especialmente el derecho a <strong>conocer, actualizar, rectificar y suprimir</strong> mi información personal, así como el derecho a <strong>revocar el consentimiento</strong> otorgado para el tratamiento de datos personales.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Los derechos pueden ser ejercidos a través de los canales dispuestos por <strong>MSIC</strong> y observando la <strong>Política de Tratamiento de Datos Personales de MSIC</strong>.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Mediante la página web de la entidad <strong>(www.mysuiteincartagena.com.co)</strong>, podré radicar cualquier tipo de requerimiento relacionado con el tratamiento de mis datos personales.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							<strong>MSIC</strong> garantizará la <strong>confidencialidad, libertad, seguridad, veracidad, transparencia, acceso y circulación restringida</strong> de mis datos y se reservará el derecho de modificar su Política de Tratamiento de Datos Personales en cualquier momento. Cualquier cambio será informado y publicado oportunamente en la página web.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							Teniendo en cuenta lo anterior, <strong>autorizo de manera voluntaria, previa, explícita, informada e inequívoca a MSIC</strong> para tratar mis datos personales de acuerdo con su Política de Tratamiento de Datos Personales para los fines relacionados con su objeto y en especial para fines legales, contractuales, misionales descritos en la <strong>Política de Tratamiento de Datos Personales MSIC</strong>.
+						</li>
+						
+						<li style="margin-bottom: 18px; text-align: justify;">
+							La información obtenida para el Tratamiento de mis datos personales la he suministrado de forma <strong>voluntaria y es verídica</strong>.
+						</li>
+					</ol>
+					
+					<div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e9ecef; text-align: center;">
+						<p style="color: #666; font-size: 0.9rem; margin: 0;">
+							<strong>My Suite In Cartagena</strong><br>
+							www.mysuiteincartagena.com.co
+						</p>
+					</div>
+				</div>
+			`;
+			
+			// Referencias a elementos del modal
+			const btnLeerTerminos = document.getElementById('btnLeerTerminos');
+			const terminosModal = document.getElementById('terminosModal');
+			const terminosContent = document.getElementById('terminosContent');
+			const btnAceptarTerminos = document.getElementById('btnAceptarTerminos');
+			const aceptaPoliticaCheckbox = document.getElementById('aceptaPolitica');
+			const terminosStatus = document.getElementById('terminosStatus');
+			const readingProgress = document.getElementById('readingProgress');
+			const readingStatus = document.getElementById('readingStatus');
+			
+			// Abrir modal de términos y condiciones
+			if (btnLeerTerminos && terminosModal) {
+				btnLeerTerminos.addEventListener('click', function() {
+					// Cargar el contenido
+					if (terminosContent) {
+						terminosContent.innerHTML = terminosHTML;
+					}
+					
+					// Abrir modal con Bootstrap
+					if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+						const modal = new bootstrap.Modal(terminosModal);
+						modal.show();
+						
+						// Iniciar tracking después de que el modal se muestre
+						terminosModal.addEventListener('shown.bs.modal', function() {
+							setTimeout(() => {
+								startReadingTracking();
+							}, 100);
+						}, { once: true });
+					} else if (typeof $ !== 'undefined' && $.fn.modal) {
+						$(terminosModal).modal('show');
+						$(terminosModal).on('shown.bs.modal', function() {
+							setTimeout(() => {
+								startReadingTracking();
+							}, 100);
+						});
+					}
+				});
+			}
+			
+			// Función para rastrear la lectura del documento
+			function startReadingTracking() {
+				const modalBody = terminosModal ? terminosModal.querySelector('.modal-body') : null;
+				
+				if (!modalBody) {
+					setTimeout(() => startReadingTracking(), 300);
+					return;
+				}
+				
+				// Reiniciar estado
+				terminosLeidos = false;
+				if (btnAceptarTerminos) {
+					btnAceptarTerminos.disabled = true;
+					btnAceptarTerminos.style.opacity = '0.6';
+					btnAceptarTerminos.style.cursor = 'not-allowed';
+				}
+				if (readingProgress) {
+					readingProgress.style.width = '0%';
+				}
+				if (readingStatus) {
+					readingStatus.innerHTML = '<i class="fa fa-info-circle"></i> <span id="readingStatusText"><?php echo __('form.please_read_document'); ?></span>';
+					readingStatus.classList.remove('text-success');
+					readingStatus.classList.add('text-muted');
+				}
+				
+				// Función para verificar scroll
+				function checkScrollProgress() {
+					if (terminosLeidos) return;
+					
+					const scrollTop = modalBody.scrollTop || 0;
+					const scrollHeight = modalBody.scrollHeight || 0;
+					const clientHeight = modalBody.clientHeight || 0;
+					
+					if (scrollHeight > clientHeight) {
+						const porcentajeScroll = Math.min(((scrollTop + clientHeight) / scrollHeight) * 100, 100);
+						
+						if (readingProgress) {
+							readingProgress.style.width = porcentajeScroll + '%';
+						}
+						
+						// Habilitar botón si ha scrolleado al 50% o más
+						if (porcentajeScroll >= 50 && !terminosLeidos) {
+							enableAcceptButton();
+							if (scrollCheckInterval) {
+								clearInterval(scrollCheckInterval);
+								scrollCheckInterval = null;
+							}
+							return true;
+						}
+					} else {
+						// Si no hay scroll (contenido cabe en pantalla)
+						if (readingProgress) {
+							readingProgress.style.width = '100%';
+						}
+					}
+					return false;
+				}
+				
+				// Tiempo mínimo de lectura (3 segundos)
+				let tiempoLeido = 0;
+				const tiempoMinimo = 3000;
+				
+				// Verificar scroll periódicamente
+				scrollCheckInterval = setInterval(() => {
+					if (checkScrollProgress()) {
+						return;
+					}
+					
+					tiempoLeido += 200;
+					
+					// Si ha pasado el tiempo mínimo, habilitar
+					if (tiempoLeido >= tiempoMinimo && !terminosLeidos) {
+						const scrollTop = modalBody.scrollTop || 0;
+						const scrollHeight = modalBody.scrollHeight || 0;
+						const clientHeight = modalBody.clientHeight || 0;
+						
+						if (scrollTop > 20 || scrollHeight <= clientHeight) {
+							enableAcceptButton();
+							if (scrollCheckInterval) {
+								clearInterval(scrollCheckInterval);
+								scrollCheckInterval = null;
+							}
+						}
+					}
+				}, 200);
+				
+				// Listener de scroll en tiempo real
+				const scrollHandler = function() {
+					if (terminosLeidos) return;
+					
+					const scrollTop = modalBody.scrollTop || 0;
+					const scrollHeight = modalBody.scrollHeight || 0;
+					const clientHeight = modalBody.clientHeight || 0;
+					
+					if (scrollHeight > clientHeight) {
+						const porcentaje = Math.min(((scrollTop + clientHeight) / scrollHeight) * 100, 100);
+						
+						if (readingProgress) {
+							readingProgress.style.width = porcentaje + '%';
+						}
+						
+						if (porcentaje >= 50) {
+							enableAcceptButton();
+							if (scrollCheckInterval) {
+								clearInterval(scrollCheckInterval);
+								scrollCheckInterval = null;
+							}
+							modalBody.removeEventListener('scroll', scrollHandler);
+						}
+					}
+				};
+				
+				modalBody.addEventListener('scroll', scrollHandler, { passive: true });
+				
+				// Verificar inmediatamente
+				setTimeout(checkScrollProgress, 100);
+			}
+			
+			// Función para habilitar el botón de aceptar
+			function enableAcceptButton() {
+				if (terminosLeidos) return;
+				
+				terminosLeidos = true;
+				
+				const btn = document.getElementById('btnAceptarTerminos');
+				if (!btn) return;
+				
+				btn.disabled = false;
+				btn.removeAttribute('disabled');
+				btn.style.opacity = '1';
+				btn.style.cursor = 'pointer';
+				
+				if (readingProgress) {
+					readingProgress.style.width = '100%';
+				}
+				
+				if (readingStatus) {
+					const statusText = document.getElementById('readingStatusText');
+					if (statusText) {
+						statusText.textContent = '<?php echo __('form.document_read'); ?>';
+					}
+					readingStatus.innerHTML = '<i class="fa fa-check-circle text-success"></i> <?php echo __('form.document_read'); ?>';
+					readingStatus.classList.remove('text-muted');
+					readingStatus.classList.add('text-success');
+				}
+			}
+			
+			// Función para manejar la aceptación de términos
+			function handleAcceptTerms() {
+				if (!terminosLeidos) {
+					alert('Por favor, lee el documento completo antes de aceptar.');
+					return false;
+				}
+				
+				// Habilitar checkbox
+				if (aceptaPoliticaCheckbox) {
+					aceptaPoliticaCheckbox.disabled = false;
+					aceptaPoliticaCheckbox.checked = true;
+					aceptaPoliticaCheckbox.removeAttribute('disabled');
+					
+					// Disparar evento change
+					const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+					aceptaPoliticaCheckbox.dispatchEvent(changeEvent);
+				}
+				
+				// Actualizar estilo del label
+				const label = aceptaPoliticaCheckbox ? aceptaPoliticaCheckbox.nextElementSibling : null;
+				if (label) {
+					label.style.cursor = 'pointer';
+					label.style.opacity = '1';
+				}
+				
+				// Limpiar mensaje de error
+				const errorElement = document.getElementById('aceptaPoliticaError');
+				if (errorElement) {
+					errorElement.textContent = '';
+					errorElement.style.display = 'none';
+				}
+				
+				// Actualizar estado visual
+				if (terminosStatus) {
+					terminosStatus.innerHTML = '<i class="fa fa-check-circle text-success"></i> <?php echo __('form.terms_read'); ?>';
+					terminosStatus.classList.remove('text-muted', 'text-danger');
+					terminosStatus.classList.add('text-success');
+				}
+				
+				// Limpiar intervalos
+				if (scrollCheckInterval) {
+					clearInterval(scrollCheckInterval);
+					scrollCheckInterval = null;
+				}
+				if (readingTimer) {
+					clearInterval(readingTimer);
+					readingTimer = null;
+				}
+				
+				// Cerrar modal y restaurar scroll
+				setTimeout(() => {
+					if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+						const modal = bootstrap.Modal.getInstance(terminosModal);
+						if (modal) {
+							modal.hide();
+						}
+					} else if (typeof $ !== 'undefined' && $.fn.modal) {
+						$(terminosModal).modal('hide');
+					} else {
+						terminosModal.style.display = 'none';
+						terminosModal.classList.remove('show');
+					}
+					
+					// Restaurar el body completamente
+					document.body.classList.remove('modal-open');
+					document.body.style.overflow = '';
+					document.body.style.paddingRight = '';
+					
+					// Remover todos los backdrops que puedan existir
+					const backdrops = document.querySelectorAll('.modal-backdrop');
+					backdrops.forEach(backdrop => backdrop.remove());
+					
+					// Verificar que el checkbox esté correctamente marcado
+					setTimeout(() => {
+						if (aceptaPoliticaCheckbox && !aceptaPoliticaCheckbox.checked) {
+							aceptaPoliticaCheckbox.checked = true;
+							aceptaPoliticaCheckbox.disabled = false;
+						}
+						
+						// Asegurar que el formulario de reserva sea scrolleable
+						const reservationModal = document.getElementById('reservationModal');
+						if (reservationModal) {
+							reservationModal.style.overflow = '';
+							reservationModal.style.overflowY = 'auto';
+						}
+					}, 100);
+				}, 100);
+				
+				return true;
+			}
+			
+			// Botón aceptar términos - Event listeners
+			if (btnAceptarTerminos) {
+				btnAceptarTerminos.addEventListener('click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					handleAcceptTerms();
+					return false;
+				});
+			}
+			
+			// Limpiar cuando se cierra el modal sin aceptar
+			if (terminosModal) {
+				terminosModal.addEventListener('hidden.bs.modal', function() {
+					// Restaurar el body completamente
+					document.body.classList.remove('modal-open');
+					document.body.style.overflow = '';
+					document.body.style.paddingRight = '';
+					
+					// Remover todos los backdrops que puedan existir
+					const backdrops = document.querySelectorAll('.modal-backdrop');
+					backdrops.forEach(backdrop => {
+						if (backdrop.parentNode) {
+							backdrop.remove();
+						}
+					});
+					
+					if (scrollCheckInterval) {
+						clearInterval(scrollCheckInterval);
+						scrollCheckInterval = null;
+					}
+					if (readingTimer) {
+						clearInterval(readingTimer);
+						readingTimer = null;
+					}
+					// Reiniciar estado si no se aceptó
+					if (!aceptaPoliticaCheckbox || !aceptaPoliticaCheckbox.checked) {
+						terminosLeidos = false;
+					}
+					
+					// Asegurar que el formulario de reserva sea scrolleable
+					const reservationModal = document.getElementById('reservationModal');
+					if (reservationModal) {
+						reservationModal.style.overflow = '';
+						reservationModal.style.overflowY = 'auto';
+					}
+				});
+			}
+			// ==========================================================
+			// FIN FUNCIONALIDAD DE TÉRMINOS Y CONDICIONES
+			// ==========================================================
 			
 			// Agregar validación en tiempo real para el celular
 			const celularInput = document.getElementById('celular');
-			const codigoPaisSelect = document.getElementById('codigoPais');
+			const codigoPaisInput = document.getElementById('codigoPais');
 			
-			if (celularInput && codigoPaisSelect) {
-				// Validar cuando cambia el código de país
-				codigoPaisSelect.addEventListener('change', function() {
-					// Actualizar placeholder según el país
-					const codigo = this.value;
-					if (codigo === '+57') {
-						celularInput.placeholder = '3001234567';
-						celularInput.maxLength = 10;
-					} else if (codigo === '+56') {
-						celularInput.placeholder = '912345678';
-						celularInput.maxLength = 9;
-					} else if (codigo === '+1') {
-						celularInput.placeholder = '1234567890';
-						celularInput.maxLength = 10;
-					} else if (codigo === '+52') {
-						celularInput.placeholder = '5512345678';
-						celularInput.maxLength = 10;
-					} else if (codigo === '+51') {
-						celularInput.placeholder = '912345678';
-						celularInput.maxLength = 9;
-					} else if (codigo === '+54') {
-						celularInput.placeholder = '9112345678';
-						celularInput.maxLength = 10;
-					} else if (codigo === '+55') {
-						celularInput.placeholder = '11912345678';
-						celularInput.maxLength = 11;
+			if (celularInput && codigoPaisInput) {
+				// Validar formato del código de país (debe empezar con + y tener números)
+				codigoPaisInput.addEventListener('input', function() {
+					// Asegurar que empiece con +
+					if (this.value && !this.value.startsWith('+')) {
+						this.value = '+' + this.value.replace(/[^0-9]/g, '');
 					} else {
-						celularInput.placeholder = 'Número de teléfono';
-						celularInput.maxLength = 15;
+						// Solo permitir + y números
+						this.value = '+' + this.value.replace(/[^0-9]/g, '');
+					}
+					
+					// Limitar a 5 caracteres máximo (ej: +1234)
+					if (this.value.length > 5) {
+						this.value = this.value.substring(0, 5);
 					}
 					
 					// Limpiar error al cambiar código
 					document.getElementById('celularError').textContent = '';
 					celularInput.classList.remove('error');
+				});
+				
+				// Asegurar que el código de país tenga el formato correcto al perder focus
+				codigoPaisInput.addEventListener('blur', function() {
+					if (this.value && !this.value.startsWith('+')) {
+						this.value = '+' + this.value.replace(/[^0-9]/g, '');
+					}
+					if (!this.value || this.value === '+') {
+						this.value = '+57'; // Valor por defecto
+					}
 				});
 				
 				// Validar en tiempo real mientras se escribe
@@ -5233,77 +5746,47 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					document.getElementById('celular').classList.add('error');
 					isValid = false;
 				} else {
-					// Validar según el código de país
-					const codigoPais = document.getElementById('codigoPais').value;
-					const celularLimpio = celular.replace(/\D/g, ''); // Solo números
-					
-					// Validaciones por país
-					let esValido = false;
-					let mensajeError = '';
-					
-					if (codigoPais === '+57') { // Colombia
-						if (celularLimpio.length === 10) {
-							// Validar que empiece con 3 (celular colombiano)
-							if (celularLimpio.startsWith('3')) {
-								esValido = true;
-							} else {
-								mensajeError = 'El número de celular colombiano debe empezar con 3';
-							}
-						} else {
-							mensajeError = 'El número de celular colombiano debe tener 10 dígitos';
-						}
-					} else if (codigoPais === '+56') { // Chile
-						if (celularLimpio.length === 9) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de celular chileno debe tener 9 dígitos';
-						}
-					} else if (codigoPais === '+1') { // USA/Canadá
-						if (celularLimpio.length === 10) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de teléfono debe tener 10 dígitos';
-						}
-					} else if (codigoPais === '+52') { // México
-						if (celularLimpio.length === 10) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de celular mexicano debe tener 10 dígitos';
-						}
-					} else if (codigoPais === '+51') { // Perú
-						if (celularLimpio.length === 9) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de celular peruano debe tener 9 dígitos';
-						}
-					} else if (codigoPais === '+54') { // Argentina
-						if (celularLimpio.length === 10) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de celular argentino debe tener 10 dígitos';
-						}
-					} else if (codigoPais === '+55') { // Brasil
-						if (celularLimpio.length === 11) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número de celular brasileño debe tener 11 dígitos';
-						}
+					// Validar código de país
+					const codigoPais = document.getElementById('codigoPais').value.trim();
+					if (!codigoPais || !codigoPais.startsWith('+')) {
+						document.getElementById('celularError').textContent = 'El código de país debe empezar con +';
+						document.getElementById('codigoPais').classList.add('error');
+						isValid = false;
 					} else {
-						// Para otros países, validar que tenga entre 7 y 15 dígitos
-						if (celularLimpio.length >= 7 && celularLimpio.length <= 15) {
-							esValido = true;
-						} else {
-							mensajeError = 'El número debe tener entre 7 y 15 dígitos';
-						}
+						document.getElementById('codigoPais').classList.remove('error');
 					}
 					
-					if (!esValido) {
-						document.getElementById('celularError').textContent = mensajeError;
+					// Validar número de celular (debe tener entre 7 y 15 dígitos)
+					const celularLimpio = celular.replace(/\D/g, ''); // Solo números
+					if (celularLimpio.length < 7 || celularLimpio.length > 15) {
+						document.getElementById('celularError').textContent = 'El número de celular debe tener entre 7 y 15 dígitos';
 						document.getElementById('celular').classList.add('error');
 						isValid = false;
 					} else {
 						document.getElementById('celularError').textContent = '';
 						document.getElementById('celular').classList.remove('error');
+					}
+				}
+				
+				// Validar fecha de nacimiento
+				const fechaNacimiento = document.getElementById('fechaNacimiento').value;
+				if (!fechaNacimiento) {
+					document.getElementById('fechaNacimientoError').textContent = <?php echo json_encode(__('form.birthday_required')); ?>;
+					document.getElementById('fechaNacimiento').classList.add('error');
+					isValid = false;
+				} else {
+					// Validar que no sea una fecha futura
+					const fechaNac = new Date(fechaNacimiento);
+					const hoy = new Date();
+					hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+					
+					if (fechaNac > hoy) {
+						document.getElementById('fechaNacimientoError').textContent = <?php echo json_encode(__('form.birthday_invalid')); ?>;
+						document.getElementById('fechaNacimiento').classList.add('error');
+						isValid = false;
+					} else {
+						document.getElementById('fechaNacimientoError').textContent = '';
+						document.getElementById('fechaNacimiento').classList.remove('error');
 					}
 				}
 			} else if (sectionNumber === 2) {
@@ -5331,9 +5814,25 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				isValid = true;
 			} else if (sectionNumber === 5) {
 				// Validar términos y condiciones
-				const aceptaPolitica = document.getElementById('aceptaPolitica').checked;
-				if (!aceptaPolitica) {
-					document.getElementById('aceptaPoliticaError').textContent = 'Debes aceptar los términos y condiciones';
+				const aceptaPoliticaCheckbox = document.getElementById('aceptaPolitica');
+				if (aceptaPoliticaCheckbox) {
+					const aceptaPolitica = aceptaPoliticaCheckbox.checked && !aceptaPoliticaCheckbox.disabled;
+					if (!aceptaPolitica) {
+						const errorElement = document.getElementById('aceptaPoliticaError');
+						if (errorElement) {
+							errorElement.textContent = 'Debes leer y aceptar los términos y condiciones';
+							errorElement.style.display = 'block';
+						}
+						isValid = false;
+					} else {
+						// Limpiar error si está marcado
+						const errorElement = document.getElementById('aceptaPoliticaError');
+						if (errorElement) {
+							errorElement.textContent = '';
+							errorElement.style.display = 'none';
+						}
+					}
+				} else {
 					isValid = false;
 				}
 			}
@@ -5463,23 +5962,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		// Abrir modal de reserva
 		function openReservationModal() {
-			console.log('openReservationModal llamada');
-			console.log('Fechas seleccionadas:', selectedStartDate, selectedEndDate);
-			
 			// Verificar que el modal existe
 			const modalElement = document.getElementById('reservationModal');
 			if (!modalElement) {
-				console.error('Modal reservationModal no encontrado en el DOM');
 				alert('Error: No se pudo encontrar el formulario de reserva. Por favor recarga la página.');
 				return;
 			}
 			
-			console.log('Modal encontrado:', modalElement);
-			
 			// Resetear al primer paso
 			currentReservationSection = 1;
 			const formSections = document.querySelectorAll('#reservationModal .form-section');
-			console.log('Secciones encontradas:', formSections.length);
 			formSections.forEach((section, index) => {
 				section.classList.remove('active');
 				section.style.display = index === 0 ? 'block' : 'none';
@@ -5488,7 +5980,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			
 			// Resetear indicador de progreso
 			const progressSteps = document.querySelectorAll('#reservationModal .progress-step');
-			console.log('Pasos de progreso encontrados:', progressSteps.length);
 			progressSteps.forEach((step, index) => {
 				step.classList.remove('active', 'completed');
 				if (index === 0) {
@@ -5509,21 +6000,32 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Actualizar resumen de costos
 			updateModalCostSummary();
 			
-			// Mostrar modal - Múltiples métodos de compatibilidad
-			console.log('Intentando mostrar modal...');
+			// Inicializar placeholder de fecha de nacimiento cuando el modal se muestre
+			const initPlaceholderOnShow = () => {
+				setTimeout(() => {
+					if (window.initFechaPlaceholder) {
+						window.initFechaPlaceholder();
+					}
+				}, 300);
+			};
 			
+			// Agregar listener para cuando el modal se muestre completamente
+			if (modalElement) {
+				modalElement.addEventListener('shown.bs.modal', initPlaceholderOnShow, { once: true });
+			}
+			
+			// Mostrar modal - Múltiples métodos de compatibilidad
 			// Método 1: Bootstrap 5
 			if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-				console.log('Usando Bootstrap 5');
 				try {
 					const modal = new bootstrap.Modal(modalElement, {
 						backdrop: true,
 						keyboard: true
 					});
 					modal.show();
-					console.log('Modal mostrado con Bootstrap 5');
+					// También inicializar después de mostrar
+					initPlaceholderOnShow();
 				} catch (error) {
-					console.error('Error al mostrar modal con Bootstrap 5:', error);
 					// Fallback manual
 					modalElement.style.display = 'block';
 					modalElement.classList.add('show');
@@ -5555,7 +6057,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			}
 			// Método 2: Bootstrap 4 con jQuery
 			else if (typeof $ !== 'undefined' && $.fn.modal) {
-				console.log('Usando Bootstrap 4 con jQuery');
 				$(modalElement).modal('show');
 				
 				// Asegurar z-index después de que jQuery muestre el modal
@@ -5573,7 +6074,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			}
 			// Método 3: Fallback manual
 			else {
-				console.log('Usando fallback manual');
 				modalElement.style.display = 'block';
 				modalElement.classList.add('show');
 				document.body.classList.add('modal-open');
@@ -5630,7 +6130,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		// Actualizar resumen de costos en el modal
 		function updateModalCostSummary() {
 			if (!selectedStartDate || !selectedEndDate) {
-				console.log('No hay fechas seleccionadas para calcular costos');
 				return;
 			}
 			
@@ -5664,6 +6163,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Descuento por fidelidad - solo para usuarios logueados
 			<?php if ($user_logged_in && isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']): ?>
 			descuentoFidelidad = subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>;
+			<?php endif; ?>
 			
 			// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
 			<?php if ($user_logged_in && isset($user_data) && is_array($user_data) && isset($user_data['fecha_nacimiento']) && !empty($user_data['fecha_nacimiento'])): ?>
@@ -5689,7 +6189,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					descuentoCumpleanos = subtotal * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>; // Descuento por cumpleaños
 				}
 			}
-			<?php endif; ?>
 			<?php endif; ?>
 			
 			// Calcular total con todos los descuentos
@@ -5819,7 +6318,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		function submitReservation() {
 			// Prevenir envíos duplicados
 			if (isSubmittingReservation) {
-				console.log('Ya se está enviando una reserva, ignorando envío duplicado');
 				return;
 			}
 			
@@ -5942,14 +6440,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				})()
 			};
 			
-			// Debug: Mostrar datos que se van a enviar
-			console.log('=== DATOS DE RESERVA ===');
-			console.log('Costo base:', reservationData.costo_base);
-			console.log('Descuento fidelización:', reservationData.descuento_fidelizacion);
-			console.log('Descuento cumpleaños:', reservationData.descuento_cumpleanios);
-			console.log('Descuento promocional:', reservationData.descuento_promocional);
-			console.log('Total:', reservationData.total);
-			
 			// Enviar datos al servidor PHP
 			fetch('../../app/services/process_reservation.php', {
 				method: 'POST',
@@ -5980,7 +6470,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			.catch(error => {
 				// Resetear flag de envío en caso de error
 				isSubmittingReservation = false;
-				console.error('Error:', error);
 				alert('ERROR: ' + translations.messages.error_retry);
 			});
 		}
@@ -5989,18 +6478,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		// Inicializar cuando el DOM esté listo
 		function initializeCalendar() {
-			console.log('=== INICIALIZANDO CALENDARIO ===');
-			console.log('ReadyState:', document.readyState);
-			console.log('translations:', translations);
-			
 			if (document.readyState === 'loading') {
-				console.log('DOM aún cargando, esperando DOMContentLoaded...');
 				document.addEventListener('DOMContentLoaded', function() {
-					console.log('DOMContentLoaded disparado');
 					initCalendar();
 				});
 			} else {
-				console.log('DOM ya está listo, iniciando inmediatamente');
 				// DOM ya está listo
 				setTimeout(function() {
 					initCalendar();
@@ -6009,29 +6491,22 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		// Ejecutar inicialización
-		console.log('Llamando a initializeCalendar()...');
 		initializeCalendar();
 		
 		// También reinicializar cuando se vuelve a la página (para navegación desde otras páginas)
 		window.addEventListener('pageshow', function(event) {
-			console.log('pageshow event disparado');
 			// Reinicializar siempre que se muestre la página, especialmente si viene de otra página
 			const calendar = document.getElementById('calendar');
 			if (calendar) {
-				console.log('Reinicializando calendario desde pageshow');
 				initCalendar();
-			} else {
-				console.error('Calendario no encontrado en pageshow');
 			}
 		});
 		
 		// Reinicializar cuando la página se vuelve visible (útil para navegación entre pestañas/páginas)
 		document.addEventListener('visibilitychange', function() {
 			if (!document.hidden) {
-				console.log('Página visible, verificando calendario...');
 				const calendar = document.getElementById('calendar');
 				if (calendar && calendar.innerHTML === '') {
-					console.log('Calendario vacío, reinicializando...');
 					// Si el calendario está vacío, reinicializar
 					initCalendar();
 				}
@@ -6208,7 +6683,6 @@ window.showProfileInfo = function() {
 			}
 		}
 	} catch (error) {
-		console.error('Error al mostrar perfil:', error);
 		alert('Error al cargar la información del perfil');
 	}
 	<?php else: ?>
@@ -6337,12 +6811,10 @@ window.showMyReservations = function() {
 				}
 			})
 			.catch(error => {
-				console.error('Error al cargar reservas:', error);
 				document.getElementById('loadingReservations').style.display = 'none';
 				document.getElementById('noReservations').style.display = 'block';
 			});
 	} catch (error) {
-		console.error('Error al mostrar reservas:', error);
 		alert('Error al cargar las reservas');
 	}
 };
@@ -6419,4 +6891,3 @@ window.addEventListener('scroll', revealOnScroll);
 </body>
 
 </html>
-
