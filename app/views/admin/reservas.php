@@ -4,6 +4,11 @@
  * My Suite In Cartagena
  */
 
+// Habilitar reporte de errores para debugging (solo en desarrollo)
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // No mostrar errores en pantalla (seguridad)
+ini_set('log_errors', 1); // Log errores al archivo
+
 session_start();
 
 // Verificar si el usuario está logueado como admin
@@ -12,19 +17,51 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-require_once __DIR__ . '/../../../config/database.php';
-require_once __DIR__ . '/../../../includes/functions.php';
-require_once __DIR__ . '/../../../includes/GmailSender.php';
+// Verificar y cargar archivos requeridos
+$database_path = __DIR__ . '/../../../config/database.php';
+$functions_path = __DIR__ . '/../../../includes/functions.php';
+$gmail_sender_path = __DIR__ . '/../../../includes/GmailSender.php';
+
+if (!file_exists($database_path)) {
+    error_log("Error: No se encontró database.php en: $database_path");
+    http_response_code(500);
+    die(json_encode(['error' => 'Error de configuración del servidor']));
+}
+
+if (!file_exists($functions_path)) {
+    error_log("Error: No se encontró functions.php en: $functions_path");
+    http_response_code(500);
+    die(json_encode(['error' => 'Error de configuración del servidor']));
+}
+
+if (!file_exists($gmail_sender_path)) {
+    error_log("Error: No se encontró GmailSender.php en: $gmail_sender_path");
+    http_response_code(500);
+    die(json_encode(['error' => 'Error de configuración del servidor']));
+}
+
+require_once $database_path;
+require_once $functions_path;
+require_once $gmail_sender_path;
 
 /**
  * Enviar email de aprobación al cliente
  */
 function enviarEmailAprobacion($reserva) {
     try {
+        if (!class_exists('GmailSender')) {
+            error_log("Error: La clase GmailSender no está disponible");
+            return false;
+        }
         $emailSender = new GmailSender();
         return $emailSender->sendReservaAprobada($reserva);
     } catch (Exception $e) {
         error_log("Error enviando email: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        return false;
+    } catch (Error $e) {
+        error_log("Error fatal enviando email: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         return false;
     }
 }
@@ -35,17 +72,26 @@ $tipo_mensaje = '';
 // Procesar acciones
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    $id = $_GET['id'] ?? 0;
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     
-    try {
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        if (!$db) {
-            throw new Exception("Error de conexión a la base de datos");
-        }
-        
-        switch ($action) {
+    // Validar ID
+    if ($id <= 0) {
+        $mensaje = 'Error: ID de reserva inválido';
+        $tipo_mensaje = 'danger';
+    } else {
+        try {
+            if (!class_exists('Database')) {
+                throw new Exception("La clase Database no está disponible");
+            }
+            
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            if (!$db) {
+                throw new Exception("Error de conexión a la base de datos");
+            }
+            
+            switch ($action) {
             case 'approve':
                 // Iniciar transacción
                 $db->beginTransaction();
@@ -100,13 +146,21 @@ if (isset($_GET['action'])) {
                         
                         // Enviar email de rechazo al cliente
                         try {
-                            $emailSender = new GmailSender();
-                            $email_enviado = $emailSender->sendReservaRechazada($reserva_solapada, $reserva);
-                            if ($email_enviado) {
-                                $emails_enviados++;
+                            if (class_exists('GmailSender')) {
+                                $emailSender = new GmailSender();
+                                $email_enviado = $emailSender->sendReservaRechazada($reserva_solapada, $reserva);
+                                if ($email_enviado) {
+                                    $emails_enviados++;
+                                }
+                            } else {
+                                error_log("Advertencia: GmailSender no disponible para enviar email de rechazo");
                             }
                         } catch (Exception $e) {
                             error_log("Error enviando email de rechazo: " . $e->getMessage());
+                            error_log("Stack trace: " . $e->getTraceAsString());
+                        } catch (Error $e) {
+                            error_log("Error fatal enviando email de rechazo: " . $e->getMessage());
+                            error_log("Stack trace: " . $e->getTraceAsString());
                         }
                     }
                     
@@ -181,9 +235,17 @@ if (isset($_GET['action'])) {
                 break;
         }
         
-    } catch (Exception $e) {
-        $mensaje = 'Error: ' . $e->getMessage();
-        $tipo_mensaje = 'danger';
+        } catch (Exception $e) {
+            error_log("Error en procesamiento de acción: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $mensaje = 'Error: ' . $e->getMessage();
+            $tipo_mensaje = 'danger';
+        } catch (Error $e) {
+            error_log("Error fatal en procesamiento de acción: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $mensaje = 'Error fatal del sistema. Por favor contacte al administrador.';
+            $tipo_mensaje = 'danger';
+        }
     }
 }
 
