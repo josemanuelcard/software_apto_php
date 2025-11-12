@@ -120,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try {
                         $gmail = new GmailSender();
                         
-                        // Ruta de la imagen del hotel
-                        $hotel_image_path = __DIR__ . '/../../../assets/shared/HOTEL_CARTAGENA_silueta[1].png';
+                        // Obtener ruta de la imagen del hotel de forma robusta
+                        $hotel_image_path = $gmail->getHotelImagePath();
                         
                         $asunto = "💰 Abono Recibido - My Suite In Cartagena #" . $reserva_id;
                         
@@ -259,8 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try {
                         $gmail = new GmailSender();
                         
-                        // Ruta de la imagen del hotel
-                        $hotel_image_path = __DIR__ . '/../../../assets/shared/HOTEL_CARTAGENA_silueta[1].png';
+                        // Obtener ruta de la imagen del hotel de forma robusta
+                        $hotel_image_path = $gmail->getHotelImagePath();
                         
                         $asunto = "✅ Pago Confirmado - My Suite In Cartagena";
                         
