@@ -219,46 +219,63 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				<input type="radio" name="slides" checked="checked" id="slides_1" />
 				<input type="radio" name="slides" id="slides_2" />
 				<input type="radio" name="slides" id="slides_3" />
-				<input type="radio" name="slides" id="slides_4" />
 				<ul class="banner_slide_bg">
 					<li>
 						<div class="container">
-							<div class="w3ls_banner_txt">
-								<h3 class="w3ls_pvt-title text-wh text-uppercase let"><?php echo __('banner.relaxation'); ?></h3>
+							<div class="w3ls_banner_txt banner-content-wrapper">
+								<h3 class="w3ls_pvt-title text-wh text-uppercase let banner-main-title"><?php echo __('banner.relaxation'); ?></h3>
+								<p class="banner-subtitle text-wh"><?php echo __('home.cta.new.subtitle'); ?></p>
+								<div class="banner-buttons-wrapper">
+									<a href="../../app/controllers/auth/register.php?lang=<?php echo I18n::getLanguage(); ?>" class="btn-registrate-ahora-banner">
+										<?php echo __('home.cta.new.button'); ?>
+									</a>
+								</div>
+								<p class="banner-counter text-wh"><?php echo __('home.cta.new.registered_count'); ?> <strong><?php echo $total_usuarios; ?></strong></p>
+								<div class="banner-buttons-wrapper">
+									<button class="btn-reservar-ahora-banner" onclick="scrollToCalendar()"><?php echo __('banner.reserve_now'); ?></button>
+								</div>
 							</div>
 						</div>
 					</li>
 					<li>
 						<div class="container">
-							<div class="w3ls_banner_txt">
-								<h3 class="w3ls_pvt-title text-wh text-uppercase let"><?php echo __('banner.enjoy'); ?></h3>
+							<div class="w3ls_banner_txt banner-content-wrapper">
+								<h3 class="w3ls_pvt-title text-wh text-uppercase let banner-main-title"><?php echo __('banner.enjoy'); ?></h3>
+								<p class="banner-subtitle text-wh"><?php echo __('home.cta.new.subtitle'); ?></p>
+								<div class="banner-buttons-wrapper">
+									<a href="../../app/controllers/auth/register.php?lang=<?php echo I18n::getLanguage(); ?>" class="btn-registrate-ahora-banner">
+										<?php echo __('home.cta.new.button'); ?>
+									</a>
+								</div>
+								<p class="banner-counter text-wh"><?php echo __('home.cta.new.registered_count'); ?> <strong><?php echo $total_usuarios; ?></strong></p>
+								<div class="banner-buttons-wrapper">
+									<button class="btn-reservar-ahora-banner" onclick="scrollToCalendar()"><?php echo __('banner.reserve_now'); ?></button>
+								</div>
 							</div>
 						</div>
 					</li>
 					<li>
 						<div class="container">
-							<div class="w3ls_banner_txt">
-								<h3 class="w3ls_pvt-title text-wh text-uppercase let"><?php echo __('banner.modern'); ?></h3>
-							</div>
-						</div>
-					</li>
-					<li>
-						<div class="container">
-							<div class="w3ls_banner_txt">
-								<h3 class="w3ls_pvt-title text-wh text-uppercase let"><?php echo __('banner.perfect'); ?></h3>
+							<div class="w3ls_banner_txt banner-content-wrapper">
+								<h3 class="w3ls_pvt-title text-wh text-uppercase let banner-main-title"><?php echo __('banner.modern'); ?></h3>
+								<p class="banner-subtitle text-wh"><?php echo __('home.cta.new.subtitle'); ?></p>
+								<div class="banner-buttons-wrapper">
+									<a href="../../app/controllers/auth/register.php?lang=<?php echo I18n::getLanguage(); ?>" class="btn-registrate-ahora-banner">
+										<?php echo __('home.cta.new.button'); ?>
+									</a>
+								</div>
+								<p class="banner-counter text-wh"><?php echo __('home.cta.new.registered_count'); ?> <strong><?php echo $total_usuarios; ?></strong></p>
+								<div class="banner-buttons-wrapper">
+									<button class="btn-reservar-ahora-banner" onclick="scrollToCalendar()"><?php echo __('banner.reserve_now'); ?></button>
+								</div>
 							</div>
 						</div>
 					</li>
 				</ul>
-				<!-- Botón flotante fijo -->
-				<div class="btn-reservar-flotante">
-					<button class="btn-reservar-ahora" onclick="scrollToCalendar()"><?php echo __('banner.reserve_now'); ?></button>
-				</div>
 				<div class="arrows">
 					<label for="slides_1"></label>
 					<label for="slides_2"></label>
 					<label for="slides_3"></label>
-					<label for="slides_4"></label>
 				</div>
 			</div>
 		</div>
@@ -311,12 +328,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     </div>
 </div>
 <!-- //Sección Texto y Carrusel -->
-<!-- Sección de Llamado a la Acción -->
-<div class="cta-section-new" style="position: relative; background-image: url('<?php echo I18n::sharedAsset('piesplaya.webp'); ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 150px 20px; text-align: center; margin-top: 0; margin-bottom: 0; min-height: 600px; display: flex; align-items: center; justify-content: center;">
+<!-- Sección de Llamado a la Acción - CONTENIDO MOVIDO AL CARRUSEL PRINCIPAL -->
+<!-- <div class="cta-section-new" style="position: relative; background-image: url('<?php echo I18n::sharedAsset('piesplaya.webp'); ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; padding: 150px 20px; text-align: center; margin-top: 0; margin-bottom: 0; min-height: 600px; display: flex; align-items: center; justify-content: center;">
     
-    <!-- Contenido -->
     <div style="position: relative; z-index: 2; max-width: 900px; margin: 0 auto; width: 100%;">
-        <!-- Texto arriba del botón -->
         <div style="text-align: center; margin-bottom: 60px; width: 100%; position: relative; top: -100px;">
             <h2 id="texto-cta-titulo" class="scroll-reveal-text" style="font-family: 'Calvino Grande Bold', serif; font-size: 5.5rem; color: #fff !important; margin: 0 0 25px 0; line-height: 1.1; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5); display: block !important; visibility: visible !important; opacity: 1 !important;">
                 <?php echo __('home.cta.new.title'); ?>
@@ -328,7 +343,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 <?php echo __('home.cta.new.registered_count'); ?> <strong><?php echo $total_usuarios; ?></strong>
             </p>
         </div>
-        <!-- Botón abajo del texto -->
         <div style="text-align: center; width: 100%; position: relative;">
             <a href="../../app/controllers/auth/register.php?lang=<?php echo I18n::getLanguage(); ?>" 
                style="display: inline-block; background-color: #fff; color: #333; padding: 18px 50px; font-family: 'Oxygen', sans-serif; font-size: 1.2rem; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
@@ -336,8 +350,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             </a>
         </div>
     </div>
+</div> -->
+<!-- //Sección de Llamado a la Acción - CONTENIDO MOVIDO AL CARRUSEL PRINCIPAL -->
+
+<!-- Separador entre secciones -->
+<div class="section-divider" style="width: 100%; height: 80px; background: linear-gradient(to bottom, rgb(235, 234, 223) 0%, #ffffff 100%); margin: 0; padding: 0; position: relative; overflow: hidden;">
 </div>
-<!-- //Sección de Llamado a la Acción -->
 
 <!-- Sistema de Reservas Interactivo -->
 <div class="container-fluid py-5" id="reservation-section">
@@ -592,10 +610,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                             <label for="fechaNacimiento"><?php echo __('form.birthday'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px; position: relative; flex: 1;">
                                 <img src="https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png" alt="calendario" style="width: 24px; height: 24px; flex-shrink: 0; opacity: 0.7;">
-                                <div style="position: relative; flex: 1;">
-                                    <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : 'required'; ?> style="position: relative; z-index: 0;">
-                                    <span class="date-placeholder" id="fechaNacimientoPlaceholder" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #999; font-size: 15px; pointer-events: none; font-family: 'Oxygen', sans-serif; z-index: 2; white-space: nowrap; background: transparent; <?php echo ($user_data && $user_data['fecha_nacimiento']) ? 'opacity: 0; visibility: hidden;' : 'opacity: 1; visibility: visible;'; ?>"><?php echo __('form.birthday_placeholder'); ?></span>
-                                </div>
+                                <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : 'required'; ?> onkeydown="return false;" onpaste="return false;" autocomplete="off" style="flex: 1;">
                             </div>
                             <span class="error-message" id="fechaNacimientoError"></span>
                         </div>
@@ -768,17 +783,21 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                 <span class="summary-label">Subtotal:</span>
                                 <span class="summary-value" id="summarySubtotal">$0 COP</span>
                             </div>
-                            <div class="summary-item" id="summaryDescuentoEfectivo" style="display: none;">
-                                <span class="summary-label" style="color: #28a745;">Descuento por Efectivo:</span>
-                                <span class="summary-value" style="color: #28a745;" id="summaryDescuentoEfectivoValor">-$0 COP</span>
-                            </div>
                             <div class="summary-item" id="summaryDescuentoFidelidad" style="display: none;">
-                                <span class="summary-label" style="color: #28a745;">Descuento por Fidelidad:</span>
+                                <span class="summary-label" style="color: #28a745;">Descuento por Fidelidad (<span id="summaryDescuentoFidelidadPorcentaje"><?php echo isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo'] ? number_format($descuentos['fidelidad']['porcentaje'], 0) : '5'; ?>%</span>):</span>
                                 <span class="summary-value" style="color: #28a745;" id="summaryDescuentoFidelidadValor">-$0 COP</span>
                             </div>
                             <div class="summary-item" id="summaryDescuentoCumpleanos" style="display: none;">
-                                <span class="summary-label" style="color: #28a745;">Descuento por Cumpleaños:</span>
+                                <span class="summary-label" style="color: #28a745;">Descuento por Cumpleaños (<span id="summaryDescuentoCumpleanosPorcentaje"><?php echo isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo'] ? number_format($descuentos['cumpleanos']['porcentaje'], 0) : '30'; ?>%</span>):</span>
                                 <span class="summary-value" style="color: #28a745;" id="summaryDescuentoCumpleanosValor">-$0 COP</span>
+                            </div>
+                            <div class="summary-item" id="summarySubtotalIntermedioContainer" style="display: none; border-top: 2px solid #FFE082; margin-top: 10px; padding-top: 15px;">
+                                <span class="summary-label">Subtotal:</span>
+                                <span class="summary-value" id="summarySubtotalIntermedio">$0 COP</span>
+                            </div>
+                            <div class="summary-item" id="summaryDescuentoEfectivo" style="display: none;">
+                                <span class="summary-label" style="color: #28a745;">Descuento por Efectivo (<span id="summaryDescuentoEfectivoPorcentaje"><?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? number_format($descuentos['promocional']['porcentaje'], 1) : '3.0'; ?>%</span>):</span>
+                                <span class="summary-value" style="color: #28a745;" id="summaryDescuentoEfectivoValor">-$0 COP</span>
                             </div>
                             <div class="summary-item" style="border-top: 2px solid #FFE082; margin-top: 10px; padding-top: 15px;">
                                 <span class="summary-label"><strong>Total:</strong></span>
@@ -1495,16 +1514,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			}
 		}
 		
-		/* Overlay oscuro para el banner */
-		.banner_w3lspvt {
-			position: relative !important;
-			width: 100% !important;
-			height: 100vh !important;
-			min-height: 100vh !important;
-			margin: 0 !important;
-			padding: 0 !important;
-			overflow: hidden !important;
-		}
+		
 		
 		.banner-overlay {
 			position: absolute;
@@ -1513,7 +1523,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			width: 100%;
 			height: 100vh;
 			min-height: 100vh;
-			background: rgba(0, 0, 0, 0.2);
+			background: rgba(0, 0, 0, 0.1);
 			z-index: 2;
 			pointer-events: none;
 		}
@@ -1527,7 +1537,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			width: 100%;
 			height: 100vh;
 			min-height: 100vh;
-			background: rgba(0, 0, 0, 0.4);
 			z-index: 1;
 			pointer-events: none;
 		}
@@ -1549,6 +1558,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			max-width: 100% !important;
 			margin: 0 !important;
 			padding: 0 !important;
+			height: 100vh !important;
+			display: flex !important;
+			align-items: center !important;
+			justify-content: center !important;
 		}
 		
 		.w3ls_banner_txt,
@@ -1580,11 +1593,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		.banner_w3lspvt .csslider > ul > li:nth-child(3) {
-			background-image: url('<?php echo I18n::sharedAsset('3.webp'); ?>') !important;
-		}
-		
-		.banner_w3lspvt .csslider > ul > li:nth-child(4) {
-			background-image: url('<?php echo I18n::sharedAsset('4.webp'); ?>') !important;
+			background-image: url('<?php echo I18n::sharedAsset('piesplaya.webp'); ?>') !important;
 		}
 		
 		/* CSS para el carrusel con inputs de radio - Control de visibilidad */
@@ -1596,7 +1605,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			list-style: none !important;
 			margin: 0 !important;
 			padding: 0 !important;
-			width: 400% !important;
+			width: 300% !important;
 			height: 100vh !important;
 			display: flex !important;
 			transition: transform 0.8s ease-in-out !important;
@@ -1604,7 +1613,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		.banner_w3lspvt .csslider > ul > li {
-			width: 25% !important;
+			width: 33.33% !important;
 			height: 100vh !important;
 			min-height: 100vh !important;
 			flex-shrink: 0 !important;
@@ -1617,15 +1626,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		#slides_2:checked ~ ul {
-			transform: translateX(-25%);
+			transform: translateX(-33.33%);
 		}
 		
 		#slides_3:checked ~ ul {
-			transform: translateX(-50%);
-		}
-		
-		#slides_4:checked ~ ul {
-			transform: translateX(-75%);
+			transform: translateX(-66.66%);
 		}
 		
 		/* Estilos para los labels (flechas) del carrusel */
@@ -1654,8 +1659,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		#slides_1:checked ~ .arrows label:nth-child(1),
 		#slides_2:checked ~ .arrows label:nth-child(2),
-		#slides_3:checked ~ .arrows label:nth-child(3),
-		#slides_4:checked ~ .arrows label:nth-child(4) {
+		#slides_3:checked ~ .arrows label:nth-child(3) {
 			background: rgba(255, 255, 255, 1);
 		}
 		
@@ -1672,56 +1676,34 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			animation: slide3 20s infinite;
 		}
 		
-		.csslider.infinity #slides_4:checked ~ ul {
-			animation: slide4 20s infinite;
-		}
-		
 		@keyframes slide1 {
 			0% { transform: translateX(0%); }
-			20% { transform: translateX(0%); }
-			25% { transform: translateX(-25%); }
-			45% { transform: translateX(-25%); }
-			50% { transform: translateX(-50%); }
-			70% { transform: translateX(-50%); }
-			75% { transform: translateX(-75%); }
-			95% { transform: translateX(-75%); }
+			25% { transform: translateX(0%); }
+			33.33% { transform: translateX(-33.33%); }
+			58.33% { transform: translateX(-33.33%); }
+			66.66% { transform: translateX(-66.66%); }
+			91.66% { transform: translateX(-66.66%); }
 			100% { transform: translateX(0%); }
 		}
 		
 		@keyframes slide2 {
-			0% { transform: translateX(-25%); }
-			20% { transform: translateX(-25%); }
-			25% { transform: translateX(-50%); }
-			45% { transform: translateX(-50%); }
-			50% { transform: translateX(-75%); }
-			70% { transform: translateX(-75%); }
-			75% { transform: translateX(0%); }
-			95% { transform: translateX(0%); }
-			100% { transform: translateX(-25%); }
+			0% { transform: translateX(-33.33%); }
+			25% { transform: translateX(-33.33%); }
+			33.33% { transform: translateX(-66.66%); }
+			58.33% { transform: translateX(-66.66%); }
+			66.66% { transform: translateX(0%); }
+			91.66% { transform: translateX(0%); }
+			100% { transform: translateX(-33.33%); }
 		}
 		
 		@keyframes slide3 {
-			0% { transform: translateX(-50%); }
-			20% { transform: translateX(-50%); }
-			25% { transform: translateX(-75%); }
-			45% { transform: translateX(-75%); }
-			50% { transform: translateX(0%); }
-			70% { transform: translateX(0%); }
-			75% { transform: translateX(-25%); }
-			95% { transform: translateX(-25%); }
-			100% { transform: translateX(-50%); }
-		}
-		
-		@keyframes slide4 {
-			0% { transform: translateX(-75%); }
-			20% { transform: translateX(-75%); }
-			25% { transform: translateX(0%); }
-			45% { transform: translateX(0%); }
-			50% { transform: translateX(-25%); }
-			70% { transform: translateX(-25%); }
-			75% { transform: translateX(-50%); }
-			95% { transform: translateX(-50%); }
-			100% { transform: translateX(-75%); }
+			0% { transform: translateX(-66.66%); }
+			25% { transform: translateX(-66.66%); }
+			33.33% { transform: translateX(0%); }
+			58.33% { transform: translateX(0%); }
+			66.66% { transform: translateX(-33.33%); }
+			91.66% { transform: translateX(-33.33%); }
+			100% { transform: translateX(-66.66%); }
 		}
 		
 		/* Estilos para la nueva sección CTA con imagen de fondo */
@@ -1864,17 +1846,99 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			text-shadow: 6px 6px 5px rgba(0, 0, 0, 0.5) !important;
 		}
 		
-		/* Botón flotante fijo */
-		.btn-reservar-flotante {
-			position: absolute !important;
-			top: 67% !important;
-			left: 50% !important;
-			transform: translate(-50%, 20%) !important;
-			z-index: 20 !important;
-			width: 100% !important;
+		/* Estilos para el contenido del banner integrado */
+		.banner-content-wrapper {
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: center !important;
+			justify-content: center !important;
+			gap: 20px !important;
+			padding: 40px 20px !important;
+		}
+		
+		.banner-main-title {
+			font-size: 70px !important;
+			margin-bottom: 15px !important;
+		}
+		
+		.banner-subtitle {
+			font-family: 'Crimson Text', serif !important;
+			font-size: 1.5rem !important;
+			font-weight: 400 !important;
+			font-style: italic !important;
+			text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6) !important;
+			margin: 0 !important;
+			max-width: 800px !important;
+			line-height: 1.6 !important;
+		}
+		
+		.banner-buttons-wrapper {
 			display: flex !important;
 			justify-content: center !important;
 			align-items: center !important;
+			margin: 10px 0 !important;
+		}
+		
+		.btn-registrate-ahora-banner {
+			display: inline-block !important;
+			background-color: #fff !important;
+			color: #333 !important;
+			padding: 15px 40px !important;
+			font-family: 'Oxygen', sans-serif !important;
+			font-size: 1.1rem !important;
+			font-weight: 600 !important;
+			text-decoration: none !important;
+			border-radius: 50px !important;
+			transition: all 0.3s ease !important;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+			text-align: center !important;
+		}
+		
+		.btn-registrate-ahora-banner:hover {
+			background-color: #f0f0f0 !important;
+			transform: translateY(-2px) !important;
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+		}
+		
+		.banner-counter {
+			font-family: 'Crimson Text', serif !important;
+			font-size: 1.3rem !important;
+			font-weight: 400 !important;
+			font-style: italic !important;
+			text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6) !important;
+			margin: 10px 0 !important;
+		}
+		
+		.banner-counter strong {
+			font-weight: 700 !important;
+			font-size: 1.4rem !important;
+		}
+		
+		.btn-reservar-ahora-banner {
+			padding: 15px 40px !important;
+			font-size: 18px !important;
+			font-weight: 600 !important;
+			color: #333 !important;
+			background-color: #FFE082 !important;
+			border: none !important;
+			border-radius: 50px !important;
+			cursor: pointer !important;
+			transition: all 0.3s ease !important;
+			font-family: 'Oxygen', 'Arial', sans-serif !important;
+			text-transform: uppercase !important;
+			letter-spacing: 1px !important;
+			box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+		}
+		
+		.btn-reservar-ahora-banner:hover {
+			background-color: #FFD54F !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px) !important;
+		}
+		
+		.btn-reservar-ahora-banner:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0) !important;
 		}
 		
 		/* Botón Reservar Ahora */
@@ -1901,12 +1965,39 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				letter-spacing: 1px !important;
 				text-shadow: 4px 4px 4px rgba(0, 0, 0, 0.5) !important;
 			}
-			.btn-reservar-flotante {
-				top: 70% !important;
+			
+			.banner-main-title {
+				font-size: 33px !important;
+				margin-bottom: 10px !important;
 			}
-			.btn-reservar-ahora {
-				padding: 12px 30px;
-				font-size: 16px;
+			
+			.banner-content-wrapper {
+				gap: 15px !important;
+				padding: 30px 15px !important;
+			}
+			
+			.banner-subtitle {
+				font-size: 1.2rem !important;
+				margin: 0 !important;
+			}
+			
+			.banner-counter {
+				font-size: 1.1rem !important;
+				margin: 8px 0 !important;
+			}
+			
+			.banner-counter strong {
+				font-size: 1.2rem !important;
+			}
+			
+			.btn-registrate-ahora-banner {
+				padding: 12px 30px !important;
+				font-size: 1rem !important;
+			}
+			
+			.btn-reservar-ahora-banner {
+				padding: 12px 30px !important;
+				font-size: 16px !important;
 			}
 		}
 		
@@ -1916,13 +2007,40 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				letter-spacing: 0.5px !important;
 				text-shadow: 3px 3px 3px rgba(0, 0, 0, 0.5) !important;
 			}
-			.btn-reservar-flotante {
-				top: 75% !important;
+			
+			.banner-main-title {
+				font-size: 28px !important;
+				margin-bottom: 8px !important;
 			}
-			.btn-reservar-ahora {
-				padding: 10px 25px;
-				font-size: 14px;
-				letter-spacing: 0.5px;
+			
+			.banner-content-wrapper {
+				gap: 12px !important;
+				padding: 20px 10px !important;
+			}
+			
+			.banner-subtitle {
+				font-size: 1rem !important;
+				line-height: 1.4 !important;
+			}
+			
+			.banner-counter {
+				font-size: 0.95rem !important;
+				margin: 6px 0 !important;
+			}
+			
+			.banner-counter strong {
+				font-size: 1.05rem !important;
+			}
+			
+			.btn-registrate-ahora-banner {
+				padding: 10px 25px !important;
+				font-size: 0.9rem !important;
+			}
+			
+			.btn-reservar-ahora-banner {
+				padding: 10px 25px !important;
+				font-size: 14px !important;
+				letter-spacing: 0.5px !important;
 			}
 		}
 		
@@ -1941,16 +2059,35 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			#blogCarousel .carousel-item img {
 				height: 400px !important;
 			}
-			#blogCarousel .carousel-control-prev,
-			#blogCarousel .carousel-control-next {
-				left: 10px;
+			#blogCarousel .carousel-control-prev {
+				left: 10px !important;
+				right: auto !important;
 			}
 			#blogCarousel .carousel-control-next {
-				right: 10px;
+				right: 10px !important;
+				left: auto !important;
+			}
+			#blogCarousel .carousel-control-prev,
+			#blogCarousel .carousel-control-next {
+				width: 40px !important;
+				height: 40px !important;
+				display: flex !important;
+				align-items: center !important;
+				justify-content: center !important;
+				background: rgba(0, 0, 0, 0.3) !important;
+				border-radius: 50% !important;
+				opacity: 0.9 !important;
+				z-index: 10 !important;
+			}
+			#blogCarousel .carousel-control-prev:hover,
+			#blogCarousel .carousel-control-next:hover {
+				background: rgba(0, 0, 0, 0.5) !important;
+				opacity: 1 !important;
 			}
 			#blogCarousel .carousel-control-prev span,
 			#blogCarousel .carousel-control-next span {
 				font-size: 30px !important;
+				line-height: 1 !important;
 			}
 			.cta-section {
 				padding: 80px 15px !important;
@@ -1980,16 +2117,35 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			#blogCarousel .carousel-item img {
 				height: 300px !important;
 			}
-			#blogCarousel .carousel-control-prev,
-			#blogCarousel .carousel-control-next {
-				left: 5px;
+			#blogCarousel .carousel-control-prev {
+				left: 5px !important;
+				right: auto !important;
 			}
 			#blogCarousel .carousel-control-next {
-				right: 5px;
+				right: 5px !important;
+				left: auto !important;
+			}
+			#blogCarousel .carousel-control-prev,
+			#blogCarousel .carousel-control-next {
+				width: 35px !important;
+				height: 35px !important;
+				display: flex !important;
+				align-items: center !important;
+				justify-content: center !important;
+				background: rgba(0, 0, 0, 0.4) !important;
+				border-radius: 50% !important;
+				opacity: 0.9 !important;
+				z-index: 10 !important;
+			}
+			#blogCarousel .carousel-control-prev:hover,
+			#blogCarousel .carousel-control-next:hover {
+				background: rgba(0, 0, 0, 0.6) !important;
+				opacity: 1 !important;
 			}
 			#blogCarousel .carousel-control-prev span,
 			#blogCarousel .carousel-control-next span {
 				font-size: 24px !important;
+				line-height: 1 !important;
 			}
 			.cta-section {
 				padding: 60px 10px !important;
@@ -3084,12 +3240,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			opacity: 0.5;
 		}
 		
-		/* Quitar el icono de calendario del lado derecho en el modal */
+		/* Estilos para el campo de fecha */
 		#reservationModal input[type="date"] {
 			background: transparent !important;
-			background-image: none !important;
+			cursor: pointer;
 		}
 		
+		/* Ocultar el icono de calendario nativo del lado derecho */
 		#reservationModal input[type="date"]::-webkit-calendar-picker-indicator {
 			opacity: 0 !important;
 			width: 0 !important;
@@ -3097,42 +3254,20 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			pointer-events: none !important;
 		}
 		
-		/* Placeholder para fecha de nacimiento */
-		.date-placeholder {
-			transition: opacity 0.2s ease, visibility 0.2s ease;
-			user-select: none;
-		}
-		
-		/* Mostrar placeholder cuando el campo está vacío */
-		#reservationModal input[type="date"]:empty + .date-placeholder,
-		#reservationModal input[type="date"]:not([value]) + .date-placeholder,
-		#reservationModal input[type="date"][value=""] + .date-placeholder {
-			opacity: 1 !important;
-			visibility: visible !important;
-		}
-		
-		/* Ocultar placeholder cuando tiene valor o está en focus */
-		#reservationModal input[type="date"].has-value + .date-placeholder,
-		#reservationModal input[type="date"]:focus + .date-placeholder,
-		#reservationModal input[type="date"][value]:not([value=""]) + .date-placeholder {
+		/* Para Firefox */
+		#reservationModal input[type="date"]::-moz-calendar-picker-indicator {
 			opacity: 0 !important;
-			visibility: hidden !important;
+			width: 0 !important;
+			height: 0 !important;
+			pointer-events: none !important;
 		}
 		
-		/* Asegurar que el input date tenga el mismo estilo que otros inputs */
-		#reservationModal input[type="date"].form-control {
-			color: transparent !important;
-			padding-left: 0 !important;
-		}
-		
-		#reservationModal input[type="date"].form-control:focus,
-		#reservationModal input[type="date"].form-control.has-value {
-			color: #333 !important;
-		}
-		
-		/* Asegurar que el placeholder sea visible */
-		#reservationModal #fechaNacimientoPlaceholder {
-			display: block !important;
+		/* Prevenir selección de texto en el campo date */
+		#reservationModal input[type="date"] {
+			user-select: none;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
 		}
 		
 		/* Estilos para select y textarea - línea única */
@@ -3265,25 +3400,31 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		#reservationModal #cancelReservation {
-			background: transparent !important;
-			color: #999 !important;
-			padding: 10px 0 !important;
+			background-color: #FFE082 !important;
+			color: #333 !important;
+			padding: 15px 40px !important;
 			border: none !important;
-			border-bottom: 1px solid #e1e5e9 !important;
-			border-radius: 0 !important;
+			border-radius: 50px !important;
 			font-size: 16px;
-			font-weight: 400;
+			font-weight: 600;
 			cursor: pointer;
-			transition: border-bottom-color 0.3s ease;
+			transition: all 0.3s ease;
 			font-family: 'Oxygen', sans-serif;
+			box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 		}
 		
 		#reservationModal #cancelReservation:hover {
-			background: transparent !important;
+			background-color: #FFD54F !important;
 			color: #333 !important;
-			border-bottom: 1px solid #333 !important;
-			transform: none;
-			box-shadow: none !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px);
+		}
+		
+		#reservationModal #cancelReservation:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0);
 		}
 		
 		#reservationModal #submitReservation {
@@ -3448,35 +3589,47 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		#reservationModal .next-btn {
-			background: transparent !important;
+			background-color: #FFE082 !important;
 			color: #333 !important;
 			border: none !important;
-			border-bottom: 1px solid #333 !important;
-			border-radius: 0 !important;
-			box-shadow: none !important;
-			padding: 10px 0 !important;
+			border-radius: 50px !important;
+			box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+			padding: 15px 40px !important;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 		}
 		
 		#reservationModal .next-btn:hover {
-			background: transparent !important;
-			border-bottom: 2px solid #333 !important;
-			transform: none;
-			box-shadow: none !important;
+			background-color: #FFD54F !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px);
+		}
+		
+		#reservationModal .next-btn:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0);
 		}
 		
 		#reservationModal .back-btn {
-			background: transparent !important;
-			color: #666 !important;
+			background-color: #FFE082 !important;
+			color: #333 !important;
 			border: none !important;
-			border-bottom: 1px solid #e1e5e9 !important;
-			border-radius: 0 !important;
-			padding: 10px 0 !important;
+			border-radius: 50px !important;
+			box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+			padding: 15px 40px !important;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 		}
 		
 		#reservationModal .back-btn:hover {
-			background: transparent !important;
-			color: #333 !important;
-			border-bottom: 1px solid #333 !important;
+			background-color: #FFD54F !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px);
+		}
+		
+		#reservationModal .back-btn:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0);
 		}
 		
 		#reservationModal .error-message {
@@ -5166,74 +5319,50 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				});
 			});
 			
-			// Fecha de nacimiento - actualizar descuento por cumpleaños y manejar placeholder
+			// Fecha de nacimiento - actualizar descuento por cumpleaños
 			const fechaNacimientoInput = document.getElementById('fechaNacimiento');
-			const fechaNacimientoPlaceholder = document.getElementById('fechaNacimientoPlaceholder');
 			
-			// Función para mostrar/ocultar placeholder
-			function toggleFechaPlaceholder() {
-				if (fechaNacimientoInput && fechaNacimientoPlaceholder) {
-					const hasValue = fechaNacimientoInput.value && fechaNacimientoInput.value.trim() !== '';
-					
-					if (hasValue) {
-						fechaNacimientoPlaceholder.style.opacity = '0';
-						fechaNacimientoPlaceholder.style.visibility = 'hidden';
-						fechaNacimientoInput.classList.add('has-value');
-						fechaNacimientoInput.style.color = '#333';
-					} else {
-						fechaNacimientoPlaceholder.style.opacity = '1';
-						fechaNacimientoPlaceholder.style.visibility = 'visible';
-						fechaNacimientoInput.classList.remove('has-value');
-						fechaNacimientoInput.style.color = 'transparent';
-					}
-				}
-			}
-			
-			// Función para inicializar el placeholder de fecha de nacimiento
-			function initFechaPlaceholder() {
-				const fechaInput = document.getElementById('fechaNacimiento');
-				const fechaPlaceholder = document.getElementById('fechaNacimientoPlaceholder');
-				
-				if (fechaInput && fechaPlaceholder) {
-					toggleFechaPlaceholder();
-				}
-			}
-			
-			// Verificar estado inicial al cargar
-			if (fechaNacimientoInput && fechaNacimientoPlaceholder) {
-				// Esperar a que el DOM esté completamente cargado
-				setTimeout(() => {
-					initFechaPlaceholder();
-				}, 100);
-				
-				// Ocultar placeholder al hacer focus
-				fechaNacimientoInput.addEventListener('focus', () => {
-					if (fechaNacimientoPlaceholder) {
-						fechaNacimientoPlaceholder.style.opacity = '0';
-						fechaNacimientoPlaceholder.style.visibility = 'hidden';
-						fechaNacimientoInput.style.color = '#333';
+			// Prevenir escritura manual y asegurar que solo se use el calendario
+			if (fechaNacimientoInput) {
+				// Prevenir todas las formas de entrada manual
+				fechaNacimientoInput.addEventListener('keydown', (e) => {
+					// Permitir solo teclas de navegación y escape
+					const allowedKeys = ['Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+					if (!allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+						e.preventDefault();
+						return false;
 					}
 				});
 				
-				// Mostrar/ocultar placeholder al cambiar valor
+				fechaNacimientoInput.addEventListener('keypress', (e) => {
+					e.preventDefault();
+					return false;
+				});
+				
+				fechaNacimientoInput.addEventListener('paste', (e) => {
+					e.preventDefault();
+					return false;
+				});
+				
+				fechaNacimientoInput.addEventListener('drop', (e) => {
+					e.preventDefault();
+					return false;
+				});
+				
+				// Hacer que todo el campo abra el calendario al hacer clic
+				fechaNacimientoInput.addEventListener('click', () => {
+					// Usar showPicker() si está disponible (navegadores modernos)
+					if (typeof fechaNacimientoInput.showPicker === 'function') {
+						fechaNacimientoInput.showPicker();
+					}
+					// Si no está disponible, el comportamiento nativo del input date abrirá el calendario
+				});
+				
+				// Actualizar resumen cuando cambie la fecha de nacimiento
 				fechaNacimientoInput.addEventListener('change', () => {
 					updateModalCostSummary();
-					toggleFechaPlaceholder();
-				});
-				
-				// Mostrar placeholder si está vacío al perder focus
-				fechaNacimientoInput.addEventListener('blur', () => {
-					toggleFechaPlaceholder();
-				});
-				
-				// También escuchar el evento input para detectar cambios inmediatos
-				fechaNacimientoInput.addEventListener('input', () => {
-					toggleFechaPlaceholder();
 				});
 			}
-			
-			// Hacer la función accesible globalmente para inicializar cuando se abre el modal
-			window.initFechaPlaceholder = initFechaPlaceholder;
 			
 			// ==========================================================
 			// FUNCIONALIDAD DE TÉRMINOS Y CONDICIONES
@@ -5924,10 +6053,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					currentDate.setDate(currentDate.getDate() + 1);
 				}
 				
-				// Mostrar subtotal
+				// Mostrar subtotal (con redondeo)
 				const summarySubtotal = document.getElementById('summarySubtotal');
 				if (summarySubtotal) {
-					summarySubtotal.textContent = '$' + subtotal.toLocaleString('es-CO') + ' COP';
+					summarySubtotal.textContent = '$' + Math.round(subtotal).toLocaleString('es-CO') + ' COP';
 				}
 				
 				// Calcular descuentos
@@ -5938,17 +6067,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				let descuentoFidelidad = 0;
 				let descuentoCumpleanos = 0;
 				
-				// Descuento por efectivo
-				if (metodoPagoValue === 'efectivo') {
-					descuentoEfectivo = subtotal * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>;
-				}
-				
-				// Descuento por fidelidad
+				// PASO 1: Descuento por fidelidad (sobre subtotal original) - con redondeo
 				<?php if ($user_logged_in && isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']): ?>
-				descuentoFidelidad = subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>;
+				descuentoFidelidad = Math.round(subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>);
 				<?php endif; ?>
 				
-				// Descuento por cumpleaños
+				// PASO 2: Descuento por cumpleaños (sobre subtotal original) - con redondeo
 				<?php if ($user_logged_in && isset($user_data) && is_array($user_data) && isset($user_data['fecha_nacimiento']) && !empty($user_data['fecha_nacimiento'])): ?>
 				const fechaNacimientoBD = '<?php echo htmlspecialchars($user_data['fecha_nacimiento'], ENT_QUOTES, 'UTF-8'); ?>';
 				if (fechaNacimientoBD) {
@@ -5961,50 +6085,76 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
 					
 					if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
-						descuentoCumpleanos = subtotal * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>;
+						descuentoCumpleanos = Math.round(subtotal * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>);
 					}
 				}
 				<?php endif; ?>
 				
-				// Mostrar descuentos
-				const descuentoEfectivoRow = document.getElementById('summaryDescuentoEfectivo');
-				const descuentoEfectivoValor = document.getElementById('summaryDescuentoEfectivoValor');
-				if (descuentoEfectivoRow && descuentoEfectivoValor) {
-					if (descuentoEfectivo > 0) {
-						descuentoEfectivoRow.style.display = 'flex';
-						descuentoEfectivoValor.textContent = '-$' + descuentoEfectivo.toLocaleString('es-CO') + ' COP';
-					} else {
-						descuentoEfectivoRow.style.display = 'none';
-					}
+				// PASO 3: Crear subtotal intermedio después de fidelidad y cumpleaños - con redondeo
+				const subtotalIntermedio = Math.round(subtotal - descuentoFidelidad - descuentoCumpleanos);
+				
+				// PASO 4: Descuento por efectivo (sobre subtotal intermedio) - con redondeo
+				if (metodoPagoValue === 'efectivo') {
+					descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
 				}
 				
+				// Mostrar descuento por fidelidad
 				const descuentoFidelidadRow = document.getElementById('summaryDescuentoFidelidad');
 				const descuentoFidelidadValor = document.getElementById('summaryDescuentoFidelidadValor');
 				if (descuentoFidelidadRow && descuentoFidelidadValor) {
 					if (descuentoFidelidad > 0) {
 						descuentoFidelidadRow.style.display = 'flex';
-						descuentoFidelidadValor.textContent = '-$' + descuentoFidelidad.toLocaleString('es-CO') + ' COP';
+						descuentoFidelidadValor.textContent = '-$' + Math.round(descuentoFidelidad).toLocaleString('es-CO') + ' COP';
 					} else {
 						descuentoFidelidadRow.style.display = 'none';
 					}
 				}
 				
+				// Mostrar descuento por cumpleaños
 				const descuentoCumpleanosRow = document.getElementById('summaryDescuentoCumpleanos');
 				const descuentoCumpleanosValor = document.getElementById('summaryDescuentoCumpleanosValor');
 				if (descuentoCumpleanosRow && descuentoCumpleanosValor) {
 					if (descuentoCumpleanos > 0) {
 						descuentoCumpleanosRow.style.display = 'flex';
-						descuentoCumpleanosValor.textContent = '-$' + descuentoCumpleanos.toLocaleString('es-CO') + ' COP';
+						descuentoCumpleanosValor.textContent = '-$' + Math.round(descuentoCumpleanos).toLocaleString('es-CO') + ' COP';
 					} else {
 						descuentoCumpleanosRow.style.display = 'none';
 					}
 				}
 				
-				// Calcular y mostrar total
-				const total = subtotal - descuentoEfectivo - descuentoFidelidad - descuentoCumpleanos;
+				// Mostrar descuento por efectivo y subtotal intermedio
+				const descuentoEfectivoRow = document.getElementById('summaryDescuentoEfectivo');
+				const descuentoEfectivoValor = document.getElementById('summaryDescuentoEfectivoValor');
+				const summarySubtotalIntermedio = document.getElementById('summarySubtotalIntermedio');
+				const subtotalIntermedioContainer = document.getElementById('summarySubtotalIntermedioContainer');
+				
+				if (descuentoEfectivo > 0) {
+					// Si hay descuento por efectivo, mostrar subtotal intermedio y descuento
+					if (descuentoEfectivoRow && descuentoEfectivoValor) {
+						descuentoEfectivoRow.style.display = 'flex';
+						descuentoEfectivoValor.textContent = '-$' + Math.round(descuentoEfectivo).toLocaleString('es-CO') + ' COP';
+					}
+					if (summarySubtotalIntermedio) {
+						summarySubtotalIntermedio.textContent = '$' + Math.round(subtotalIntermedio).toLocaleString('es-CO') + ' COP';
+					}
+					if (subtotalIntermedioContainer) {
+						subtotalIntermedioContainer.style.display = 'flex';
+					}
+				} else {
+					// Si NO hay descuento por efectivo, ocultar subtotal intermedio y descuento
+					if (descuentoEfectivoRow) {
+						descuentoEfectivoRow.style.display = 'none';
+					}
+					if (subtotalIntermedioContainer) {
+						subtotalIntermedioContainer.style.display = 'none';
+					}
+				}
+				
+				// Calcular y mostrar total (subtotal intermedio - descuento efectivo) - con redondeo
+				const total = Math.round(subtotalIntermedio - descuentoEfectivo);
 				const summaryTotal = document.getElementById('summaryTotal');
 				if (summaryTotal) {
-					summaryTotal.textContent = '$' + total.toLocaleString('es-CO') + ' COP';
+					summaryTotal.textContent = '$' + Math.round(total).toLocaleString('es-CO') + ' COP';
 				}
 			} else {
 				// Si no hay fechas, actualizar desde el modal
@@ -6054,20 +6204,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			
 			// Actualizar resumen de costos
 			updateModalCostSummary();
-			
-			// Inicializar placeholder de fecha de nacimiento cuando el modal se muestre
-			const initPlaceholderOnShow = () => {
-				setTimeout(() => {
-					if (window.initFechaPlaceholder) {
-						window.initFechaPlaceholder();
-					}
-				}, 300);
-			};
-			
-			// Agregar listener para cuando el modal se muestre completamente
-			if (modalElement) {
-				modalElement.addEventListener('shown.bs.modal', initPlaceholderOnShow, { once: true });
-			}
 			
 			// Mostrar modal - Múltiples métodos de compatibilidad
 			// Método 1: Bootstrap 5
@@ -6210,17 +6346,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			let descuentoFidelidad = 0;
 			let descuentoCumpleanos = 0;
 			
-			// Descuento por pago en efectivo
-			if (metodoPago === 'efectivo') {
-				descuentoEfectivo = subtotal * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>;
-			}
-			
-			// Descuento por fidelidad - solo para usuarios logueados
+			// PASO 1: Descuento por fidelidad (sobre subtotal original) - con redondeo
 			<?php if ($user_logged_in && isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']): ?>
-			descuentoFidelidad = subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>;
+			descuentoFidelidad = Math.round(subtotal * <?php echo $descuentos['fidelidad']['porcentaje'] / 100; ?>);
 			<?php endif; ?>
 			
-			// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
+			// PASO 2: Descuento por cumpleaños (sobre subtotal original) - con redondeo
 			<?php if ($user_logged_in && isset($user_data) && is_array($user_data) && isset($user_data['fecha_nacimiento']) && !empty($user_data['fecha_nacimiento'])): ?>
 			// Usar fecha de nacimiento de la BD del usuario logueado (más segura)
 			const fechaNacimientoBD = '<?php echo htmlspecialchars($user_data['fecha_nacimiento'], ENT_QUOTES, 'UTF-8'); ?>';
@@ -6241,30 +6372,38 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				
 				// Verificar si el cumpleaños está dentro del rango de la reserva
 				if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
-					descuentoCumpleanos = subtotal * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>; // Descuento por cumpleaños
+					descuentoCumpleanos = Math.round(subtotal * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>); // Descuento por cumpleaños
 				}
 			}
 			<?php endif; ?>
 			
-			// Calcular total con todos los descuentos
-			total = subtotal - descuentoEfectivo - descuentoFidelidad - descuentoCumpleanos;
+			// PASO 3: Crear subtotal intermedio después de fidelidad y cumpleaños - con redondeo
+			const subtotalIntermedio = Math.round(subtotal - descuentoFidelidad - descuentoCumpleanos);
+			
+			// PASO 4: Descuento por efectivo (sobre subtotal intermedio) - con redondeo
+			if (metodoPago === 'efectivo') {
+				descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
+			}
+			
+			// Calcular total con todos los descuentos (subtotal intermedio - descuento efectivo) - con redondeo
+			total = Math.round(subtotalIntermedio - descuentoEfectivo);
 			
 			// Actualizar elementos del modal solo si existen
 			const modalNights = document.getElementById('modalNights');
 			if (modalNights) modalNights.textContent = nights;
 			
 			const modalSubtotal = document.getElementById('modalSubtotal');
-			if (modalSubtotal) modalSubtotal.textContent = '$' + subtotal.toLocaleString('es-CO') + ' COP';
+			if (modalSubtotal) modalSubtotal.textContent = '$' + Math.round(subtotal).toLocaleString('es-CO') + ' COP';
 			
 			const modalDescuento = document.getElementById('modalDescuento');
-			if (modalDescuento) modalDescuento.textContent = '$' + descuentoEfectivo.toLocaleString('es-CO') + ' COP';
+			if (modalDescuento) modalDescuento.textContent = '$' + Math.round(descuentoEfectivo).toLocaleString('es-CO') + ' COP';
 			
 			const modalTotal = document.getElementById('modalTotal');
-			if (modalTotal) modalTotal.textContent = '$' + total.toLocaleString('es-CO') + ' COP';
+			if (modalTotal) modalTotal.textContent = '$' + Math.round(total).toLocaleString('es-CO') + ' COP';
 			
 			// Actualizar summaryTotal si existe (para el paso 5)
 			const summaryTotal = document.getElementById('summaryTotal');
-			if (summaryTotal) summaryTotal.textContent = '$' + total.toLocaleString('es-CO') + ' COP';
+			if (summaryTotal) summaryTotal.textContent = '$' + Math.round(total).toLocaleString('es-CO') + ' COP';
 			
 			// Mostrar/ocultar fila de descuento por efectivo (solo si existe)
 			const descuentoRow = document.getElementById('descuentoRow');
@@ -6419,8 +6558,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				costo_base: costoBase,
 				descuento_fidelizacion: (() => {
 					<?php if ($user_logged_in): ?>
-					// Calcular descuento por fidelidad como monto en pesos
-					return costoBase * <?php echo (isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']) ? $descuentos['fidelidad']['porcentaje'] / 100 : 0; ?>; // Descuento por fidelidad
+					// Calcular descuento por fidelidad como monto en pesos - con redondeo
+					return Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']) ? $descuentos['fidelidad']['porcentaje'] / 100 : 0; ?>); // Descuento por fidelidad
 					<?php endif; ?>
 					return 0;
 				})(),
@@ -6445,53 +6584,85 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 						
 						// Verificar si el cumpleaños está dentro del rango de la reserva
 						if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
-							// Calcular descuento por cumpleaños como monto en pesos
-							return costoBase * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>; // Descuento por cumpleaños
+							// Calcular descuento por cumpleaños como monto en pesos - con redondeo
+							return Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>); // Descuento por cumpleaños
 						}
 					}
 					<?php endif; ?>
 					return 0;
 				})(),
-				descuento_promocional: formData.get('metodoPago') === 'efectivo' ? costoBase * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?> : 0,
-				total: (() => {
-					let total = costoBase;
-					
-					// Descuento por pago en efectivo (3%)
-					if (formData.get('metodoPago') === 'efectivo') {
-						total = total * (1 - <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
-					}
+				descuento_promocional: (() => {
+					// PASO 1 y 2: Calcular descuentos de fidelidad y cumpleaños sobre costoBase - con redondeo
+					let descuentoFidelidad = 0;
+					let descuentoCumpleanos = 0;
 					
 					<?php if ($user_logged_in): ?>
-					// Descuento por fidelidad
-					total = total * (1 - <?php echo (isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']) ? $descuentos['fidelidad']['porcentaje'] / 100 : 0.05; ?>);
+					descuentoFidelidad = Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']) ? $descuentos['fidelidad']['porcentaje'] / 100 : 0; ?>);
 					
-					// Descuento por cumpleaños (30%) - verificar si está dentro del rango de fechas
 					<?php if (isset($user_data) && is_array($user_data) && isset($user_data['fecha_nacimiento']) && !empty($user_data['fecha_nacimiento'])): ?>
 					const fechaNacimientoBD = '<?php echo htmlspecialchars($user_data['fecha_nacimiento'], ENT_QUOTES, 'UTF-8'); ?>';
 					if (fechaNacimientoBD) {
 						const fechaNac = new Date(fechaNacimientoBD);
-						
-						// Verificar si el cumpleaños está dentro del rango de fechas de la reserva
 						const cumpleanosDia = fechaNac.getDate();
 						const cumpleanosMes = fechaNac.getMonth();
-						
-						// Verificar si el cumpleaños está entre las fechas de entrada y salida
 						const fechaEntrada = new Date(selectedStartDate);
 						const fechaSalida = new Date(selectedEndDate);
-						
-						// Crear fecha de cumpleaños para el año de la reserva
 						const añoReserva = fechaEntrada.getFullYear();
 						const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
 						
-						// Verificar si el cumpleaños está dentro del rango de la reserva
 						if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
-							total = total * (1 - <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0.30; ?>); // Descuento adicional por cumpleaños
+							descuentoCumpleanos = Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>);
 						}
 					}
 					<?php endif; ?>
 					<?php endif; ?>
 					
-					return total;
+					// PASO 3: Crear subtotal intermedio - con redondeo
+					const subtotalIntermedio = Math.round(costoBase - descuentoFidelidad - descuentoCumpleanos);
+					
+					// PASO 4: Calcular descuento promocional (efectivo) sobre subtotal intermedio - con redondeo
+					if (formData.get('metodoPago') === 'efectivo') {
+						return Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
+					}
+					return 0;
+				})(),
+				total: (() => {
+					// PASO 1 y 2: Calcular descuentos de fidelidad y cumpleaños sobre costoBase - con redondeo
+					let descuentoFidelidad = 0;
+					let descuentoCumpleanos = 0;
+					
+					<?php if ($user_logged_in): ?>
+					descuentoFidelidad = Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['fidelidad']) && $descuentos['fidelidad']['activo']) ? $descuentos['fidelidad']['porcentaje'] / 100 : 0; ?>);
+					
+					<?php if (isset($user_data) && is_array($user_data) && isset($user_data['fecha_nacimiento']) && !empty($user_data['fecha_nacimiento'])): ?>
+					const fechaNacimientoBD = '<?php echo htmlspecialchars($user_data['fecha_nacimiento'], ENT_QUOTES, 'UTF-8'); ?>';
+					if (fechaNacimientoBD) {
+						const fechaNac = new Date(fechaNacimientoBD);
+						const cumpleanosDia = fechaNac.getDate();
+						const cumpleanosMes = fechaNac.getMonth();
+						const fechaEntrada = new Date(selectedStartDate);
+						const fechaSalida = new Date(selectedEndDate);
+						const añoReserva = fechaEntrada.getFullYear();
+						const cumpleanosActual = new Date(añoReserva, cumpleanosMes, cumpleanosDia);
+						
+						if (cumpleanosActual >= fechaEntrada && cumpleanosActual <= fechaSalida) {
+							descuentoCumpleanos = Math.round(costoBase * <?php echo (isset($descuentos) && isset($descuentos['cumpleanos']) && $descuentos['cumpleanos']['activo']) ? $descuentos['cumpleanos']['porcentaje'] / 100 : 0; ?>);
+						}
+					}
+					<?php endif; ?>
+					<?php endif; ?>
+					
+					// PASO 3: Crear subtotal intermedio - con redondeo
+					const subtotalIntermedio = Math.round(costoBase - descuentoFidelidad - descuentoCumpleanos);
+					
+					// PASO 4: Calcular descuento promocional (efectivo) sobre subtotal intermedio - con redondeo
+					let descuentoEfectivo = 0;
+					if (formData.get('metodoPago') === 'efectivo') {
+						descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
+					}
+					
+					// Total final = subtotal intermedio - descuento efectivo - con redondeo
+					return Math.round(subtotalIntermedio - descuentoEfectivo);
 				})()
 			};
 			
@@ -6584,7 +6755,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			<p style="color: #333; font-size: 0.875rem; margin-bottom: 30px; font-family: 'Oxygen', sans-serif; font-weight: 400;">
 				<?php echo __('discount.auto_applied'); ?>
 			</p>
-			<button onclick="closeDiscountModal()" style="background: transparent; color: #333; border: none; border-bottom: 1px solid #e1e5e9; padding: 12px 30px; border-radius: 0; font-size: 1rem; font-family: 'Oxygen', sans-serif; font-weight: 400; cursor: pointer; transition: border-bottom-color 0.3s ease;">
+			<button onclick="closeDiscountModal()" style="background-color: #FFE082; color: #333; border: none; padding: 15px 40px; border-radius: 50px; font-size: 18px; font-family: 'Oxygen', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);">
 				<?php echo __('discount.great_thanks'); ?>
 			</button>
 		</div>
@@ -6593,10 +6764,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<style>
 		/* Estilos del modal de descuento - Aplicando estilos del calendario */
 		#discountModal .modal-content button:hover {
-			background: transparent !important;
+			background-color: #FFD54F !important;
 			color: #333 !important;
-			border-bottom: 1px solid #333 !important;
-			transform: none !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px) !important;
+		}
+		#discountModal .modal-content button:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0) !important;
 		}
 	</style>
 	

@@ -160,9 +160,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <body>
                             <div class='container'>
                                 <div class='header'>
-                                    <h1 style='text-align: center; margin: 0 0 15px 0;'>
-                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px;\" />
-                                        My Suite In Cartagena
+                                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                                     </h1>
                                     <h2>💰 Abono Recibido</h2>
                                 </div>
@@ -190,9 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <p><span class='field-label'>Saldo pendiente por pagar (80%):</span> <span class='amount'>$$saldo_formateado COP</span></p>
                                     </div>
                                     
+                                    
                                     <div class='info-box'>
                                         <h3>📧 Instrucciones para el Pago del Saldo:</h3>
-                                        <p>El saldo restante se cancela el día del check-in, ya sea en <strong>efectivo</strong> o en <strong>tarjeta</strong>, de forma personal.</p>
+                                        <p>El saldo restante se cancela el día anterior al check-in, ya sea en <strong>efectivo</strong> o en <strong>tarjeta</strong>, de forma personal.</p>
                                     </div>
                                     
                                     <div class='details-box'>
@@ -201,11 +202,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
                                     </div>
                                     
-                                    <p>¡Esperamos darte la bienvenida pronto a My Suite in Cartagena!</p>
+                                    <p>¡Esperamos darte la bienvenida pronto a My Suite In Cartagena!</p>
                                 </div>
                                 <div class='footer'>
                                     <p>Saludos cordiales,<br>
-                                    <strong>Equipo My Suite in Cartagena</strong></p>
+                                    <strong>Equipo My Suite In Cartagena</strong></p>
                                     <p>Este es un email automático, por favor no responder a esta dirección.</p>
                                 </div>
                             </div>
@@ -283,9 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <body>
                             <div class='container'>
                                 <div class='header'>
-                                    <h1 style='text-align: center; margin: 0 0 15px 0;'>
-                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px;\" />
-                                        My Suite In Cartagena
+                                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                                     </h1>
                                     <h2>🎉 ¡Pago Confirmado!</h2>
                                 </div>
