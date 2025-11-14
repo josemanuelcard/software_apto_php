@@ -5,7 +5,7 @@
  */
 
 class I18n {
-    private static $currentLang = 'en';
+    private static $currentLang = 'es';
     private static $translations = [];
     private static $initialized = false;
     
@@ -25,7 +25,7 @@ class I18n {
             } elseif (strpos($scriptPath, '/it/') !== false) {
                 $lang = 'it';
             } else {
-                $lang = 'en';
+                $lang = 'es';
             }
         }
         
@@ -56,8 +56,8 @@ class I18n {
         if (file_exists($langFile)) {
             self::$translations = include $langFile;
         } else {
-            // Fallback a inglés si no existe el archivo
-            self::$translations = include __DIR__ . '/en.php';
+            // Fallback a español si no existe el archivo
+            self::$translations = include __DIR__ . '/es.php';
         }
     }
     

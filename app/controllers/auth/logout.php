@@ -32,7 +32,7 @@ if (ini_get("session.use_cookies")) {
 }
 
 // Detectar idioma desde referer o parámetro
-$lang = 'en'; // Por defecto inglés
+$lang = 'es'; // Por defecto español
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'es', 'it'])) {
     $lang = $_GET['lang'];
 } elseif (isset($_SERVER['HTTP_REFERER'])) {

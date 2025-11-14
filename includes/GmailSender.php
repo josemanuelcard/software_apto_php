@@ -43,7 +43,7 @@ class GmailSender {
         $this->smtp_username = 'gerencia@mysuiteincartagena.com.co';
         $this->smtp_password = 'GereCar-2.025'; // Contraseña del correo
         $this->from_email = 'gerencia@mysuiteincartagena.com.co';
-        $this->from_name = 'My Suite in Cartagena';
+        $this->from_name = 'My Suite In Cartagena';
     }
     
     /**
@@ -119,6 +119,13 @@ class GmailSender {
             // Configurar HTML antes de agregar imágenes
             $mail->isHTML($is_html);
             $mail->CharSet = 'UTF-8';
+            
+            // Prevenir que el servidor agregue firmas automáticas
+            $mail->XMailer = 'My Suite In Cartagena';
+            $mail->addCustomHeader('X-Auto-Response-Suppress', 'All');
+            $mail->addCustomHeader('Precedence', 'bulk');
+            // Intentar prevenir firmas automáticas del servidor
+            $mail->addCustomHeader('List-Unsubscribe', '<mailto:' . $this->from_email . '>');
             
             // Agregar imagen incrustada si se proporciona (DEBE ser ANTES de establecer el Body)
             if ($image_path) {
@@ -305,15 +312,21 @@ class GmailSender {
      * Enviar email de aprobación de reserva
      */
     public function sendReservaAprobada($reserva) {
-        $subject = "✅ Reserva Aprobada - My Suite in Cartagena #" . $reserva['id_reserva'];
+        $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
         
         // Obtener ruta de la imagen del hotel de forma robusta
         $hotel_image_path = $this->getHotelImagePath();
         
         if ($hotel_image_path) {
             error_log("📧 Enviando email de aprobación con imagen: $hotel_image_path");
+            error_log("   - Archivo existe: " . (file_exists($hotel_image_path) ? 'SÍ' : 'NO'));
+            error_log("   - Archivo legible: " . (is_readable($hotel_image_path) ? 'SÍ' : 'NO'));
+            error_log("   - Tamaño: " . (file_exists($hotel_image_path) ? filesize($hotel_image_path) . ' bytes' : 'N/A'));
         } else {
             error_log("⚠️ Enviando email de aprobación SIN imagen (ruta no encontrada)");
+            error_log("   - DOCUMENT_ROOT: " . (isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : 'NO DEFINIDO'));
+            error_log("   - SCRIPT_FILENAME: " . (isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 'NO DEFINIDO'));
+            error_log("   - __DIR__: " . __DIR__);
         }
         
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
@@ -334,7 +347,7 @@ class GmailSender {
      * Enviar email de rechazo de reserva (por solapamiento)
      */
     public function sendReservaRechazada($reserva_rechazada, $reserva_aprobada) {
-        $subject = "⚠️ Reserva No Disponible - My Suite in Cartagena #" . $reserva_rechazada['id_reserva'];
+        $subject = "⚠️ Reserva No Disponible - My Suite In Cartagena #" . $reserva_rechazada['id_reserva'];
         
         // Obtener ruta de la imagen del hotel de forma robusta
         $hotel_image_path = $this->getHotelImagePath();
@@ -374,9 +387,9 @@ class GmailSender {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1 style='text-align: center; margin: 0 0 15px 0;'>
-                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px;\" />
-                        My Suite in Cartagena
+                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                     </h1>
                     <h2>¡Reserva Aprobada!</h2>
                 </div>
@@ -401,7 +414,7 @@ class GmailSender {
                     <div class='instructions'>
                         <h3>💳 INSTRUCCIONES DE PAGO:</h3>
                         <p><strong>Una vez aprobada tu reserva, deberás pagar el 20% del total y enviar el comprobante a gerencia@mysuiteincartagena.com.co.</strong></p>
-                        <p><strong>El saldo restante se cancelará el día del check-in.</strong></p>
+                        <p><strong>El saldo restante se cancelará el día anterior al check-in.</strong></p>
                         <div style='background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #2196f3;'>
                             <p><strong>📝 Pasos a seguir:</strong></p>
                             <p><strong>1.</strong> Calcula el 20% del total: <strong>$" . $anticipo_formateado . " COP</strong></p>
@@ -409,18 +422,33 @@ class GmailSender {
                             <p><strong>3.</strong> Toma una foto o escanea el comprobante de pago</p>
                             <p><strong>4.</strong> <strong>IMPORTANTE:</strong> Envía el comprobante al correo: <strong>gerencia@mysuiteincartagena.com.co</strong></p>
                             <p><strong>5.</strong> Una vez confirmado el pago del anticipo, recibirás la confirmación final</p>
-                            <p><strong>6.</strong> El saldo restante (<strong>$" . $saldo_formateado . " COP</strong>) se cancelará el día del check-in</p>
+                            <p><strong>6.</strong> El saldo restante (<strong>$" . $saldo_formateado . " COP</strong>) se cancelará el día anterior al check-in</p>
                         </div>
                         <div style='background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #ffc107;'>
                             <strong>⚠️ RECORDATORIO:</strong> Sin el comprobante de pago del anticipo, tu reserva no será confirmada.
                         </div>
                     </div>
                     
-                    <p>¡Esperamos darte la bienvenida pronto a My Suite in Cartagena!</p>
+                    <div class='instructions' style='background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3;'>
+                        <h3>💳 Medio de Pago para el Abono (20%):</h3>
+                        <p>Para consignar el <strong>20% del total ($" . $anticipo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
+                        <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
+                            @COO3137910897
+                        </p>
+                        <p style='text-align: center; color: #666; font-size: 14px;'>Usa esta llave en tu aplicación bancaria para realizar la consignación del abono.</p>
+                        
+                        <div style='text-align: center; margin-top: 25px;'>
+                            <a href='#' style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
+                                Pagar ahora con tarjeta
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <p>¡Esperamos darte la bienvenida pronto a My Suite In Cartagena!</p>
                 </div>
                 <div class='footer'>
                     <p>Saludos cordiales,<br>
-                    <strong>Equipo My Suite in Cartagena</strong></p>
+                    <strong>Equipo My Suite In Cartagena</strong></p>
                     <p>Este es un email automático, por favor no responder a esta dirección.</p>
                 </div>
             </div>
@@ -453,9 +481,9 @@ class GmailSender {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1 style='text-align: center; margin: 0 0 15px 0;'>
-                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px;\" />
-                        My Suite in Cartagena
+                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                     </h1>
                     <h2>Reserva No Disponible</h2>
                 </div>
@@ -490,7 +518,7 @@ class GmailSender {
                 </div>
                 <div class='footer'>
                     <p>Saludos cordiales,<br>
-                    <strong>Equipo My Suite in Cartagena</strong></p>
+                    <strong>Equipo My Suite In Cartagena</strong></p>
                     <p>Este es un email automático, por favor no responder a esta dirección.</p>
                 </div>
             </div>
