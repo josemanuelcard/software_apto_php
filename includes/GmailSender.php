@@ -451,12 +451,11 @@ class GmailSender {
                         <p><strong>El saldo restante se cancelará el día anterior al check-in.</strong></p>
                         <div style='background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #2196f3;'>
                             <p><strong>📝 Pasos a seguir:</strong></p>
-                            <p><strong>1.</strong> Calcula el 20% del total: <strong>$" . $anticipo_formateado . " COP</strong></p>
-                            <p><strong>2.</strong> Realiza el pago del 20% (anticipo)</p>
-                            <p><strong>3.</strong> Toma una foto o escanea el comprobante de pago</p>
-                            <p><strong>4.</strong> <strong>IMPORTANTE:</strong> Envía el comprobante al correo: <strong>gerencia@mysuiteincartagena.com.co</strong></p>
-                            <p><strong>5.</strong> Una vez confirmado el pago del anticipo, recibirás la confirmación final</p>
-                            <p><strong>6.</strong> El saldo restante (<strong>$" . $saldo_formateado . " COP</strong>) se cancelará el día anterior al check-in</p>
+                            <p><strong>1.</strong> Realiza el pago del 20% (anticipado): <strong>$" . $anticipo_formateado . " COP</strong></p>
+                            <p><strong>2.</strong> Toma una foto o escanea el comprobante de pago</p>
+                            <p><strong>3.</strong> <strong>IMPORTANTE:</strong> Envía el comprobante al correo: <strong>gerencia@mysuiteincartagena.com.co</strong></p>
+                            <p><strong>4.</strong> Una vez confirmado el pago del anticipo, recibirás la confirmación final</p>
+                            <p><strong>5.</strong> El saldo restante (<strong>$" . $saldo_formateado . " COP</strong>) se cancelará el día anterior al check-in</p>
                         </div>
                         <div style='background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #ffc107;'>
                             <strong>⚠️ RECORDATORIO:</strong> Sin el comprobante de pago del anticipo, tu reserva no será confirmada.
