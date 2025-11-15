@@ -884,7 +884,20 @@ try {
                                                             <strong>$<?php echo number_format($reserva['total'], 0, ',', '.'); ?> COP</strong>
                                                             <br>
                                                             <small class="text-muted">
-                                                                <?php echo $reserva['metodo_pago'] === 'efectivo' ? 'Efectivo' : 'Tarjeta'; ?>
+                                                                <?php 
+                                                                $metodo = trim(strtolower($reserva['metodo_pago'] ?? ''));
+                                                                // Debug temporal
+                                                                error_log("DEBUG metodo_pago: valor='" . ($reserva['metodo_pago'] ?? 'NULL') . "', normalizado='" . $metodo . "'");
+                                                                
+                                                                if ($metodo === 'efectivo' || $metodo === 'transferencia') {
+                                                                    echo 'Transferencia';
+                                                                } elseif ($metodo === 'tarjeta_credito') {
+                                                                    echo 'Tarjeta';
+                                                                } else {
+                                                                    // Mostrar el valor real para debug
+                                                                    echo htmlspecialchars($reserva['metodo_pago'] ?? 'N/A');
+                                                                }
+                                                                ?>
                                                             </small>
                                                         </div>
                                                     </td>
@@ -1061,7 +1074,23 @@ try {
                 estadoClass = estadoClasses[reserva.estado] || 'bg-secondary';
             }
             
-            const metodoPago = reserva.metodo_pago === 'efectivo' ? 'Efectivo' : 'Tarjeta de Crédito';
+            // Debug temporal
+            console.log('DEBUG metodo_pago recibido:', reserva.metodo_pago, 'tipo:', typeof reserva.metodo_pago);
+            
+            // Normalizar el valor: convertir a string, lowercase, y eliminar espacios
+            const metodoPagoValor = String(reserva.metodo_pago || '').toLowerCase().trim().replace(/\s+/g, '');
+            console.log('DEBUG metodoPagoValor normalizado:', metodoPagoValor, 'longitud:', metodoPagoValor.length);
+            
+            // Comparar con diferentes posibles valores
+            let metodoPago = 'Tarjeta de Crédito'; // Por defecto
+            if (metodoPagoValor === 'efectivo' || 
+                metodoPagoValor === 'transferencia' ||
+                metodoPagoValor.includes('efectivo') ||
+                metodoPagoValor.includes('transferencia')) {
+                metodoPago = 'Transferencia';
+            }
+            
+            console.log('DEBUG metodoPago final:', metodoPago);
             const vivePalmira = reserva.vive_palmira == 1 ? 'Sí' : 'No';
             
             document.getElementById('detalleReservaContent').innerHTML = `
@@ -1242,15 +1271,13 @@ try {
                 credentials: 'same-origin'
             })
                 .then(response => {
-                    // Después de la acción, recargar la tabla
-                    setTimeout(() => {
-                        recargarTablaReservas();
-                    }, 500); // Pequeño delay para asegurar que el servidor procesó la acción
+                    // Recargar toda la página para mostrar los mensajes del servidor
+                    window.location.reload();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    // Recargar la tabla de todas formas
-                    recargarTablaReservas();
+                    // Recargar la página de todas formas para mostrar cualquier mensaje de error
+                    window.location.reload();
                 });
         }
         

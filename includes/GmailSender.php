@@ -438,7 +438,7 @@ class GmailSender {
                         <p><strong>Fecha de Entrada:</strong> {$fecha_entrada}</p>
                         <p><strong>Fecha de Salida:</strong> {$fecha_salida}</p>
                         <p><strong>Huéspedes:</strong> {$reserva['num_adultos']} adultos, {$reserva['num_ninos']} niños</p>
-                        <p><strong>Método de Pago:</strong> " . ($reserva['metodo_pago'] === 'efectivo' ? 'Transferencia' : 'Tarjeta de Crédito') . "</p>
+                        <p><strong>Método de Pago:</strong> " . ($reserva['metodo_pago'] === 'efectivo' || $reserva['metodo_pago'] === 'transferencia' ? 'Transferencia' : 'Tarjeta de Crédito') . "</p>
                     </div>
                     
                     <div class='total'>
@@ -464,7 +464,7 @@ class GmailSender {
                     
                     <div class='instructions' style='background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3;'>
                         <h3>💳 Medio de Pago para el Abono (20%):</h3>
-                        " . ($reserva['metodo_pago'] === 'efectivo' ? "
+                        " . (($reserva['metodo_pago'] === 'efectivo' || $reserva['metodo_pago'] === 'transferencia') ? "
                         <p>Para consignar el <strong>20% del total ($" . $anticipo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
                         <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
                             @COO3137910897

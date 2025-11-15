@@ -450,6 +450,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <?php echo __('calendar.rates_note'); ?> <span class="bold-text" style="font-weight: 700; color: rgb(38, 38, 38);">COP ($)</span>
                     </p>
                 </div>
+                
+                <!-- Botón de Pago -->
+                <button id="pagoBtn" class="btn-pago btn-reservar-ahora w-100 mt-4" style="background-color: #FFE082; color: #333; padding: 12px 30px; font-family: 'Oxygen', sans-serif; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;">
+                    Botón de Pago
+                </button>
             </div>
         </div>
     </div>
@@ -718,9 +723,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="metodoPago" id="efectivo" value="efectivo">
-                                    <label class="form-check-label" for="efectivo">
-                                        <?php echo __('form.cash'); ?> (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% <?php echo __('form.cash_discount'); ?>)
+                                    <input class="form-check-input" type="radio" name="metodoPago" id="transferencia" value="transferencia">
+                                    <label class="form-check-label" for="transferencia">
+                                        Transferencia (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% <?php echo __('form.cash_discount'); ?>)
                                     </label>
                                 </div>
                             </div>
@@ -796,7 +801,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                 <span class="summary-value" id="summarySubtotalIntermedio">$0 COP</span>
                             </div>
                             <div class="summary-item" id="summaryDescuentoEfectivo" style="display: none;">
-                                <span class="summary-label" style="color: #28a745;">Descuento por Efectivo (<span id="summaryDescuentoEfectivoPorcentaje"><?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? number_format($descuentos['promocional']['porcentaje'], 1) : '3.0'; ?>%</span>):</span>
+                                <span class="summary-label" style="color: #28a745;">Descuento por Transferencia (<span id="summaryDescuentoEfectivoPorcentaje"><?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? number_format($descuentos['promocional']['porcentaje'], 1) : '3.0'; ?>%</span>):</span>
                                 <span class="summary-value" style="color: #28a745;" id="summaryDescuentoEfectivoValor">-$0 COP</span>
                             </div>
                             <div class="summary-item" style="border-top: 2px solid #FFE082; margin-top: 10px; padding-top: 15px;">
@@ -2166,6 +2171,35 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		.btn-reservar-ahora:active {
 			transform: translateY(0);
 			box-shadow: 0 2px 10px rgba(255, 193, 7, 0.3);
+		}
+		
+		/* Estilos para el botón de pago */
+		#pagoBtn, .btn-pago {
+			background-color: #FFE082 !important;
+			color: #333 !important;
+			padding: 12px 30px !important;
+			font-family: 'Oxygen', sans-serif !important;
+			font-size: 16px !important;
+			font-weight: 600 !important;
+			border: none !important;
+			border-radius: 50px !important;
+			transition: all 0.3s ease !important;
+			box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+			text-transform: uppercase !important;
+			letter-spacing: 1px !important;
+			cursor: pointer !important;
+		}
+		
+		#pagoBtn:hover, .btn-pago:hover {
+			background-color: #FFD54F !important;
+			color: #333 !important;
+			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
+			transform: translateY(-2px);
+		}
+		
+		#pagoBtn:active, .btn-pago:active {
+			background-color: #FFC107 !important;
+			transform: translateY(0);
 		}
 		
 		/* Estilos del Carrusel de Blog */
@@ -5305,7 +5339,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
 				radio.addEventListener('change', (e) => {
 					const descuentoInfo = document.getElementById('descuentoInfo');
-					if (e.target.value === 'efectivo') {
+					if (e.target.value === 'transferencia') {
 						descuentoInfo.style.display = 'block';
 						updateModalCostSummary();
 					} else {
@@ -6037,7 +6071,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			
 			const metodoPago = document.querySelector('input[name="metodoPago"]:checked');
 			if (metodoPago) {
-				const metodoTexto = metodoPago.value === 'tarjeta_credito' ? 'Tarjeta de Crédito' : 'Efectivo';
+				const metodoTexto = metodoPago.value === 'tarjeta_credito' ? 'Tarjeta de Crédito' : 'Transferencia';
 				document.getElementById('summaryMetodoPago').textContent = metodoTexto;
 			}
 			
@@ -6094,7 +6128,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				const subtotalIntermedio = Math.round(subtotal - descuentoFidelidad - descuentoCumpleanos);
 				
 				// PASO 4: Descuento por efectivo (sobre subtotal intermedio) - con redondeo
-				if (metodoPagoValue === 'efectivo') {
+				if (metodoPagoValue === 'transferencia') {
 					descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
 				}
 				
@@ -6381,7 +6415,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			const subtotalIntermedio = Math.round(subtotal - descuentoFidelidad - descuentoCumpleanos);
 			
 			// PASO 4: Descuento por efectivo (sobre subtotal intermedio) - con redondeo
-			if (metodoPago === 'efectivo') {
+			if (metodoPago === 'transferencia') {
 				descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
 			}
 			
@@ -6408,7 +6442,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			// Mostrar/ocultar fila de descuento por efectivo (solo si existe)
 			const descuentoRow = document.getElementById('descuentoRow');
 			if (descuentoRow) {
-				if (metodoPago === 'efectivo' && descuentoEfectivo > 0) {
+				if (metodoPago === 'transferencia' && descuentoEfectivo > 0) {
 					descuentoRow.style.display = 'flex';
 				} else {
 					descuentoRow.style.display = 'none';
@@ -6541,6 +6575,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				fecha_nacimiento: '<?php echo (isset($user_data['fecha_nacimiento']) && $user_data['fecha_nacimiento']) ? htmlspecialchars($user_data['fecha_nacimiento'], ENT_QUOTES) : ''; ?>'
 			}<?php else: ?>null<?php endif; ?>;
 			
+			// Obtener método de pago del radio button seleccionado
+			const metodoPagoRadio = document.querySelector('input[name="metodoPago"]:checked');
+			const metodoPagoValue = metodoPagoRadio ? metodoPagoRadio.value : (formData.get('metodoPago') || 'tarjeta_credito');
+			
 			const reservationData = {
 				id_apartamento: 1,
 				id_usuario: <?php echo $user_logged_in && isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'null'; ?>,
@@ -6554,7 +6592,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				num_adultos: parseInt(formData.get('adultos')),
 				num_ninos: parseInt(formData.get('ninos')),
 				vive_palmira: formData.get('vivePalmira') === 'on',
-				metodo_pago: formData.get('metodoPago'),
+				metodo_pago: metodoPagoValue,
 				costo_base: costoBase,
 				descuento_fidelizacion: (() => {
 					<?php if ($user_logged_in): ?>
@@ -6621,7 +6659,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const subtotalIntermedio = Math.round(costoBase - descuentoFidelidad - descuentoCumpleanos);
 					
 					// PASO 4: Calcular descuento promocional (efectivo) sobre subtotal intermedio - con redondeo
-					if (formData.get('metodoPago') === 'efectivo') {
+					if (metodoPagoValue === 'transferencia') {
 						return Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
 					}
 					return 0;
@@ -6657,7 +6695,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					
 					// PASO 4: Calcular descuento promocional (efectivo) sobre subtotal intermedio - con redondeo
 					let descuentoEfectivo = 0;
-					if (formData.get('metodoPago') === 'efectivo') {
+					if (metodoPagoValue === 'transferencia') {
 						descuentoEfectivo = Math.round(subtotalIntermedio * <?php echo (isset($descuentos) && isset($descuentos['promocional']) && $descuentos['promocional']['activo']) ? $descuentos['promocional']['porcentaje'] / 100 : 0.03; ?>);
 					}
 					
@@ -6985,7 +7023,7 @@ window.showMyReservations = function() {
 											translations.reservations.confirmed;
 						const paymentStatus = reservation.estado_pago === 'pagada' ? translations.reservations.paid : translations.reservations.unpaid;
 						const paymentClass = reservation.estado_pago === 'pagada' ? 'success' : 'warning';
-						const paymentMethod = reservation.metodo_pago === 'efectivo' ? translations.reservations.cash : translations.reservations.card;
+						const paymentMethod = (reservation.metodo_pago === 'efectivo' || reservation.metodo_pago === 'transferencia') ? 'Transferencia' : translations.reservations.card;
 						
 						html += `
 							<div class="card mb-3" style="border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">

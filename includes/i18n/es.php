@@ -91,7 +91,7 @@ return [
     'form.credit_card' => 'Tarjeta de Crédito',
     'form.cash' => 'Efectivo',
     'form.cash_discount' => 'descuento',
-    'form.discount_applied' => 'descuento aplicado por pago en efectivo!',
+    'form.discount_applied' => 'descuento aplicado por pago en transferencia!',
     'form.payment_receipt_title' => 'Importante - Comprobante de Pago:',
     'form.payment_receipt_text' => 'Una vez aprobada tu reserva, deberás realizar el pago y enviar el comprobante al correo:',
     'form.cost_summary' => 'Resumen de Costo',
@@ -156,7 +156,7 @@ return [
     'reservations.cancelled' => 'Cancelada',
     'reservations.paid' => 'Pagada',
     'reservations.unpaid' => 'Sin Pagar',
-    'reservations.cash' => 'Efectivo',
+    'reservations.cash' => 'Transferencia',
     'reservations.card' => 'Tarjeta',
     'reservations.loading' => 'Cargando reservas...',
     
