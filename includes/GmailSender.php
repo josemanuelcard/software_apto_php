@@ -431,17 +431,20 @@ class GmailSender {
                     
                     <div class='instructions' style='background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3;'>
                         <h3>💳 Medio de Pago para el Abono (20%):</h3>
+                        " . ($reserva['metodo_pago'] === 'efectivo' ? "
                         <p>Para consignar el <strong>20% del total ($" . $anticipo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
                         <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
                             @COO3137910897
                         </p>
                         <p style='text-align: center; color: #666; font-size: 14px;'>Usa esta llave en tu aplicación bancaria para realizar la consignación del abono.</p>
-                        
+                        " : "
+                        <p>Para realizar el pago del <strong>20% del total ($" . $anticipo_formateado . " COP)</strong>, puedes usar el siguiente botón:</p>
                         <div style='text-align: center; margin-top: 25px;'>
                             <a href='#' style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
                                 Pagar ahora con tarjeta
                             </a>
                         </div>
+                        ") . "
                     </div>
                     
                     <p>¡Esperamos darte la bienvenida pronto a My Suite In Cartagena!</p>
