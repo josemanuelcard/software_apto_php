@@ -20,6 +20,9 @@ $llaveSecreta = "kpnruQ3ec0Bfs4wGCYAkhw";
 // La URL a la que Bold redigirá al usuario después del pago
 $redirectionUrl = "https://mysuiteincartagena.com.co/index.php"; // Puedes cambiarla a una página de "gracias"
 
+// La URL a la que Bold redigirá cuando se cancele
+$originUrl = "https://mysuiteincartagena.com.co/pago_cancelado.php"; // Puedes cambiarla a una página de "gracias"
+
 
 /*
  * ======================================================================
@@ -113,7 +116,8 @@ $checkout_data = [
     "apiKey" => $apiKey,
     "integritySignature" => $hashHex,
     "description" => "Anticipo Reserva #" . htmlspecialchars($reservaId_from_email),
-    "redirectionUrl" => $redirectionUrl
+    "redirectionUrl" => $redirectionUrl,
+    "originUrl" => $originUrl
 ];
 
 // Convertimos el array de PHP a un objeto JSON para JavaScript
