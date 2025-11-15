@@ -64,26 +64,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
         $error = 'Las contraseñas no coinciden';
     } elseif (strlen($newPassword) < 8) {
         $error = 'La contraseña debe tener al menos 8 caracteres';
+    } elseif (!preg_match('/[A-Z]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos una letra mayúscula';
+    } elseif (!preg_match('/[0-9]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos un número';
+    } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos un carácter especial (!@#$%^&*()_+-=[]{};\':"|,.<>/?])';
     } else {
         try {
             $database = new Database();
             $pdo = $database->getConnection();
             
-            // Actualizar contraseña
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-            $updateQuery = "UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?";
-            $updateStmt = $pdo->prepare($updateQuery);
-            $updateResult = $updateStmt->execute([$hashedPassword, $user['user_id']]);
+            // Verificar que la nueva contraseña no sea igual a la actual
+            $queryCurrentPassword = "SELECT contrasena FROM usuarios WHERE id_usuario = ?";
+            $stmtCurrentPassword = $pdo->prepare($queryCurrentPassword);
+            $stmtCurrentPassword->execute([$user['user_id']]);
+            $currentUser = $stmtCurrentPassword->fetch(PDO::FETCH_ASSOC);
             
-            if ($updateResult) {
-                // Marcar token como usado
-                $markUsedQuery = "UPDATE password_reset_tokens SET used = TRUE WHERE token = ?";
-                $markUsedStmt = $pdo->prepare($markUsedQuery);
-                $markUsedStmt->execute([$token]);
-                
-                $success = 'password_changed';
+            if ($currentUser && password_verify($newPassword, $currentUser['contrasena'])) {
+                $error = 'La contraseña no puede ser igual a la actual';
             } else {
-                $error = 'Error al actualizar la contraseña';
+                // Actualizar contraseña
+                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                $updateQuery = "UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?";
+                $updateStmt = $pdo->prepare($updateQuery);
+                $updateResult = $updateStmt->execute([$hashedPassword, $user['user_id']]);
+                
+                if ($updateResult) {
+                    // Marcar token como usado
+                    $markUsedQuery = "UPDATE password_reset_tokens SET used = TRUE WHERE token = ?";
+                    $markUsedStmt = $pdo->prepare($markUsedQuery);
+                    $markUsedStmt->execute([$token]);
+                    
+                    $success = 'password_changed';
+                } else {
+                    $error = 'Error al actualizar la contraseña';
+                }
             }
             
         } catch (Exception $e) {
@@ -260,8 +276,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             font-size: 16px;
         }
         
-        /* Modal de confirmación */
-        .success-modal {
+        /* Modales estéticos pequeños */
+        .custom-modal, .success-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -271,59 +287,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
             animation: fadeIn 0.3s ease;
         }
         
-        .success-modal-content {
+        .custom-modal-content, .success-modal-content {
             background: white;
-            padding: 40px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             animation: slideIn 0.3s ease;
         }
         
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
         @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
+            from { transform: translateY(-30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
         
-        .success-icon {
+        .modal-icon, .success-icon {
             font-size: 48px;
-            color: #28a745;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
-        .success-title {
-            font-size: 24px;
+        .modal-icon.success, .success-icon {
+            color: #28a745;
+        }
+        
+        .modal-icon.error {
+            color: #dc3545;
+        }
+        
+        .modal-title, .success-title {
+            font-size: 20px;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             font-weight: 600;
         }
         
-        .success-message {
+        .modal-message, .success-message {
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             line-height: 1.5;
+            font-size: 15px;
         }
         
-        .success-btn {
-            background: linear-gradient(135deg, rgb(25, 130, 151), rgb(20, 110, 130));
+        .modal-btn, .success-btn {
+            background: linear-gradient(135deg, rgb(199, 156, 65), rgb(186, 117, 13));
             color: white;
             padding: 12px 30px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            width: 100%;
         }
         
-        .success-btn:hover {
-            background: linear-gradient(135deg, rgb(20, 110, 130), rgb(15, 90, 110));
+        .modal-btn:hover, .success-btn:hover {
+            background: linear-gradient(135deg, rgb(186, 117, 13), rgb(170, 100, 10));
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(199, 156, 65, 0.4);
+        }
+        
+        .modal-btn:active, .success-btn:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -338,14 +374,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
                     <h2>Nueva Contraseña</h2>
 
                     <?php if ($error): ?>
-                        <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; text-align: center;">
-                            <?php echo htmlspecialchars($error); ?>
+                        <div class="custom-modal" id="errorModal" style="display: flex;">
+                            <div class="custom-modal-content">
+                                <div class="modal-icon error">❌</div>
+                                <div class="modal-title">Error</div>
+                                <div class="modal-message"><?php echo htmlspecialchars($error); ?></div>
+                                <button class="modal-btn" onclick="closeModal('errorModal')">Aceptar</button>
+                            </div>
                         </div>
                     <?php endif; ?>
                     
                     <?php if ($success === 'password_changed'): ?>
                         <!-- Modal de confirmación -->
-                        <div class="success-modal" id="successModal">
+                        <div class="success-modal" id="successModal" style="display: flex;">
                             <div class="success-modal-content">
                                 <div class="success-icon">✅</div>
                                 <div class="success-title">¡Contraseña Actualizada!</div>
@@ -376,6 +417,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
                                 <input type="password" id="newPassword" name="newPassword" placeholder="Mínimo 8 caracteres" required minlength="8">
                                 <span class="toggle-password" onclick="togglePassword()"><i class="fas fa-eye"></i></span>
                             </div>
+                            <small style="color: #666; font-size: 13px; display: block; margin-top: 5px;">
+                                La contraseña debe contener: al menos 8 caracteres, una mayúscula, un número y un carácter especial
+                            </small>
                             <span class="error-message" id="newPasswordError"></span> 
                         </div>
 
@@ -404,6 +448,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
     </div>
     
     <script>
+        // Función para cerrar modales
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Cerrar modal al hacer clic fuera de él
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('custom-modal') || e.target.classList.contains('success-modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+        
         // Funciones para mostrar/ocultar contraseña
         function togglePassword() {
             const passwordInput = document.getElementById('newPassword');
@@ -458,9 +517,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             }
         });
 
+        // Función para mostrar modal de error
+        function showErrorModal(message) {
+            // Eliminar modal anterior si existe
+            const existingModal = document.getElementById('jsErrorModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.id = 'jsErrorModal';
+            modal.style.display = 'flex';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'custom-modal-content';
+            
+            const icon = document.createElement('div');
+            icon.className = 'modal-icon error';
+            icon.textContent = '❌';
+            
+            const title = document.createElement('div');
+            title.className = 'modal-title';
+            title.textContent = 'Error';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'modal-message';
+            messageDiv.textContent = message;
+            
+            const button = document.createElement('button');
+            button.className = 'modal-btn';
+            button.textContent = 'Aceptar';
+            button.addEventListener('click', function() {
+                closeModal('jsErrorModal');
+            });
+            
+            modalContent.appendChild(icon);
+            modalContent.appendChild(title);
+            modalContent.appendChild(messageDiv);
+            modalContent.appendChild(button);
+            modal.appendChild(modalContent);
+            
+            document.body.appendChild(modal);
+            
+            // Cerrar al hacer clic fuera del modal
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal('jsErrorModal');
+                }
+            });
+        }
+        
         // Validación del formulario
         document.getElementById('resetForm').addEventListener('submit', function(e) {
             let isValid = true;
+            let errorMessage = '';
             
             // Limpiar errores anteriores
             document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
@@ -471,28 +582,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             
             // Validar nueva contraseña
             if (!newPassword) {
-                document.getElementById('newPasswordError').textContent = 'La nueva contraseña es requerida';
+                errorMessage = 'La nueva contraseña es requerida';
                 document.getElementById('newPassword').classList.add('error');
                 isValid = false;
             } else if (newPassword.length < 8) {
-                document.getElementById('newPasswordError').textContent = 'La contraseña debe tener al menos 8 caracteres';
+                errorMessage = 'La contraseña debe tener al menos 8 caracteres';
                 document.getElementById('newPassword').classList.add('error');
                 isValid = false;
+            } else {
+                // Validar requisitos de seguridad
+                const hasUpperCase = /[A-Z]/.test(newPassword);
+                const hasNumber = /[0-9]/.test(newPassword);
+                const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
+                
+                if (!hasUpperCase || !hasNumber || !hasSpecialChar) {
+                    errorMessage = 'La contraseña debe contener: al menos una mayúscula, un número y un carácter especial';
+                    document.getElementById('newPassword').classList.add('error');
+                    isValid = false;
+                }
             }
             
             // Validar confirmación de contraseña
-            if (!confirmPassword) {
-                document.getElementById('confirmPasswordError').textContent = 'Confirma tu nueva contraseña';
+            if (isValid && !confirmPassword) {
+                errorMessage = 'Confirma tu nueva contraseña';
                 document.getElementById('confirmPassword').classList.add('error');
                 isValid = false;
-            } else if (newPassword !== confirmPassword) {
-                document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+            } else if (isValid && newPassword !== confirmPassword) {
+                errorMessage = 'Las contraseñas no coinciden';
                 document.getElementById('confirmPassword').classList.add('error');
                 isValid = false;
             }
             
             if (!isValid) {
                 e.preventDefault();
+                if (errorMessage) {
+                    showErrorModal(errorMessage);
+                }
             }
         });
     </script>

@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 if ($result) {
                     $step = 'code';
                     $userEmail = $email;
-                    $success = 'Código enviado exitosamente a tu email';
+                    $success = 'Se envió un código de verificación al correo registrado';
                 } else {
                     $error = 'Error al enviar el correo';
                 }
@@ -134,10 +134,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $code = trim($_POST['code'] ?? '');
     $email = trim($_POST['email'] ?? '');
     
+    // Si no hay userEmail, intentar obtenerlo del POST
+    if (empty($userEmail) && !empty($email)) {
+        $userEmail = $email;
+    }
+    
+    // Validaciones en orden de prioridad
     if (empty($code)) {
         $error = 'Por favor, ingresa el código de verificación';
     } elseif (strlen($code) !== 6 || !is_numeric($code)) {
         $error = 'El código debe tener 6 dígitos';
+    } elseif (empty($userEmail) && empty($email)) {
+        $error = 'Por favor, ingresa tu correo primero';
+        $step = 'email';
+    } elseif (!empty($email) && !empty($userEmail) && $email !== $userEmail) {
+        $error = 'El correo no puede ser modificado';
     } else {
         require_once __DIR__ . '/../../../config/database.php';
         
@@ -145,21 +156,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $database = new Database();
             $pdo = $database->getConnection();
             
+            // Usar el correo del POST si userEmail está vacío, sino usar userEmail
+            $emailToUse = !empty($userEmail) ? $userEmail : $email;
+            
             // Verificar el código
             $query = "SELECT prt.*, u.correo FROM password_reset_tokens prt 
                       JOIN usuarios u ON prt.user_id = u.id_usuario 
                       WHERE u.correo = ? AND prt.verification_code = ? AND prt.expires_at > NOW() AND prt.used = FALSE";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$email, $code]);
+            $stmt->execute([$emailToUse, $code]);
             $codeData = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($codeData) {
                 $step = 'password';
-                $userEmail = $email;
+                // Mantener el correo original
+                $userEmail = $codeData['correo'];
                 $token = $codeData['token'];
-                $success = 'Código verificado correctamente';
+                $success = 'Código verificado correctamente. Ahora puedes crear tu nueva contraseña.';
             } else {
-                $error = 'Código incorrecto o expirado';
+                $error = 'Código incorrecto';
+                // Mantener en step 'code' para que pueda intentar de nuevo
+                // Asegurar que userEmail se mantenga
+                if (empty($userEmail) && !empty($email)) {
+                    $userEmail = $email;
+                }
             }
             
         } catch (Exception $e) {
@@ -175,12 +195,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $email = $_POST['email'] ?? '';
     $token = $_POST['token'] ?? '';
     
+    // Si no hay userEmail, intentar obtenerlo del POST
+    if (empty($userEmail) && !empty($email)) {
+        $userEmail = $email;
+    }
+    
+    // Validaciones de contraseña primero
     if (empty($newPassword) || empty($confirmPassword)) {
         $error = 'Por favor, complete todos los campos';
     } elseif ($newPassword !== $confirmPassword) {
         $error = 'Las contraseñas no coinciden';
     } elseif (strlen($newPassword) < 8) {
         $error = 'La contraseña debe tener al menos 8 caracteres';
+    } elseif (!preg_match('/[A-Z]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos una letra mayúscula';
+    } elseif (!preg_match('/[0-9]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos un número';
+    } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/', $newPassword)) {
+        $error = 'La contraseña debe contener al menos un carácter especial (!@#$%^&*()_+-=[]{};\':"|,.<>/?])';
     } else {
         require_once __DIR__ . '/../../../config/database.php';
         
@@ -188,31 +220,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $database = new Database();
             $pdo = $database->getConnection();
             
+            // Usar el correo del POST si userEmail está vacío, sino usar userEmail
+            $emailToUse = !empty($userEmail) ? $userEmail : $email;
+            
             // Verificar token válido
             $query = "SELECT prt.*, u.id_usuario FROM password_reset_tokens prt 
                       JOIN usuarios u ON prt.user_id = u.id_usuario 
                       WHERE u.correo = ? AND prt.token = ? AND prt.expires_at > NOW() AND prt.used = FALSE";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$email, $token]);
+            $stmt->execute([$emailToUse, $token]);
             $tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($tokenData) {
-                // Actualizar contraseña
-                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-                $updateQuery = "UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?";
-                $updateStmt = $pdo->prepare($updateQuery);
-                $updateResult = $updateStmt->execute([$hashedPassword, $tokenData['user_id']]);
+                // Verificar que la nueva contraseña no sea igual a la actual
+                $queryCurrentPassword = "SELECT contrasena FROM usuarios WHERE id_usuario = ?";
+                $stmtCurrentPassword = $pdo->prepare($queryCurrentPassword);
+                $stmtCurrentPassword->execute([$tokenData['user_id']]);
+                $currentUser = $stmtCurrentPassword->fetch(PDO::FETCH_ASSOC);
                 
-                if ($updateResult) {
-                    // Marcar token como usado
-                    $markUsedQuery = "UPDATE password_reset_tokens SET used = TRUE WHERE token = ?";
-                    $markUsedStmt = $pdo->prepare($markUsedQuery);
-                    $markUsedStmt->execute([$token]);
-                    
-                    $step = 'success';
-                    $success = 'Contraseña actualizada exitosamente';
+                if ($currentUser && password_verify($newPassword, $currentUser['contrasena'])) {
+                    $error = 'La contraseña no puede ser igual a la actual';
+                    // Mantener en step 'password' para que pueda intentar de nuevo
+                    // Asegurar que userEmail se mantenga
+                    if (empty($userEmail) && !empty($email)) {
+                        $userEmail = $email;
+                    }
                 } else {
-                    $error = 'Error al actualizar la contraseña';
+                    // Actualizar contraseña
+                    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                    $updateQuery = "UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?";
+                    $updateStmt = $pdo->prepare($updateQuery);
+                    $updateResult = $updateStmt->execute([$hashedPassword, $tokenData['user_id']]);
+                    
+                    if ($updateResult) {
+                        // Marcar token como usado
+                        $markUsedQuery = "UPDATE password_reset_tokens SET used = TRUE WHERE token = ?";
+                        $markUsedStmt = $pdo->prepare($markUsedQuery);
+                        $markUsedStmt->execute([$token]);
+                        
+                        $step = 'success';
+                        $success = 'Contraseña actualizada exitosamente';
+                    } else {
+                        $error = 'Error al actualizar la contraseña';
+                    }
                 }
             } else {
                 $error = 'Token inválido o expirado';
@@ -366,6 +416,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             line-height: 1.5;
             font-size: 16px;
         }
+        
+        /* Modales estéticos pequeños */
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .custom-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-icon.success {
+            color: #28a745;
+        }
+        
+        .modal-icon.error {
+            color: #dc3545;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .modal-message {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        
+        .modal-btn {
+            background: linear-gradient(135deg, rgb(199, 156, 65), rgb(186, 117, 13));
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .modal-btn:hover {
+            background: linear-gradient(135deg, rgb(186, 117, 13), rgb(170, 100, 10));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(199, 156, 65, 0.4);
+        }
+        
+        .modal-btn:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -379,15 +515,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     <?php if ($step === 'email'): ?>
                         <h2>Restablecer Contraseña</h2>
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; text-align: center;">
-                                <?php echo htmlspecialchars($error); ?>
-                            </div>
-                        <?php endif; ?>
                         
                         <div class="info-text">
                             Ingresa tu email y te enviaremos un código de verificación para restablecer tu contraseña.
                         </div>
+                        
+                        <?php if ($error): ?>
+                            <div class="custom-modal" id="errorModal" style="display: flex;">
+                                <div class="custom-modal-content">
+                                    <div class="modal-icon error">❌</div>
+                                    <div class="modal-title">Error</div>
+                                    <div class="modal-message"><?php echo htmlspecialchars($error); ?></div>
+                                    <button class="modal-btn" onclick="closeModal('errorModal')">Aceptar</button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         
                         <form method="POST">
                             <input type="hidden" name="action" value="send_code">
@@ -400,27 +542,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     <?php elseif ($step === 'code'): ?>
                         <h2>Verificar Código</h2>
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; text-align: center;">
-                                <?php echo htmlspecialchars($error); ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($success): ?>
-                            <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb; text-align: center;">
-                                <?php echo htmlspecialchars($success); ?>
-                            </div>
-                        <?php endif; ?>
                         
                         <div class="info-text">
-                            Hemos enviado un código de 6 dígitos a:<br>
-                            <strong><?php echo htmlspecialchars($userEmail); ?></strong><br>
-                            Ingresa el código para continuar.
+                            Se envió un código de verificación al correo registrado.<br>
+                            Ingresa el código de 6 dígitos para continuar.
                         </div>
+                        
+                        <?php if ($success && !$error): ?>
+                            <div class="custom-modal" id="successModal" style="display: flex;">
+                                <div class="custom-modal-content">
+                                    <div class="modal-icon success">✅</div>
+                                    <div class="modal-title">Éxito</div>
+                                    <div class="modal-message"><?php echo htmlspecialchars($success); ?></div>
+                                    <button class="modal-btn" onclick="closeModal('successModal')">Aceptar</button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if ($error): ?>
+                            <div class="custom-modal" id="errorModal" style="display: flex;">
+                                <div class="custom-modal-content">
+                                    <div class="modal-icon error">❌</div>
+                                    <div class="modal-title">Error</div>
+                                    <div class="modal-message"><?php echo htmlspecialchars($error); ?></div>
+                                    <button class="modal-btn" onclick="closeModal('errorModal')">Aceptar</button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         
                         <form method="POST">
                             <input type="hidden" name="action" value="verify_code">
-                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>">
+                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>" id="email_hidden">
                             <div class="input-group-ihg">
                                 <label for="code">Código de Verificación</label>
                                 <input type="text" id="code" name="code" placeholder="000000" required maxlength="6" pattern="[0-9]{6}" style="text-align: center; letter-spacing: 3px; font-size: 24px; font-weight: bold;">
@@ -430,26 +582,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     <?php elseif ($step === 'password'): ?>
                         <h2>Nueva Contraseña</h2>
+                        
+                        <div class="info-text">
+                            Crea tu nueva contraseña siguiendo los requisitos de seguridad.
+                        </div>
+                        
                         <?php if ($error): ?>
-                            <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; text-align: center;">
-                                <?php echo htmlspecialchars($error); ?>
+                            <div class="custom-modal" id="errorModal" style="display: flex;">
+                                <div class="custom-modal-content">
+                                    <div class="modal-icon error">❌</div>
+                                    <div class="modal-title">Error</div>
+                                    <div class="modal-message"><?php echo htmlspecialchars($error); ?></div>
+                                    <button class="modal-btn" onclick="closeModal('errorModal')">Aceptar</button>
+                                </div>
                             </div>
                         <?php endif; ?>
                         
                         <?php if ($success): ?>
-                            <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb; text-align: center;">
-                                ✅ <?php echo htmlspecialchars($success); ?>
+                            <div class="custom-modal" id="successModal" style="display: flex;">
+                                <div class="custom-modal-content">
+                                    <div class="modal-icon success">✅</div>
+                                    <div class="modal-title">Éxito</div>
+                                    <div class="modal-message"><?php echo htmlspecialchars($success); ?></div>
+                                    <button class="modal-btn" onclick="closeModal('successModal')">Aceptar</button>
+                                </div>
                             </div>
                         <?php endif; ?>
                         
-                        <div class="info-text">
-                            Código verificado correctamente.<br>
-                            Ahora puedes crear tu nueva contraseña.
-                        </div>
-                        
                         <form method="POST">
                             <input type="hidden" name="action" value="change_password">
-                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>">
+                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>" id="email_hidden_password">
                             <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
                             
                             <div class="input-group-ihg password-group">
@@ -458,6 +620,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                     <input type="password" id="newPassword" name="newPassword" placeholder="Mínimo 8 caracteres" required minlength="8">
                                     <span class="toggle-password" onclick="togglePassword()"><i class="fas fa-eye"></i></span>
                                 </div>
+                                <small style="color: #666; font-size: 13px; display: block; margin-top: 5px;">
+                                    La contraseña debe contener: al menos 8 caracteres, una mayúscula, un número y un carácter especial
+                                </small>
                             </div>
                             
                             <div class="input-group-ihg password-group">
@@ -473,12 +638,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     
                     <?php elseif ($step === 'success'): ?>
                         <h2>¡Contraseña Actualizada!</h2>
-                        <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb; text-align: center;">
-                            ✅ Tu contraseña ha sido cambiada exitosamente.<br>
-                            Ya puedes iniciar sesión con tu nueva contraseña.
-                        </div>
-                        <div style="text-align: center;">
-                            <a href="login.php" class="login-button-ihg" style="display: inline-block; text-decoration: none; width: auto; padding: 15px 30px;">Ir al Login</a>
+                        <div class="custom-modal" id="successModal" style="display: flex;">
+                            <div class="custom-modal-content">
+                                <div class="modal-icon success">✅</div>
+                                <div class="modal-title">¡Contraseña Actualizada!</div>
+                                <div class="modal-message">
+                                    Tu contraseña ha sido cambiada exitosamente.<br>
+                                    Ya puedes iniciar sesión con tu nueva contraseña.
+                                </div>
+                                <button class="modal-btn" onclick="window.location.href='login.php'">Ir al Login</button>
+                            </div>
                         </div>
                     <?php endif; ?>
                     
@@ -491,6 +660,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     </div>
     
     <script>
+        // Función para cerrar modales
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Cerrar modal al hacer clic fuera de él
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('custom-modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+        
         // Funciones para mostrar/ocultar contraseña
         function togglePassword() {
             const passwordInput = document.getElementById('newPassword');
@@ -552,8 +736,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             });
         }
         
+        // Proteger campos ocultos del correo - prevenir modificación
+        const emailHiddenCode = document.getElementById('email_hidden');
+        const emailHiddenPassword = document.getElementById('email_hidden_password');
+        
+        if (emailHiddenCode) {
+            const originalEmailCode = emailHiddenCode.value;
+            // Monitorear cambios y restaurar el valor original
+            setInterval(function() {
+                if (emailHiddenCode.value !== originalEmailCode) {
+                    emailHiddenCode.value = originalEmailCode;
+                }
+            }, 100);
+        }
+        
+        if (emailHiddenPassword) {
+            const originalEmailPassword = emailHiddenPassword.value;
+            // Monitorear cambios y restaurar el valor original
+            setInterval(function() {
+                if (emailHiddenPassword.value !== originalEmailPassword) {
+                    emailHiddenPassword.value = originalEmailPassword;
+                }
+            }, 100);
+        }
+        
+        // Función para mostrar modal de error
+        function showErrorModal(message) {
+            // Eliminar modal anterior si existe
+            const existingModal = document.getElementById('jsErrorModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.id = 'jsErrorModal';
+            modal.style.display = 'flex';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'custom-modal-content';
+            
+            const icon = document.createElement('div');
+            icon.className = 'modal-icon error';
+            icon.textContent = '❌';
+            
+            const title = document.createElement('div');
+            title.className = 'modal-title';
+            title.textContent = 'Error';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'modal-message';
+            messageDiv.textContent = message;
+            
+            const button = document.createElement('button');
+            button.className = 'modal-btn';
+            button.textContent = 'Aceptar';
+            button.addEventListener('click', function() {
+                closeModal('jsErrorModal');
+            });
+            
+            modalContent.appendChild(icon);
+            modalContent.appendChild(title);
+            modalContent.appendChild(messageDiv);
+            modalContent.appendChild(button);
+            modal.appendChild(modalContent);
+            
+            document.body.appendChild(modal);
+            
+            // Cerrar al hacer clic fuera del modal
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal('jsErrorModal');
+                }
+            });
+        }
+        
         // Validación del formulario de contraseña
-        const passwordForm = document.querySelector('form[action="change_password"]');
+        const passwordForm = document.querySelector('input[name="action"][value="change_password"]')?.closest('form');
         if (passwordForm) {
             passwordForm.addEventListener('submit', function(e) {
                 const newPassword = document.getElementById('newPassword').value;
@@ -561,19 +820,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 if (!newPassword) {
                     e.preventDefault();
-                    alert('La nueva contraseña es requerida');
+                    showErrorModal('La nueva contraseña es requerida');
                     return;
                 }
                 
                 if (newPassword.length < 8) {
                     e.preventDefault();
-                    alert('La contraseña debe tener al menos 8 caracteres');
+                    showErrorModal('La contraseña debe tener al menos 8 caracteres');
+                    return;
+                }
+                
+                // Validar requisitos de seguridad
+                const hasUpperCase = /[A-Z]/.test(newPassword);
+                const hasNumber = /[0-9]/.test(newPassword);
+                const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
+                
+                if (!hasUpperCase || !hasNumber || !hasSpecialChar) {
+                    e.preventDefault();
+                    showErrorModal('La contraseña debe contener: al menos una mayúscula, un número y un carácter especial');
                     return;
                 }
                 
                 if (newPassword !== confirmPassword) {
                     e.preventDefault();
-                    alert('Las contraseñas no coinciden');
+                    showErrorModal('Las contraseñas no coinciden');
                     return;
                 }
             });
