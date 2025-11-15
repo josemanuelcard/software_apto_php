@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class='container'>
                                 <div class='header'>
                                     <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
-                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
                                         <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                                     </h1>
                                     <h2>💰 Abono Recibido</h2>

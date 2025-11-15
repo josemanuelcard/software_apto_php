@@ -687,7 +687,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         
                         <div class="input-group-ihg">
                             <label for="correo"><?php echo __('form.email'); ?> *</label>
-                            <input type="email" class="form-control" id="correo" name="correo" placeholder="Correo Electrónico" value="<?php echo $user_data ? htmlspecialchars($user_data['correo']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                            <input type="email" class="form-control" id="correo" name="correo" placeholder="Correo Electrónico" value="<?php echo $user_data ? htmlspecialchars($user_data['correo']) : ''; ?>" required>
                             <span class="error-message" id="correoError"></span>
                         </div>
                         
@@ -732,7 +732,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="alert alert-info mt-3">
                             <h6 class="mb-2"><strong>Importante:</strong></h6>
                             <p class="mb-0">
-                                Una vez aprobada tu reserva, deberás pagar el 20% del total y enviar el comprobante a <strong>gerencia@mysuiteincartagena.com.co</strong>. El saldo restante se cancelará el día del check-in.
+                                Una vez aprobada tu reserva, deberás pagar el 20% del total y enviar el comprobante a <strong>gerencia@mysuiteincartagena.com.co</strong>. El saldo restante se cancelará el día anterior al check-in.
                             </p>
                         </div>
                         
@@ -823,7 +823,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         
                         <div class="section-buttons">
                             <button type="button" class="back-btn" onclick="prevReservationSection(5)">Atrás</button>
-                            <button type="button" class="next-btn" id="submitReservationFinal">Enviar Reserva</button>
+                            <button type="button" class="next-btn" id="submitReservationFinal">Solicitar Reserva</button>
                         </div>
                     </div>
                 </form>
