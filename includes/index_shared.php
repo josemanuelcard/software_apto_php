@@ -62,6 +62,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			window.scrollTo(0, 1);
 		}
 	</script>
+
 	<!-- //Meta tag Keywords -->
 
 	<!-- Custom-Files -->
@@ -452,7 +453,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 </div>
                 
                 <!-- Botón de Pago -->
-                <button id="pagoBtn" class="btn-pago btn-reservar-ahora w-100 mt-4" style="background-color: #FFE082; color: #333; padding: 12px 30px; font-family: 'Oxygen', sans-serif; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;">
+                <button id="custom-button-payment" class="btn-pago btn-reservar-ahora w-100 mt-4" style="background-color: #FFE082; color: #333; padding: 12px 30px; font-family: 'Oxygen', sans-serif; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;">
                     Botón de Pago
                 </button>
             </div>
@@ -7153,8 +7154,68 @@ function revealOnScroll() {
 // Verificar al cargar y al hacer scroll
 window.addEventListener('load', revealOnScroll);
 window.addEventListener('scroll', revealOnScroll);
-</script>
 
+function initBoldCheckout() {
+    if (document.querySelector('script[src="https://checkout.bold.co/library/boldPaymentButton.js"]')) {
+        console.warn('Bold Checkout script is already present.');
+        return;
+    }
+    const js = document.createElement('script');
+    js.onload = () => window.dispatchEvent(new Event('boldCheckoutLoaded'));
+    js.onerror = () => window.dispatchEvent(new Event('boldCheckoutLoadFailed'));
+    js.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
+    document.head.appendChild(js);
+}
+
+async function obtenerHashDesdePHP(orderId, amount, currency) {
+    const response = await fetch("generar_hash.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ orderId, amount, currency })
+    });
+    if (!response.ok) throw new Error('Error al obtener hash: ' + response.status);
+    const data = await response.json();
+    if (!data.hash) throw new Error('Respuesta inválida del servidor');
+    return data.hash;
+}
+
+// Cargar la librería dinámicamente
+initBoldCheckout();
+
+// Si la librería se carga bien:
+window.addEventListener('boldCheckoutLoaded', async () => {
+    try {
+        const orderId = "MI-PEDIDO-" + Date.now().toString();
+        const amount = "0";
+        const currency = "COP";
+
+        const hashHex = await obtenerHashDesdePHP(orderId, amount, currency);
+
+        // Crear la instancia
+        window.checkout = new BoldCheckout({
+            orderId,
+            amount: amount,
+            currency: currency,
+            apiKey: "7FA8bRNE1KvrXfwLiAnibCGonyYSZCXJ1WvbXHgPnGo",
+            integritySignature: hashHex,
+            description: "Pago seguro",
+            redirectionUrl: 'https://mysuiteincartagena.com.co/index.php'
+        });
+
+        document.getElementById("custom-button-payment")
+            .addEventListener("click", () => checkout.open());
+
+        console.log("Bold Checkout listo con hash:", hashHex);
+    } catch (err) {
+        console.error(err);
+        alert('No se pudo iniciar el pago. Revisa la consola.');
+    }
+});
+
+window.addEventListener('boldCheckoutLoadFailed', () => {
+    console.error("Falló la carga del script de Bold.");
+});
+</script>
 
 </body>
 

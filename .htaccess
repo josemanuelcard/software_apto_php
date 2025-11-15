@@ -2,10 +2,10 @@
 RewriteEngine On
 
 # Redirección automática a la versión en inglés
-RewriteRule ^$ en/index.php [L]
+RewriteRule ^$ index.php [L]
 
 # Manejo de errores 404
-ErrorDocument 404 /en/index.php
+ErrorDocument 404 index.php
 
 # Configuración de PHP
 php_value upload_max_filesize 10M

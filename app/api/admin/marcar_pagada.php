@@ -131,6 +131,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $total = (float)$reserva['total'];
                         $abono_20 = $total * 0.20;
                         $saldo_pendiente = $total * 0.80;
+
+                        // --- INICIO: LÓGICA DEL ENLACE DE PAGO ---
+                        // Datos para generar enlace de pago
+                        $total_num = isset($reserva['total']) ? (float)$reserva['total'] : 0;
+
+                        // Calcula el monto SIN formatear
+                        // Usamos (int) round() para asegurarnos que sea un entero, como lo espera Bold.
+                        $anticipo_amount_raw = (int) round($total_num * 0.20);
+
+                        $order_id = 'RES-' . $reserva['id_reserva'] . '-' . time();
+                        $currency = 'COP';
+                        $percent = 0.80;
+
+                        // Creamos la URL que apunta a tu script de pago
+                        $payment_url = 'https://mysuiteincartagena.com.co/checkout.php?' . http_build_query([
+                                'orderId' => $order_id,
+                                'amount'  => $anticipo_amount_raw, // Pasamos el monto (aunque checkout.php lo ignorará por seguridad)
+                                'currency'=> $currency,
+                                'reserva' => $reserva['id_reserva'], // ¡Este es el dato CLAVE y de confianza!
+                                'percent' => $percent // Porcentaje a calcular, en este caso 80% para terminar de pagar la reserva
+                            ]);
                         
                         $total_formateado = number_format($total, 0, ',', '.');
                         $abono_formateado = number_format($abono_20, 0, ',', '.');
@@ -193,7 +214,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     
                                     <div class='info-box'>
                                         <h3>📧 Instrucciones para el Pago del Saldo:</h3>
-                                        <p>El saldo restante se cancela el día del check-in.</p>
+                                        <p>El saldo restante se cancela el día anterior al check-in.</p>
+                                        " . (($reserva['metodo_pago'] === 'efectivo' || $reserva['metodo_pago'] === 'transferencia') ? "
+                                            <p>Para consignar el <strong>saldo restante ($" . $saldo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
+                                            <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
+                                                @COO3137910897
+                                            </p>
+                                            <p style='text-align: center; color: #666; font-size: 14px;'>Usa esta llave en tu aplicación bancaria para realizar la consignación del abono.</p>
+                                            " : "
+                                            <p>Para realizar el pago del <strong>saldo restante ($" . $saldo_formateado . " COP)</strong>, puedes usar el siguiente botón:</p>
+                                            <div style='text-align: center; margin-top: 25px;'>
+                                                <a href=\"" . htmlspecialchars($payment_url) . "\" style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
+                                                    Pagar ahora con tarjeta
+                                                </a>
+                                            </div>
+                                            ") . "
                                     </div>
                                     
                                     <div class='details-box'>
