@@ -35,7 +35,7 @@ class GmailSender {
     private $smtp_password;
     private $from_email;
     private $from_name;
-    
+
     public function __construct() {
         // Configuración SMTP para cPanel
         $this->smtp_host = 'mail.mysuiteincartagena.com.co'; // Cambiar si tu proveedor usa otro host
@@ -45,7 +45,7 @@ class GmailSender {
         $this->from_email = 'gerencia@mysuiteincartagena.com.co';
         $this->from_name = 'My Suite In Cartagena';
     }
-    
+
     /**
      * Verificar si PHPMailer está disponible
      */
@@ -55,7 +55,7 @@ class GmailSender {
         }
         return self::$phpmailer_available;
     }
-    
+
     /**
      * Enviar email usando SMTP (cPanel)
      */
@@ -69,7 +69,7 @@ class GmailSender {
                 error_log("PHPMailer no disponible, usando método básico para enviar email");
                 return $this->sendWithBasic($to, $subject, $message, $is_html);
             }
-            
+
         } catch (Exception $e) {
             error_log("Error en GmailSender: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
@@ -80,7 +80,7 @@ class GmailSender {
             return false;
         }
     }
-    
+
     /**
      * Envío con PHPMailer (recomendado)
      */
@@ -90,9 +90,9 @@ class GmailSender {
                 error_log("PHPMailer no disponible, no se puede enviar email");
                 return false;
             }
-            
+
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            
+
             // Configuración SMTP para cPanel
             $mail->isSMTP();
             $mail->Host = $this->smtp_host;
@@ -101,7 +101,7 @@ class GmailSender {
             $mail->Password = $this->smtp_password;
             $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS; // TLS para puerto 587, o ENCRYPTION_SMTPS para puerto 465
             $mail->Port = $this->smtp_port;
-            
+
             // Configuraciones adicionales para cPanel (puede requerir certificados autofirmados)
             $mail->SMTPOptions = array(
                 'ssl' => array(
@@ -110,34 +110,34 @@ class GmailSender {
                     'allow_self_signed' => true
                 )
             );
-            
+
             // Remitente y destinatario
             $mail->setFrom($this->from_email, $this->from_name);
             $mail->addAddress($to);
             $mail->addReplyTo($this->from_email, $this->from_name);
-            
+
             // Configurar HTML antes de agregar imágenes
             $mail->isHTML($is_html);
             $mail->CharSet = 'UTF-8';
-            
+
             // Prevenir que el servidor agregue firmas automáticas
             $mail->XMailer = 'My Suite In Cartagena';
             $mail->addCustomHeader('X-Auto-Response-Suppress', 'All');
             $mail->addCustomHeader('Precedence', 'bulk');
             // Intentar prevenir firmas automáticas del servidor
             $mail->addCustomHeader('List-Unsubscribe', '<mailto:' . $this->from_email . '>');
-            
+
             // Agregar imagen incrustada si se proporciona (DEBE ser ANTES de establecer el Body)
             if ($image_path) {
                 // Normalizar la ruta
                 $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $image_path);
-                
+
                 if (file_exists($normalized_path) && is_readable($normalized_path)) {
                     try {
                         // Leer el archivo y determinar el tipo MIME
                         $image_info = getimagesize($normalized_path);
                         $mime_type = $image_info ? $image_info['mime'] : 'image/png';
-                        
+
                         // El CID debe ser exactamente 'hotel_logo' (sin 'cid:') para que coincida con el HTML
                         // Firma: addEmbeddedImage(path, cid, name, encoding, type, disposition)
                         $result = $mail->addEmbeddedImage(
@@ -148,7 +148,7 @@ class GmailSender {
                             $mime_type,        // Tipo MIME
                             'inline'           // Disposición
                         );
-                        
+
                         if ($result) {
                             error_log("✅ Imagen incrustada correctamente: $normalized_path (Tamaño: " . filesize($normalized_path) . " bytes, MIME: $mime_type, CID: hotel_logo)");
                         } else {
@@ -172,16 +172,16 @@ class GmailSender {
             } else {
                 error_log("⚠️ Ruta de imagen no proporcionada (null)");
             }
-            
+
             // Establecer contenido DESPUÉS de agregar las imágenes
             $mail->Subject = $subject;
             $mail->Body = $message;
-            
+
             // Debug (temporal)
             $mail->SMTPDebug = 0; // Cambiar a 2 para ver debug completo
-            
+
             $result = $mail->send();
-            
+
             if ($result) {
                 error_log("✅ Email enviado exitosamente a: $to");
                 return true;
@@ -189,13 +189,13 @@ class GmailSender {
                 error_log("❌ Error enviando email a: $to");
                 return false;
             }
-            
+
         } catch (Exception $e) {
             error_log("❌ Error PHPMailer: " . $e->getMessage());
             return false;
         }
     }
-    
+
     /**
      * Envío básico (fallback)
      */
@@ -204,7 +204,7 @@ class GmailSender {
         ini_set('SMTP', $this->smtp_host);
         ini_set('smtp_port', $this->smtp_port);
         ini_set('sendmail_from', $this->from_email);
-        
+
         $headers = [
             'MIME-Version: 1.0',
             'Content-type: ' . ($is_html ? 'text/html' : 'text/plain') . '; charset=UTF-8',
@@ -212,18 +212,18 @@ class GmailSender {
             'Reply-To: ' . $this->from_email,
             'X-Mailer: PHP/' . phpversion()
         ];
-        
+
         $result = mail($to, $subject, $message, implode("\r\n", $headers));
-        
+
         if ($result) {
             error_log("Email básico enviado a: $to");
         } else {
             error_log("Error en email básico a: $to");
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Obtener ruta de la imagen del hotel de forma robusta
      * Método público para que pueda ser usado desde otros archivos
@@ -231,25 +231,25 @@ class GmailSender {
     public function getHotelImagePath() {
         $image_filename = 'HOTEL_CARTAGENA_silueta[1].png';
         $possible_paths = [];
-        
+
         // 1. Rutas relativas desde el archivo actual (GmailSender.php está en includes/)
         $possible_paths[] = __DIR__ . '/../assets/shared/' . $image_filename;
         $possible_paths[] = __DIR__ . '/../../assets/shared/' . $image_filename;
         $possible_paths[] = dirname(__DIR__) . '/assets/shared/' . $image_filename;
         $possible_paths[] = dirname(dirname(__DIR__)) . '/assets/shared/' . $image_filename;
-        
+
         // 2. Rutas basadas en DOCUMENT_ROOT (común en producción)
         if (isset($_SERVER['DOCUMENT_ROOT']) && !empty($_SERVER['DOCUMENT_ROOT'])) {
             $doc_root = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\');
             $possible_paths[] = $doc_root . '/assets/shared/' . $image_filename;
             $possible_paths[] = $doc_root . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'shared' . DIRECTORY_SEPARATOR . $image_filename;
-            
+
             // También intentar con posibles subdirectorios comunes
             $possible_paths[] = $doc_root . '/software_apto_php/assets/shared/' . $image_filename;
             $possible_paths[] = $doc_root . '/public_html/assets/shared/' . $image_filename;
             $possible_paths[] = $doc_root . '/www/assets/shared/' . $image_filename;
         }
-        
+
         // 3. Rutas basadas en SCRIPT_FILENAME (donde se ejecuta el script)
         if (isset($_SERVER['SCRIPT_FILENAME']) && !empty($_SERVER['SCRIPT_FILENAME'])) {
             $script_dir = dirname($_SERVER['SCRIPT_FILENAME']);
@@ -257,14 +257,14 @@ class GmailSender {
             $possible_paths[] = dirname($script_dir) . '/assets/shared/' . $image_filename;
             $possible_paths[] = dirname(dirname($script_dir)) . '/assets/shared/' . $image_filename;
         }
-        
+
         // 4. Buscar desde la raíz del proyecto usando getcwd() si está disponible
         $current_dir = getcwd();
         if ($current_dir !== false) {
             $possible_paths[] = $current_dir . '/assets/shared/' . $image_filename;
             $possible_paths[] = dirname($current_dir) . '/assets/shared/' . $image_filename;
         }
-        
+
         // 5. Buscar usando rutas absolutas basadas en el directorio del archivo actual
         $base_dir = dirname(dirname(__DIR__));
         $possible_paths[] = $base_dir . '/assets/shared/' . $image_filename;
@@ -272,28 +272,28 @@ class GmailSender {
         if ($base_dir_real !== false) {
             $possible_paths[] = $base_dir_real . '/assets/shared/' . $image_filename;
         }
-        
+
         // Eliminar duplicados y normalizar
         $possible_paths = array_unique($possible_paths);
-        
+
         foreach ($possible_paths as $path) {
             // Normalizar la ruta (convertir / y \ a DIRECTORY_SEPARATOR)
             $normalized_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-            
+
             // Intentar obtener la ruta real (resuelve symlinks, .., etc.)
             $real_path = realpath($normalized_path);
             if ($real_path === false) {
                 // Si realpath falla, intentar con la ruta normalizada
                 $real_path = $normalized_path;
             }
-            
+
             // Verificar si el archivo existe y es legible
             if (file_exists($real_path) && is_readable($real_path) && is_file($real_path)) {
                 error_log("✅ Imagen del hotel encontrada en: $real_path");
                 return $real_path;
             }
         }
-        
+
         // Si no se encuentra, loggear advertencia con todas las rutas probadas
         error_log("⚠️ No se encontró la imagen del hotel en ninguna de las rutas probadas:");
         foreach ($possible_paths as $path) {
@@ -304,19 +304,19 @@ class GmailSender {
             $readable = ($exists === 'existe' && is_readable($check_path)) ? ' (legible)' : ' (no legible)';
             error_log("   - $check_path ($exists$readable)");
         }
-        
+
         return null;
     }
-    
+
     /**
      * Enviar email de aprobación de reserva
      */
     public function sendReservaAprobada($reserva) {
         $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
-        
+
         // Obtener ruta de la imagen del hotel de forma robusta
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         if ($hotel_image_path) {
             error_log("📧 Enviando email de aprobación con imagen: $hotel_image_path");
             error_log("   - Archivo existe: " . (file_exists($hotel_image_path) ? 'SÍ' : 'NO'));
@@ -328,7 +328,7 @@ class GmailSender {
             error_log("   - SCRIPT_FILENAME: " . (isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 'NO DEFINIDO'));
             error_log("   - __DIR__: " . __DIR__);
         }
-        
+
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
         $total = (float)$reserva['total'];
@@ -337,31 +337,31 @@ class GmailSender {
         $anticipo_formateado = number_format($anticipo_20, 0, ',', '.');
         $saldo_restante = $total * 0.80;
         $saldo_formateado = number_format($saldo_restante, 0, ',', '.');
-        
+
         $message = $this->getEmailTemplate($reserva, $fecha_entrada, $fecha_salida, $total_formateado, $anticipo_formateado, $saldo_formateado);
-        
+
         return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
-    
+
     /**
      * Enviar email de rechazo de reserva (por solapamiento)
      */
     public function sendReservaRechazada($reserva_rechazada, $reserva_aprobada) {
         $subject = "⚠️ Reserva No Disponible - My Suite In Cartagena #" . $reserva_rechazada['id_reserva'];
-        
+
         // Obtener ruta de la imagen del hotel de forma robusta
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         $fecha_entrada_rechazada = date('d/m/Y', strtotime($reserva_rechazada['fecha_entrada']));
         $fecha_salida_rechazada = date('d/m/Y', strtotime($reserva_rechazada['fecha_salida']));
         $fecha_entrada_aprobada = date('d/m/Y', strtotime($reserva_aprobada['fecha_entrada']));
         $fecha_salida_aprobada = date('d/m/Y', strtotime($reserva_aprobada['fecha_salida']));
-        
+
         $message = $this->getEmailTemplateRechazo($reserva_rechazada, $fecha_entrada_rechazada, $fecha_salida_rechazada, $fecha_entrada_aprobada, $fecha_salida_aprobada);
-        
+
         return $this->sendEmail($reserva_rechazada['correo'], $subject, $message, true, $hotel_image_path);
     }
-    
+
     /**
      * Template HTML para email de aprobación
      */
@@ -388,7 +388,7 @@ class GmailSender {
             <div class='container'>
                 <div class='header'>
                     <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
-                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
                         <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                     </h1>
                     <h2>¡Reserva Aprobada!</h2>
@@ -456,7 +456,7 @@ class GmailSender {
         </html>
         ";
     }
-    
+
     /**
      * Template HTML para email de rechazo por solapamiento
      */
@@ -482,7 +482,7 @@ class GmailSender {
             <div class='container'>
                 <div class='header'>
                     <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
-                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
                         <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
                     </h1>
                     <h2>Reserva No Disponible</h2>

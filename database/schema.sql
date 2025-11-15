@@ -3,11 +3,11 @@
 -- Sistema de Reservas de Apartamento Turístico
 -- ==========================================================
 
-CREATE DATABASE IF NOT EXISTS softwarePHP
+CREATE DATABASE IF NOT EXISTS mysgd5s3m2re_MySuiteBD
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE softwarePHP;
+USE mysgd5s3m2re_MySuiteBD;
 
 -- ==========================================================
 -- TABLA: usuarios (clientes y administrador)

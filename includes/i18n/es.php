@@ -113,7 +113,7 @@ return [
     'form.scroll_to_end' => 'Desplázate hasta el final para continuar',
     'form.loading_document' => 'Cargando documento...',
     'form.cancel' => 'Cancelar',
-    'form.submit' => 'Enviar Reserva',
+    'form.submit' => 'Solicitar Reserva',
     'form.birthday_in_range' => 'Tu cumpleaños ({month} {day}) está dentro del rango de fechas seleccionado',
     
     // WhatsApp & Transport
@@ -162,8 +162,8 @@ return [
     
     // Messages
     'message.success_sent' => 'Solicitud enviada exitosamente. Te contactaremos pronto.',
-    'message.error_sending' => 'Error al enviar reserva',
-    'message.error_retry' => 'Error al enviar reserva. Por favor intenta de nuevo.',
+    'message.error_sending' => 'Error al solicitar reserva',
+    'message.error_retry' => 'Error al solicitar reserva. Por favor intenta de nuevo.',
     
     // Discount Modal
     'discount.welcome_back' => '¡Bienvenido de nuevo!',
