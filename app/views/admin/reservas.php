@@ -219,18 +219,82 @@ if (isset($_GET['action'])) {
                 break;
                 
             case 'reject':
+                // Obtener datos de la reserva antes de rechazar
+                $query_reserva = "SELECT * FROM reservas WHERE id_reserva = ?";
+                $stmt_reserva = $db->prepare($query_reserva);
+                $stmt_reserva->execute([$id]);
+                $reserva = $stmt_reserva->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$reserva) {
+                    throw new Exception('Reserva no encontrada');
+                }
+                
+                // Actualizar estado
                 $query = "UPDATE reservas SET estado = 'rechazada' WHERE id_reserva = ?";
                 $stmt = $db->prepare($query);
                 $stmt->execute([$id]);
+                
+                // Enviar email de rechazo
+                $email_enviado = false;
+                try {
+                    if (class_exists('GmailSender')) {
+                        $emailSender = new GmailSender();
+                        $email_enviado = $emailSender->sendReservaRechazadaManual($reserva);
+                    } else {
+                        error_log("Advertencia: GmailSender no disponible para enviar email de rechazo");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error enviando email de rechazo: " . $e->getMessage());
+                    error_log("Stack trace: " . $e->getTraceAsString());
+                } catch (Error $e) {
+                    error_log("Error fatal enviando email de rechazo: " . $e->getMessage());
+                    error_log("Stack trace: " . $e->getTraceAsString());
+                }
+                
                 $mensaje = 'Reserva rechazada';
+                if ($email_enviado) {
+                    $mensaje .= '. Se envió correo de notificación al cliente.';
+                }
                 $tipo_mensaje = 'warning';
                 break;
                 
             case 'cancel':
+                // Obtener datos de la reserva antes de cancelar
+                $query_reserva = "SELECT * FROM reservas WHERE id_reserva = ?";
+                $stmt_reserva = $db->prepare($query_reserva);
+                $stmt_reserva->execute([$id]);
+                $reserva = $stmt_reserva->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$reserva) {
+                    throw new Exception('Reserva no encontrada');
+                }
+                
+                // Actualizar estado
                 $query = "UPDATE reservas SET estado = 'cancelada' WHERE id_reserva = ?";
                 $stmt = $db->prepare($query);
                 $stmt->execute([$id]);
+                
+                // Enviar email de cancelación
+                $email_enviado = false;
+                try {
+                    if (class_exists('GmailSender')) {
+                        $emailSender = new GmailSender();
+                        $email_enviado = $emailSender->sendReservaCancelada($reserva);
+                    } else {
+                        error_log("Advertencia: GmailSender no disponible para enviar email de cancelación");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error enviando email de cancelación: " . $e->getMessage());
+                    error_log("Stack trace: " . $e->getTraceAsString());
+                } catch (Error $e) {
+                    error_log("Error fatal enviando email de cancelación: " . $e->getMessage());
+                    error_log("Stack trace: " . $e->getTraceAsString());
+                }
+                
                 $mensaje = 'Reserva cancelada';
+                if ($email_enviado) {
+                    $mensaje .= '. Se envió correo de notificación al cliente.';
+                }
                 $tipo_mensaje = 'info';
                 break;
         }
