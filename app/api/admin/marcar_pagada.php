@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     
                                     <div class='info-box'>
                                         <h3>📧 Instrucciones para el Pago del Saldo:</h3>
-                                        <p>El saldo restante se cancela el día anterior al check-in, ya sea en <strong>transferencia</strong> o en <strong>tarjeta</strong>, de forma personal.</p>
+                                        <p>El saldo restante se cancela el día del check-in.</p>
                                     </div>
                                     
                                     <div class='details-box'>

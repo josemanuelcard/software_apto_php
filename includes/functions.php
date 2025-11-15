@@ -195,7 +195,16 @@ function guardarReserva($datos) {
         $num_adultos = (int)$datos['num_adultos'];
         $num_ninos = isset($datos['num_ninos']) ? (int)$datos['num_ninos'] : 0;
         $vive_palmira = isset($datos['vive_palmira']) && $datos['vive_palmira'] ? 1 : 0;
-        $metodo_pago = $datos['metodo_pago'];
+        // Validar y normalizar metodo_pago
+        $metodo_pago = isset($datos['metodo_pago']) ? trim(strtolower($datos['metodo_pago'])) : 'tarjeta_credito';
+        // Mapear 'transferencia' a 'efectivo' para compatibilidad con la base de datos
+        if ($metodo_pago === 'transferencia') {
+            $metodo_pago = 'efectivo';
+        }
+        if (!in_array($metodo_pago, ['efectivo', 'tarjeta_credito'])) {
+            error_log("Warning: metodo_pago inválido: '$metodo_pago', usando 'tarjeta_credito' por defecto");
+            $metodo_pago = 'tarjeta_credito';
+        }
         $costo_base = isset($datos['costo_base']) ? (float)$datos['costo_base'] : 0;
         $descuento_fidelizacion = isset($datos['descuento_fidelizacion']) ? (float)$datos['descuento_fidelizacion'] : 0;
         $descuento_cumpleanios = isset($datos['descuento_cumpleanios']) ? (float)$datos['descuento_cumpleanios'] : 0;
@@ -361,6 +370,19 @@ function getEstadisticasReservas() {
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['ingresos_totales'] = (float)($result['ingresos'] ?? 0);
+        
+        // Métodos de pago
+        $query_tarjeta = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'tarjeta_credito'";
+        $stmt = $db->prepare($query_tarjeta);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['metodo_tarjeta'] = (int)$result['total'];
+        
+        $query_efectivo = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'efectivo'";
+        $stmt = $db->prepare($query_efectivo);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $estadisticas['metodo_efectivo'] = (int)$result['total'];
         
         return $estadisticas;
     } catch (Exception $e) {
