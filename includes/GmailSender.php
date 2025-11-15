@@ -363,6 +363,40 @@ class GmailSender {
     }
 
     /**
+     * Enviar email de rechazo manual de reserva
+     */
+    public function sendReservaRechazadaManual($reserva) {
+        $subject = "⚠️ Reserva Rechazada - My Suite In Cartagena #" . $reserva['id_reserva'];
+
+        // Obtener ruta de la imagen del hotel de forma robusta
+        $hotel_image_path = $this->getHotelImagePath();
+
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+
+        $message = $this->getEmailTemplateRechazoManual($reserva, $fecha_entrada, $fecha_salida);
+
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
+    }
+
+    /**
+     * Enviar email de cancelación de reserva
+     */
+    public function sendReservaCancelada($reserva) {
+        $subject = "❌ Reserva Cancelada - My Suite In Cartagena #" . $reserva['id_reserva'];
+
+        // Obtener ruta de la imagen del hotel de forma robusta
+        $hotel_image_path = $this->getHotelImagePath();
+
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+
+        $message = $this->getEmailTemplateCancelacion($reserva, $fecha_entrada, $fecha_salida);
+
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
+    }
+
+    /**
      * Template HTML para email de aprobación
      */
     private function getEmailTemplate($reserva, $fecha_entrada, $fecha_salida, $total_formateado, $anticipo_formateado, $saldo_formateado) {
@@ -404,7 +438,7 @@ class GmailSender {
                         <p><strong>Fecha de Entrada:</strong> {$fecha_entrada}</p>
                         <p><strong>Fecha de Salida:</strong> {$fecha_salida}</p>
                         <p><strong>Huéspedes:</strong> {$reserva['num_adultos']} adultos, {$reserva['num_ninos']} niños</p>
-                        <p><strong>Método de Pago:</strong> " . ($reserva['metodo_pago'] === 'efectivo' ? 'Efectivo' : 'Tarjeta de Crédito') . "</p>
+                        <p><strong>Método de Pago:</strong> " . ($reserva['metodo_pago'] === 'efectivo' ? 'Transferencia' : 'Tarjeta de Crédito') . "</p>
                     </div>
                     
                     <div class='total'>
@@ -517,7 +551,161 @@ class GmailSender {
                     
                     <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos.</p>
                     
+                    <div class='info'>
+                        <h3>📞 Información de Contacto:</h3>
+                        <p><strong>📧 Email:</strong> gerencia@mysuiteincartagena.com.co</p>
+                        <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
+                    </div>
+                    
                     <p>¡Esperamos poder atenderte en otra fecha!</p>
+                </div>
+                <div class='footer'>
+                    <p>Saludos cordiales,<br>
+                    <strong>Equipo My Suite In Cartagena</strong></p>
+                    <p>Este es un email automático, por favor no responder a esta dirección.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
+    /**
+     * Template HTML para email de rechazo manual
+     */
+    private function getEmailTemplateRechazoManual($reserva, $fecha_entrada, $fecha_salida) {
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+                .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px 20px; text-align: center; }
+                .content { padding: 30px; background: #f8f9fa; }
+                .warning { background: #fff3cd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ffc107; }
+                .info { background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3; }
+                .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+                h1, h2, h3 { margin: 0 0 15px 0; }
+                p { margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
+                    </h1>
+                    <h2>Reserva Rechazada</h2>
+                </div>
+                <div class='content'>
+                    <p>Hola <strong>{$reserva['nombre']} {$reserva['apellido']}</strong>,</p>
+                    
+                    <div class='warning'>
+                        <h3>⚠️ Información Importante</h3>
+                        <p>Lamentamos informarte que tu solicitud de reserva <strong>#{$reserva['id_reserva']}</strong> para las fechas:</p>
+                        <p style='text-align: center; font-size: 18px; font-weight: bold;'>
+                            {$fecha_entrada} - {$fecha_salida}
+                        </p>
+                        <p><strong>ha sido rechazada</strong>.</p>
+                    </div>
+                    
+                    <div class='info'>
+                        <h3>📋 Detalles de la Reserva:</h3>
+                        <p><strong>ID Reserva:</strong> #{$reserva['id_reserva']}</p>
+                        <p><strong>Fecha de Entrada:</strong> {$fecha_entrada}</p>
+                        <p><strong>Fecha de Salida:</strong> {$fecha_salida}</p>
+                        <p><strong>Huéspedes:</strong> {$reserva['num_adultos']} adultos, {$reserva['num_ninos']} niños</p>
+                    </div>
+                    
+                    <p>Entendemos que esto puede ser una inconveniencia y te pedimos disculpas. Te invitamos a:</p>
+                    <ul>
+                        <li>Seleccionar otras fechas disponibles en nuestro calendario</li>
+                        <li>Contactarnos directamente para encontrar una alternativa</li>
+                    </ul>
+                    
+                    <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos.</p>
+                    
+                    <div class='info'>
+                        <h3>📞 Información de Contacto:</h3>
+                        <p><strong>📧 Email:</strong> gerencia@mysuiteincartagena.com.co</p>
+                        <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
+                    </div>
+                    
+                    <p>¡Esperamos poder atenderte en otra fecha!</p>
+                </div>
+                <div class='footer'>
+                    <p>Saludos cordiales,<br>
+                    <strong>Equipo My Suite In Cartagena</strong></p>
+                    <p>Este es un email automático, por favor no responder a esta dirección.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
+    /**
+     * Template HTML para email de cancelación
+     */
+    private function getEmailTemplateCancelacion($reserva, $fecha_entrada, $fecha_salida) {
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+                .header { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; padding: 30px 20px; text-align: center; }
+                .content { padding: 30px; background: #f8f9fa; }
+                .warning { background: #fff3cd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ffc107; }
+                .info { background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3; }
+                .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+                h1, h2, h3 { margin: 0 0 15px 0; }
+                p { margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
+                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
+                    </h1>
+                    <h2>Reserva Cancelada</h2>
+                </div>
+                <div class='content'>
+                    <p>Hola <strong>{$reserva['nombre']} {$reserva['apellido']}</strong>,</p>
+                    
+                    <div class='warning'>
+                        <h3>❌ Información Importante</h3>
+                        <p>Te informamos que tu reserva <strong>#{$reserva['id_reserva']}</strong> para las fechas:</p>
+                        <p style='text-align: center; font-size: 18px; font-weight: bold;'>
+                            {$fecha_entrada} - {$fecha_salida}
+                        </p>
+                        <p><strong>ha sido cancelada</strong>.</p>
+                    </div>
+                    
+                    <div class='info'>
+                        <h3>📋 Detalles de la Reserva Cancelada:</h3>
+                        <p><strong>ID Reserva:</strong> #{$reserva['id_reserva']}</p>
+                        <p><strong>Fecha de Entrada:</strong> {$fecha_entrada}</p>
+                        <p><strong>Fecha de Salida:</strong> {$fecha_salida}</p>
+                        <p><strong>Huéspedes:</strong> {$reserva['num_adultos']} adultos, {$reserva['num_ninos']} niños</p>
+                    </div>
+                    
+                    <p>Si tienes alguna pregunta sobre esta cancelación o deseas realizar una nueva reserva, no dudes en contactarnos.</p>
+                    
+                    <div class='info'>
+                        <h3>📞 Información de Contacto:</h3>
+                        <p><strong>📧 Email:</strong> gerencia@mysuiteincartagena.com.co</p>
+                        <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
+                    </div>
+                    
+                    <p>¡Esperamos poder atenderte en el futuro!</p>
                 </div>
                 <div class='footer'>
                     <p>Saludos cordiales,<br>
