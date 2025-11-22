@@ -454,8 +454,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 
                 <!-- Botón de Pago -->
                 <button id="custom-button-payment" class="btn-pago btn-reservar-ahora w-100 mt-4" style="background-color: #FFE082; color: #333; padding: 12px 30px; font-family: 'Oxygen', sans-serif; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;">
-                    Botón de Pago
+                    <?php echo __('button.payment.label'); ?>
                 </button>
+
+                <p class="text-center mt-3 mb-0" style="font-size: 0.85rem; color: rgb(38, 38, 38); font-family: 'Oxygen', sans-serif; font-weight: 500; font-style: italic;">
+                    <?php echo __('button.payment.description'); ?>
+                </p>
             </div>
         </div>
     </div>
@@ -4723,20 +4727,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const dayDate = new Date(date);
 					dayDate.setHours(0, 0, 0, 0);
 					
-					// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-					const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-					endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-					const isNotAvailable = dayDate >= today && dayDate <= endDate;
+					// Quitar bloqueo global hardcodeado; solo considerar pasado/ocupado/bloqueado desde backend
 					
 					if (dayDate < today) {
 						// Día pasado - estilo como other-month
 						dayElement.classList.add('other-month');
 						dayElement.title = translations.calendar.past_day;
-					} else if (isNotAvailable) {
-						// Día no disponible (hasta 31 enero 2026)
-						dayElement.classList.add('not-available');
-						dayElement.classList.add('occupied');
-						dayElement.title = translations.calendar.not_available || 'No disponible hasta el 1 de febrero 2026';
 					} else if (occupiedDates.includes(dateString)) {
 						// Día ocupado
 						dayElement.classList.add('occupied');
@@ -4780,18 +4776,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		function selectDate(date) {
 			const dateString = date.toISOString().split('T')[0];
 			
-			// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-			endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-			const dateOnly = new Date(date);
-			dateOnly.setHours(0, 0, 0, 0);
-			
-			if (dateOnly >= today && dateOnly <= endDate) {
-				alert(translations.calendar.not_available || 'Esta fecha no está disponible hasta el 1 de febrero 2026');
-				return;
-			}
+			// Quitar restricción global; permitir selección si no está ocupado/bloqueado y tiene precio
 			
 			// Verificar si el día tiene precio disponible
 			if (!tienePrecioDisponible(dateString)) {
