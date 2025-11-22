@@ -449,7 +449,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="form-left-panel">
                     <div class="logo-ihg">
-                        <h1><a href="https://mysuiteincartagena.com.co/index.php" target="_self" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">My Suite In Cartagena</a></h1>
+                                                <h1><a href="https://mysuiteincartagena.com.co/index.php" target="_self" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">My Suite In Cartagena</a></h1>
                     </div>
                     <h2><?php echo __('login.heading'); ?></h2>
 

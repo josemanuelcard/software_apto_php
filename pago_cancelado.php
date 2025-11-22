@@ -68,7 +68,7 @@
     <h1>¡Pago Cancelado!</h1>
     <p>Has cerrado o cancelado el proceso de pago. Tu reserva sigue <strong>pendiente de confirmación</strong>.</p>
     <p>Para completar tu reserva, utiliza el enlace <strong>Pagar Ahora</strong> que recibiste en tu correo electrónico.</p>
-    <p style="font-size: small; color: #999;">Puedes cerrar esta pestaña ahora.</p>
+       <p style="font-size: small; color: #999;">Puedes cerrar esta pestaña ahora.</p>
 </div>
 </body>
 </html>
