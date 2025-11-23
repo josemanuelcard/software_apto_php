@@ -1,25 +1,28 @@
 # Configuración para My Suite In Cartagena
 RewriteEngine On
 
-# Redirección automática a la versión en inglés
-RewriteRule ^$ en/index.php [L]
+# Redirección automática
+RewriteRule ^$ index.php [L]
 
 # Manejo de errores 404
-ErrorDocument 404 /en/index.php
+ErrorDocument 404 index.php
 
-# Configuración de PHP
-php_value upload_max_filesize 10M
-php_value post_max_size 10M
-php_value max_execution_time 300
-php_value memory_limit 256M
+# Configuración de PHP (solo si está permitido en tu hosting)
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+</IfModule>
 
 # Seguridad
 Options -Indexes
 ServerSignature Off
 
-# Headers de seguridad
+# Headers de seguridad (menos restrictivo)
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
+    # Cambiar DENY por SAMEORIGIN para evitar problemas
+    Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection "1; mode=block"
 </IfModule>

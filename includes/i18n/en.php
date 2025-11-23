@@ -72,7 +72,11 @@ return [
     'modal.reservation_form' => 'Reservation Form',
     'modal.user_locked_info' => 'Personal data is locked because it comes from your registered account. If you want to make a reservation under another name, you must register again to get the benefits.',
     'modal.close' => 'Close',
-    
+
+    // Button payment
+    'button.payment.label' => 'PAYMENT BUTTON FOR PURCHASES',
+    'button.payment.description' => 'This button is only for additional payments, such as damages, replacement items, or extra charges. Do not use this button to pay for reservations.',
+
     // Form Fields
     'form.first_name' => 'First Name',
     'form.last_name' => 'Last Name',

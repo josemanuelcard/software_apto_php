@@ -592,9 +592,7 @@ if ($pdo) {
             // Días del mes
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            // Usar new Date(año, mes, día) para evitar problemas de zona horaria (mes 0 = enero, mes 1 = febrero)
-            const endDate = new Date(2026, 1, 1); // 1 de febrero de 2026
-            endDate.setHours(0, 0, 0, 0); // Inicio del día 1 de febrero
+            // Quitar restricción global de indisponibilidad
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -603,14 +601,13 @@ if ($pdo) {
                 const dateObj = new Date(dateStr);
                 dateObj.setHours(0, 0, 0, 0);
                 
-                // Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive, sin incluir 1 de febrero)
-                const isNotAvailable = dateObj >= today && dateObj < endDate;
+                // Sin bloqueo global: las restricciones se gestionan por reservas/bloqueos
                 
                 const dayElement = $(`
-                    <div class="calendar-day-price p-2 border rounded ${isToday ? 'bg-info text-white' : ''} ${isNotAvailable ? 'not-available' : ''}" 
+                    <div class="calendar-day-price p-2 border rounded ${isToday ? 'bg-info text-white' : ''}" 
                          data-date="${dateStr}" 
                          onclick="editPrice('${dateStr}', ${price})"
-                         title="${isNotAvailable ? 'No disponible hasta el 1 de febrero 2026' : 'Click para editar precio'}">
+                         title="Click para editar precio">
                         <div class="fw-bold">${day}</div>
                         <div class="price-display">${formatearPrecioCOP(price)}</div>
                     </div>
