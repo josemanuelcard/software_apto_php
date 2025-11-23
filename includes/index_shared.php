@@ -2650,6 +2650,18 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			.selected-day-price {
 				display: none !important;
 			}
+			
+			/* Asegurar que en desktop los días seleccionados no tengan padding extra */
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 0 !important;
+			}
+			
+			/* Asegurar que los precios normales se muestren correctamente en desktop */
+			.day-price {
+				display: block !important;
+			}
 		}
 		
 		.calendar-legend {
