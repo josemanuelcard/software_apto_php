@@ -50,7 +50,11 @@ return [
     'calendar.past_day' => 'Giorno passato',
     'calendar.not_available' => 'Non disponibile',
     'calendar.price_per_night' => 'Prezzo per notte',
-    
+
+    // Button payment
+    'button.payment.label' => 'PULSANTE DI PAGAMENTO PER GLI ACQUISTI',
+    'button.payment.description' => 'Questo pulsante è riservato esclusivamente ai pagamenti aggiuntivi, come danni, articoli sostitutivi o spese extra. Non utilizzare questo pulsante per pagare le prenotazioni.',
+
     // Reservation Summary
     'reservation.summary' => 'Riepilogo Prenotazione',
     'reservation.checkin_date' => 'Data check-in',

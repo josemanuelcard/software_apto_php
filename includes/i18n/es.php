@@ -138,6 +138,11 @@ return [
     // Reservations
     'reservations.title' => 'MIS RESERVAS',
     'reservations.soon' => 'Esta funcionalidad estará disponible pronto.',
+
+    // Button payment
+    'button.payment.label' => 'BOTÓN DE PAGO PARA CONSUMOS',
+    'button.payment.description' => 'Este botón es únicamente para pagos adicionales, como daños, reposición de objetos o cargos extra. No utilices este botón para pagar reservas.',
+
     'reservations.view_history' => 'Podrás ver tu historial de reservas y su estado.',
     'reservations.no_reservations' => 'Aún no tienes reservas.',
     'reservations.checkin' => 'Entrada',

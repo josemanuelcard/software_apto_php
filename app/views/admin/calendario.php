@@ -789,7 +789,7 @@ require_once __DIR__ . '/../../../includes/functions.php';
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <!-- Modal Gestión de Clientes -->
     <div class="modal fade" id="clientManagementModal" tabindex="-1">
@@ -1414,12 +1414,7 @@ require_once __DIR__ . '/../../../includes/functions.php';
                     dayElement.style.opacity = '0.6';
                 }
                 
-                // Marcar fechas no disponibles (hoy hasta 31 enero 2026 inclusive, sin incluir 1 de febrero)
-                const endDate = new Date(2026, 1, 1); // 1 de febrero de 2026 (mes 1 = febrero)
-                endDate.setHours(0, 0, 0, 0); // Inicio del día 1 de febrero
-                if (dateOnly >= today && dateOnly < endDate) {
-                    dayElement.classList.add('not-available');
-                }
+                // Quitar bloqueo global hardcodeado; disponibilidad se determina por bloqueos y reservas
                 
                 // VERIFICAR SI ESTÁ BLOQUEADO
                 let isBlocked = false;

@@ -125,7 +125,7 @@ try {
         'vive_palmira' => isset($input['vive_palmira']) && $input['vive_palmira'] ? 1 : 0,
         'metodo_pago' => $input['metodo_pago'],
         'costo_base' => isset($input['costo_base']) ? (float)$input['costo_base'] : 0,
-        'descuento_fidelizacion' => isset($input['descuento_fidelizacion']) ? (float)$input['descuento_fidelizacion'] : 0,
+        'descuento_fidelizacion' => isset($input['descuento_fidelizacion']) ? (int)round($input['descuento_fidelizacion']) : 0,
         'descuento_cumpleanios' => isset($input['descuento_cumpleanios']) ? (float)$input['descuento_cumpleanios'] : 0,
         'descuento_promocional' => isset($input['descuento_promocional']) ? (float)$input['descuento_promocional'] : 0,
         'total' => isset($input['total']) ? (float)$input['total'] : 0

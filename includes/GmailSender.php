@@ -400,6 +400,27 @@ class GmailSender {
      * Template HTML para email de aprobación
      */
     private function getEmailTemplate($reserva, $fecha_entrada, $fecha_salida, $total_formateado, $anticipo_formateado, $saldo_formateado) {
+        // --- INICIO: LÓGICA DEL ENLACE DE PAGO ---
+        // Datos para generar enlace de pago
+        $total_num = isset($reserva['total']) ? (float)$reserva['total'] : 0;
+
+        // Calcula el monto SIN formatear (ej: 50000)
+        // Usamos (int) round() para asegurarnos que sea un entero, como lo espera Bold.
+        $anticipo_amount_raw = (int) round($total_num * 0.20);
+
+        $order_id = 'RES-' . $reserva['id_reserva'] . '-' . time();
+        $currency = 'COP';
+        $percent = 0.20;
+
+        // Creamos la URL que apunta a tu script de pago
+        $payment_url = 'https://mysuiteincartagena.com.co/checkout.php?' . http_build_query([
+                'orderId' => $order_id,
+                'amount'  => $anticipo_amount_raw, // Pasamos el monto (aunque checkout.php lo ignorará por seguridad)
+                'currency'=> $currency,
+                'reserva' => $reserva['id_reserva'], // ¡Este es el dato CLAVE y de confianza!
+                'percent' => $percent // Porcentaje a calcular, en este caso 20% para abono
+            ]);
+
         return "
         <!DOCTYPE html>
         <html>
@@ -473,7 +494,7 @@ class GmailSender {
                         " : "
                         <p>Para realizar el pago del <strong>20% del total ($" . $anticipo_formateado . " COP)</strong>, puedes usar el siguiente botón:</p>
                         <div style='text-align: center; margin-top: 25px;'>
-                            <a href='#' style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
+                            <a href=\"" . htmlspecialchars($payment_url) . "\" style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
                                 Pagar ahora con tarjeta
                             </a>
                         </div>

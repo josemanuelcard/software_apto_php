@@ -12,6 +12,8 @@ ini_set('display_errors', 0);
 
 session_start();
 
+date_default_timezone_set('America/Bogota'); 
+
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/i18n/i18n.php';
