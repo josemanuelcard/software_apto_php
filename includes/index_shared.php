@@ -2593,6 +2593,65 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			white-space: nowrap;
 		}
 		
+		/* Precio dentro del día seleccionado (solo móviles/tablets) - Estilo Booking.com/Airbnb */
+		.selected-day-price {
+			position: absolute;
+			bottom: 4px;
+			left: 0;
+			right: 0;
+			width: 100%;
+			background: transparent;
+			padding: 2px 4px;
+			font-size: 0.7rem;
+			color: #333;
+			font-weight: 600;
+			font-family: 'Oxygen', sans-serif;
+			text-align: center;
+			z-index: 10;
+			display: none; /* Oculto por defecto, solo visible en móviles/tablets */
+			line-height: 1.1;
+			letter-spacing: 0;
+			transition: all 0.2s ease;
+			box-sizing: border-box;
+		}
+		
+		/* Estilos específicos según el tipo de día seleccionado - Todos con el mismo estilo prominente */
+		.calendar-day.checkin .selected-day-price {
+			color: #E65100;
+			font-weight: 700;
+		}
+		
+		.calendar-day.checkout .selected-day-price {
+			color: #0D47A1;
+			font-weight: 700;
+		}
+		
+		.calendar-day.in-range .selected-day-price {
+			color: #0D47A1;
+			font-weight: 700;
+		}
+		
+		/* Mostrar precios en días seleccionados solo en móviles/tablets */
+		@media (max-width: 992px) {
+			.selected-day-price {
+				display: block;
+			}
+			
+			/* Asegurar que los días seleccionados tengan suficiente espacio para el precio */
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 18px;
+			}
+		}
+		
+		/* Ocultar en desktop */
+		@media (min-width: 993px) {
+			.selected-day-price {
+				display: none !important;
+			}
+		}
+		
 		.calendar-legend {
 			display: flex;
 			justify-content: center;
@@ -2831,8 +2890,23 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				padding-bottom: 30px !important;
 			}
 			
+			#reservation-section .container-fluid {
+				padding-left: 5px !important;
+				padding-right: 5px !important;
+			}
+			
 			#reservation-section .row {
 				flex-direction: column;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+			}
+			
+			#reservation-section .col-lg-7,
+			#reservation-section .col-md-12 {
+				padding-left: 5px !important;
+				padding-right: 5px !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
 			}
 			
 			#reservation-section .col-lg-5 {
@@ -3080,14 +3154,48 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			color: #28a745 !important;
 		}
 		
+		/* Adaptación para tablets */
+		@media (max-width: 992px) and (min-width: 769px) {
+			.calendar-container {
+				padding: 15px 10px !important;
+				max-width: 100% !important;
+				margin: 0 !important;
+				width: 100% !important;
+			}
+			.calendar-grid {
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				width: 100% !important;
+			}
+			#reservation-section .container-fluid {
+				padding-left: 10px !important;
+				padding-right: 10px !important;
+			}
+			#reservation-section .col-lg-7 {
+				padding-left: 5px !important;
+				padding-right: 5px !important;
+			}
+			.day-price {
+				display: none; /* Ocultar el precio en tablets para simplificar */
+			}
+		}
+		
 		/* Adaptación para dispositivos pequeños */
 		@media (max-width: 768px) {
 			.calendar-container {
-				padding: 20px 10px;
+				padding: 10px 5px !important;
+				max-width: 100% !important;
+				margin: 0 !important;
+				width: 100% !important;
 			}
 			.calendar-grid {
 				gap: 2px;
 				grid-auto-rows: minmax(45px, auto);
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				width: 100% !important;
 			}
 			.calendar-day {
 				font-size: 0.9rem;
@@ -3107,6 +3215,18 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			.legend-color {
 				width: 14px;
 				height: 14px;
+			}
+			/* Ajustar precios en días seleccionados en móviles */
+			.selected-day-price {
+				bottom: 3px;
+				font-size: 0.65rem;
+				padding: 1px 2px;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 16px;
 			}
 		}
 		
@@ -4063,12 +4183,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		@media (max-width: 768px) {
 			.calendar-container {
 				margin-bottom: 20px;
-				padding: 15px;
+				padding: 10px 5px !important;
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				width: 100% !important;
 			}
 			
 			.calendar-grid {
 				gap: 1px;
-				max-width: 100%;
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				width: 100% !important;
 			}
 			
 			.calendar-day {
@@ -4155,7 +4282,17 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		@media (max-width: 480px) {
 			.calendar-container {
-				padding: 10px;
+				padding: 8px 3px !important;
+				max-width: 100% !important;
+				margin: 0 !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				width: 100% !important;
 			}
 			
 			.calendar-day {
@@ -4164,6 +4301,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			
 			.day-number {
 				font-size: 11px;
+			}
+			
+			/* Ajustar precios en días seleccionados en móviles muy pequeños */
+			.selected-day-price {
+				bottom: 2px;
+				font-size: 0.6rem;
+				padding: 1px 2px;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 14px;
 			}
 			
 			.reservation-summary {
@@ -4980,6 +5130,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			document.querySelectorAll('.calendar-day').forEach(day => {
 				day.classList.remove('checkin', 'checkout', 'in-range');
 				
+				// Eliminar etiqueta de precio anterior si existe
+				const existingPriceLabel = day.querySelector('.selected-day-price');
+				if (existingPriceLabel) {
+					existingPriceLabel.remove();
+				}
+				
 				if (day.dataset.date) {
 					const dayDateString = day.dataset.date;
 					
@@ -4987,13 +5143,32 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const startDateString = selectedStartDate ? selectedStartDate.toISOString().split('T')[0] : null;
 					const endDateString = selectedEndDate ? selectedEndDate.toISOString().split('T')[0] : null;
 					
+					let isSelected = false;
+					let showPriceLabel = false;
+					
 					if (selectedStartDate && dayDateString === startDateString) {
 						day.classList.add('checkin');
+						isSelected = true;
+						showPriceLabel = true; // Mostrar precio en check-in
 					} else if (selectedEndDate && dayDateString === endDateString) {
 						day.classList.add('checkout');
+						isSelected = true;
+						showPriceLabel = true; // Mostrar precio en check-out
 					} else if (selectedStartDate && selectedEndDate && 
 							  dayDateString > startDateString && dayDateString < endDateString) {
 						day.classList.add('in-range');
+						isSelected = true;
+						showPriceLabel = true; // Mostrar precio también en días del rango
+					}
+					
+					// Agregar etiqueta de precio en todos los días seleccionados (solo en móviles/tablets)
+					if (showPriceLabel) {
+						const precio = getTarifaPorFecha(dayDateString);
+						const priceLabel = document.createElement('div');
+						priceLabel.className = 'selected-day-price';
+						priceLabel.textContent = formatearPrecioCOP(precio);
+						day.style.position = 'relative';
+						day.appendChild(priceLabel);
 					}
 				}
 			});
