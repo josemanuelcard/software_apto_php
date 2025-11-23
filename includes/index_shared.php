@@ -2395,6 +2395,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			max-width: 1100px;
 			margin: 0 auto;
 			border: none !important;
+			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
 		}
 		
 		.calendar-header {
@@ -2464,6 +2465,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			margin-left: auto;
 			margin-right: auto;
 			grid-auto-rows: minmax(85px, auto);
+			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
 		}
 		
 		.calendar-day {
@@ -2482,6 +2484,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			background: #ffffff !important;
 			border: none !important;
 			border-bottom: 1px solid #e1e5e9 !important;
+			overflow: visible; /* Permitir que las etiquetas de precio se muestren fuera del contenedor */
 		}
 		
 		.calendar-day.available {
@@ -2582,10 +2585,110 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			background: transparent !important;
 			padding: 3px 8px;
 			border-radius: 0 !important;
-			border: none !important;
-			border-bottom: 1px solid #e1e5e9 !important;
-			box-shadow: none !important;
-			white-space: nowrap;
+		}
+		
+		/* Etiqueta de precio sobre días seleccionados (solo móviles/tablets) */
+		.selected-day-price {
+			position: absolute;
+			top: -18px;
+			left: 0;
+			right: 0;
+			width: 100%;
+			transform: translateY(-5px);
+			background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+			border: 1.5px solid #333;
+			border-bottom: 2.5px solid #333;
+			border-radius: 4px;
+			padding: 5px 4px;
+			font-size: 0.65rem;
+			color: #333;
+			font-weight: 600;
+			font-family: 'Oxygen', sans-serif;
+			text-align: center;
+			z-index: 100;
+			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+			display: none; /* Oculto por defecto, solo visible en móviles/tablets */
+			line-height: 1.3;
+			letter-spacing: 0.3px;
+			transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+			box-sizing: border-box;
+		}
+		
+		/* Estilos específicos según el tipo de día seleccionado */
+		.calendar-day.checkin .selected-day-price {
+			background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
+			border-color: #FFC107;
+			border-bottom-color: #FFA000;
+			color: #E65100;
+			box-shadow: 0 3px 8px rgba(255, 193, 7, 0.4), 0 1px 3px rgba(255, 193, 7, 0.2);
+		}
+		
+		.calendar-day.checkout .selected-day-price {
+			background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+			border-color: #2196F3;
+			border-bottom-color: #1976D2;
+			color: #0D47A1;
+			box-shadow: 0 3px 8px rgba(33, 150, 243, 0.4), 0 1px 3px rgba(33, 150, 243, 0.2);
+		}
+		
+		.calendar-day.in-range .selected-day-price {
+			background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
+			border-color: #03A9F4;
+			border-bottom-color: #0288D1;
+			color: #01579B;
+			box-shadow: 0 3px 8px rgba(3, 169, 244, 0.35), 0 1px 3px rgba(3, 169, 244, 0.2);
+		}
+		
+		/* Pequeño triángulo apuntando hacia el día */
+		.selected-day-price::after {
+			content: '';
+			position: absolute;
+			bottom: -6px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 0;
+			height: 0;
+			border-left: 5px solid transparent;
+			border-right: 5px solid transparent;
+			border-top: 6px solid #333;
+		}
+		
+		.calendar-day.checkin .selected-day-price::after {
+			border-top-color: #FFA000;
+		}
+		
+		.calendar-day.checkout .selected-day-price::after {
+			border-top-color: #1976D2;
+		}
+		
+		.calendar-day.in-range .selected-day-price::after {
+			border-top-color: #0288D1;
+		}
+		
+		/* Mostrar etiquetas de precio en días seleccionados solo en móviles/tablets */
+		@media (max-width: 992px) {
+			.selected-day-price {
+				display: block;
+				animation: priceLabelFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+			}
+		}
+		
+		@keyframes priceLabelFadeIn {
+			0% {
+				opacity: 0;
+				transform: translateY(-15px) scale(0.85);
+			}
+			100% {
+				opacity: 1;
+				transform: translateY(-5px) scale(1);
+			}
+		}
+		
+		/* Ocultar en desktop */
+		@media (min-width: 993px) {
+			.selected-day-price {
+				display: none !important;
+			}
 		}
 		
 		.calendar-legend {
@@ -3075,6 +3178,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			color: #28a745 !important;
 		}
 		
+		/* Adaptación para tablets */
+		@media (max-width: 992px) and (min-width: 769px) {
+			.day-price {
+				display: none; /* Ocultar el precio en tablets para simplificar */
+			}
+		}
+		
 		/* Adaptación para dispositivos pequeños */
 		@media (max-width: 768px) {
 			.calendar-container {
@@ -3102,6 +3212,18 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			.legend-color {
 				width: 14px;
 				height: 14px;
+			}
+			/* Ajustar etiquetas de precio en móviles */
+			.selected-day-price {
+				top: -16px;
+				padding: 4px 3px;
+				font-size: 0.6rem;
+			}
+			.selected-day-price::after {
+				border-left-width: 4px;
+				border-right-width: 4px;
+				border-top-width: 5px;
+				bottom: -5px;
 			}
 		}
 		
@@ -4161,6 +4283,20 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				font-size: 11px;
 			}
 			
+			/* Ajustar etiquetas de precio en móviles muy pequeños */
+			.selected-day-price {
+				top: -14px;
+				padding: 3px 2px;
+				font-size: 0.55rem;
+				letter-spacing: 0.2px;
+			}
+			.selected-day-price::after {
+				border-left-width: 3px;
+				border-right-width: 3px;
+				border-top-width: 4px;
+				bottom: -4px;
+			}
+			
 			.reservation-summary {
 				padding: 20px !important;
 				margin-left: 0 !important;
@@ -4994,6 +5130,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			document.querySelectorAll('.calendar-day').forEach(day => {
 				day.classList.remove('checkin', 'checkout', 'in-range');
 				
+				// Eliminar etiqueta de precio anterior si existe
+				const existingPriceLabel = day.querySelector('.selected-day-price');
+				if (existingPriceLabel) {
+					existingPriceLabel.remove();
+				}
+				
 				if (day.dataset.date) {
 					const dayDateString = day.dataset.date;
 					
@@ -5001,13 +5143,28 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const startDateString = selectedStartDate ? selectedStartDate.toISOString().split('T')[0] : null;
 					const endDateString = selectedEndDate ? selectedEndDate.toISOString().split('T')[0] : null;
 					
+					let isSelected = false;
+					
 					if (selectedStartDate && dayDateString === startDateString) {
 						day.classList.add('checkin');
+						isSelected = true;
 					} else if (selectedEndDate && dayDateString === endDateString) {
 						day.classList.add('checkout');
+						isSelected = true;
 					} else if (selectedStartDate && selectedEndDate && 
 							  dayDateString > startDateString && dayDateString < endDateString) {
 						day.classList.add('in-range');
+						isSelected = true;
+					}
+					
+					// Agregar etiqueta de precio sobre días seleccionados (solo en móviles/tablets)
+					if (isSelected) {
+						const precio = getTarifaPorFecha(dayDateString);
+						const priceLabel = document.createElement('div');
+						priceLabel.className = 'selected-day-price';
+						priceLabel.textContent = formatearPrecioCOP(precio);
+						day.style.position = 'relative';
+						day.appendChild(priceLabel);
 					}
 				}
 			});
@@ -6756,6 +6913,103 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		// Ejecutar inicialización
 		initializeCalendar();
+		
+		// ==========================================================
+		// INTEGRACIÓN CON BOLD - Botón de Pago
+		// ==========================================================
+		
+		// Handler para el botón de pago
+		const pagoBtn = document.getElementById('pagoBtn');
+		if (pagoBtn) {
+			pagoBtn.addEventListener('click', function(e) {
+				e.preventDefault();
+				
+				// Obtener ID de reserva desde la URL o parámetro
+				const urlParams = new URLSearchParams(window.location.search);
+				const reservaId = urlParams.get('reserva_id') || 
+								  urlParams.get('id') || 
+								  (window.reservaId ? window.reservaId : null);
+				
+				if (!reservaId) {
+					alert('No se encontró el ID de la reserva. Por favor, contacta con soporte.');
+					return;
+				}
+				
+				// Obtener el monto total (puede venir de la URL o calcularse)
+				const totalAmount = urlParams.get('total') || 
+									(window.reservaTotal ? window.reservaTotal : null);
+				
+				if (!totalAmount) {
+					alert('No se pudo obtener el monto a pagar. Por favor, contacta con soporte.');
+					return;
+				}
+				
+				// Deshabilitar botón mientras se procesa
+				pagoBtn.disabled = true;
+				pagoBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+				
+				// Crear link de pago con Bold
+				fetch('../../app/api/payment/create_bold_link.php', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						reserva_id: reservaId,
+						total_amount: parseFloat(totalAmount)
+					})
+				})
+				.then(response => response.json())
+				.then(data => {
+					if (data.success && data.data && data.data.payment_url) {
+						// Redirigir a la URL de pago de Bold
+						window.location.href = data.data.payment_url;
+					} else {
+						// Error al crear el link
+						alert('Error al generar el link de pago: ' + (data.message || 'Error desconocido'));
+						pagoBtn.disabled = false;
+						pagoBtn.innerHTML = 'Botón de Pago';
+					}
+				})
+				.catch(error => {
+					console.error('Error:', error);
+					alert('Error de conexión al generar el link de pago. Por favor, intenta nuevamente.');
+					pagoBtn.disabled = false;
+					pagoBtn.innerHTML = 'Botón de Pago';
+				});
+			});
+		}
+		
+		// Manejar mensajes de resultado de pago (desde callback)
+		(function() {
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.get('payment_success') === '1') {
+				alert('¡Pago realizado exitosamente! Tu reserva ha sido confirmada.');
+				// Limpiar parámetros de la URL
+				window.history.replaceState({}, document.title, window.location.pathname);
+			} else if (urlParams.get('payment_error')) {
+				const errorType = urlParams.get('payment_error');
+				let errorMessage = 'Error al procesar el pago.';
+				
+				switch(errorType) {
+					case 'rejected':
+						errorMessage = 'El pago fue rechazado. Por favor, intenta con otro método de pago.';
+						break;
+					case 'expired':
+						errorMessage = 'El link de pago ha expirado. Por favor, solicita un nuevo link.';
+						break;
+					case 'no_payment_link':
+						errorMessage = 'No se encontró información del pago. Por favor, contacta con soporte.';
+						break;
+					default:
+						errorMessage = 'Ocurrió un error al procesar el pago. Por favor, contacta con soporte.';
+				}
+				
+				alert(errorMessage);
+				// Limpiar parámetros de la URL
+				window.history.replaceState({}, document.title, window.location.pathname);
+			}
+		})();
 		
 		// También reinicializar cuando se vuelve a la página (para navegación desde otras páginas)
 		window.addEventListener('pageshow', function(event) {
