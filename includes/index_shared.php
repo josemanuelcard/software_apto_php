@@ -2391,11 +2391,39 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			background: #ffffff !important;
 			border-radius: 0 !important;
 			box-shadow: none !important;
-			padding: 30px 40px !important;
+			padding: 40px 50px !important;
 			max-width: 1100px;
 			margin: 0 auto;
 			border: none !important;
 			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
+		}
+		
+		/* Mejorar espaciado en desktop */
+		@media (min-width: 993px) {
+			.calendar-container {
+				padding: 40px 50px !important;
+			}
+			
+			.calendar-grid {
+				gap: 15px;
+			}
+		}
+		
+		/* Asegurar que el calendario ocupe todo el ancho en móvil/tablet */
+		@media (max-width: 992px) {
+			.calendar-container {
+				padding: 20px 0 !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 10px;
+			}
 		}
 		
 		.calendar-header {
@@ -2459,12 +2487,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		.calendar-grid {
 			display: grid;
 			grid-template-columns: repeat(7, 1fr);
-			gap: 10px;
+			gap: 15px;
 			margin-bottom: 20px;
 			max-width: 1080px;
 			margin-left: auto;
 			margin-right: auto;
-			grid-auto-rows: minmax(85px, auto);
+			grid-auto-rows: minmax(100px, auto);
 			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
 		}
 		
@@ -2473,11 +2501,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			justify-content: center;
+			justify-content: flex-start;
 			cursor: pointer;
 			transition: border-bottom-color 0.3s ease;
 			position: relative;
-			min-height: 85px;
+			min-height: 100px;
+			padding: 8px 4px;
 			font-size: 18px;
 			font-family: 'Oxygen', sans-serif !important;
 			border-radius: 0 !important;
@@ -2573,18 +2602,27 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			opacity: 0.5;
 		}
 		
+		.day-number {
+			margin-top: 8px;
+			margin-bottom: auto;
+			font-size: 18px;
+			font-weight: 400;
+			line-height: 1.2;
+		}
+		
 		.day-price {
-			font-size: 0.7rem;
+			font-size: 0.75rem;
 			position: absolute;
-			bottom: 6px;
+			bottom: 8px;
 			left: 50%;
 			transform: translateX(-50%);
 			color: #333 !important;
 			font-weight: 400 !important;
 			font-family: 'Oxygen', sans-serif !important;
 			background: transparent !important;
-			padding: 3px 8px;
+			padding: 4px 6px;
 			border-radius: 0 !important;
+			white-space: nowrap;
 		}
 		
 		/* Precio dentro del día seleccionado (solo móviles/tablets) - Estilo Booking.com/Airbnb */
@@ -2609,6 +2647,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			box-sizing: border-box;
 		}
 		
+		/* Estilo para el precio en dos líneas - COP del mismo tamaño */
+		.selected-day-price {
+			line-height: 1.2;
+		}
+		
 		/* Estilos específicos según el tipo de día seleccionado - Todos con el mismo estilo prominente */
 		.calendar-day.checkin .selected-day-price {
 			color: #E65100;
@@ -2627,8 +2670,23 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		/* Mostrar precios en días seleccionados solo en móviles/tablets */
 		@media (max-width: 992px) {
+			/* Ocultar precios normales en móvil/tablet */
+			.day-price {
+				display: none !important;
+			}
+			
+			/* Mostrar precios en días seleccionados */
 			.selected-day-price {
-				display: block;
+				display: block !important;
+			}
+			
+			/* Subir el número del día cuando está seleccionado para aprovechar espacio */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 2px !important;
+				transform: translateY(-2px);
+				transition: all 0.2s ease;
 			}
 			
 			/* Asegurar que los días seleccionados tengan suficiente espacio para el precio */
@@ -2655,6 +2713,26 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			/* Asegurar que los precios normales se muestren correctamente en desktop */
 			.day-price {
 				display: block !important;
+				position: absolute;
+				bottom: 8px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 0.75rem;
+				color: #333 !important;
+				font-weight: 400 !important;
+				font-family: 'Oxygen', sans-serif !important;
+				background: transparent !important;
+				padding: 4px 6px;
+				border-radius: 0 !important;
+				white-space: nowrap;
+			}
+			
+			/* Mejorar espaciado del número del día en desktop */
+			.day-number {
+				margin-top: 8px;
+				margin-bottom: auto;
+				font-size: 18px;
+				font-weight: 400;
 			}
 		}
 		
@@ -3147,26 +3225,94 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		/* Adaptación para tablets */
 		@media (max-width: 992px) and (min-width: 769px) {
+			/* Asegurar que los precios normales estén ocultos en tablet */
 			.day-price {
-				display: none; /* Ocultar el precio en tablets para simplificar */
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en tablet */
+			.selected-day-price {
+				display: block !important;
+			}
+			
+			.calendar-container {
+				padding: 30px 20px !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 20px;
+				gap: 12px;
+				grid-auto-rows: minmax(90px, auto);
+			}
+			
+			.calendar-day {
+				min-height: 90px;
+				padding: 10px 5px;
+				font-size: 16px;
+			}
+			
+			.day-number {
+				margin-top: 6px;
+				font-size: 16px;
+			}
+			
+			.selected-day-price {
+				font-size: 0.7rem;
+				bottom: 6px;
+				line-height: 1.1;
+			}
+			
+			/* Subir el número del día cuando está seleccionado en tablet */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 2px !important;
+				transform: translateY(-3px);
+				transition: all 0.2s ease;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 20px;
 			}
 		}
 		
 		/* Adaptación para dispositivos pequeños */
 		@media (max-width: 768px) {
+			/* Asegurar que los precios normales estén ocultos en móvil */
+			.day-price {
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en móvil */
+			.selected-day-price {
+				display: block !important;
+			}
+			
 			.calendar-container {
-				padding: 20px 10px;
+				padding: 20px 0 !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
 			}
 			.calendar-grid {
 				gap: 2px;
 				grid-auto-rows: minmax(45px, auto);
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 5px;
 			}
 			.calendar-day {
 				font-size: 0.9rem;
 				min-height: 45px;
-			}
-			.day-price {
-				display: none; /* Ocultar el precio en móviles para simplificar */
 			}
 			.month-display {
 				font-size: 1.5rem;
@@ -3185,6 +3331,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				bottom: 3px;
 				font-size: 0.65rem;
 				padding: 1px 2px;
+				line-height: 1;
+			}
+			
+			/* Subir el número del día cuando está seleccionado en móvil */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 1px !important;
+				transform: translateY(-2px);
+				transition: all 0.2s ease;
 			}
 			
 			.calendar-day.checkin,
@@ -4147,12 +4303,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		@media (max-width: 768px) {
 			.calendar-container {
 				margin-bottom: 20px;
-				padding: 15px;
+				padding: 20px 0 !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
 			}
 			
 			.calendar-grid {
 				gap: 1px;
-				max-width: 100%;
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				padding: 0 5px;
 			}
 			
 			.calendar-day {
@@ -4164,9 +4327,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				font-size: 12px;
 			}
 			
+			/* Asegurar que los precios normales estén ocultos en móvil */
 			.day-price {
-				font-size: 0.6rem;
-				padding: 1px 4px;
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en móvil */
+			.selected-day-price {
+				display: block !important;
 			}
 			
 			.calendar-legend {
@@ -4239,7 +4407,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		@media (max-width: 480px) {
 			.calendar-container {
-				padding: 10px;
+				padding: 15px 0 !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				padding: 0 3px;
 			}
 			
 			.calendar-day {
@@ -4255,6 +4431,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				bottom: 2px;
 				font-size: 0.6rem;
 				padding: 1px 2px;
+				line-height: 1;
+			}
+			
+			/* Subir el número del día cuando está seleccionado en móviles muy pequeños */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 0px !important;
+				transform: translateY(-1px);
+				transition: all 0.2s ease;
 			}
 			
 			.calendar-day.checkin,
@@ -4606,6 +4792,29 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		let basePrice = <?php echo $base_price; ?>; // Precio base por noche en COP
 		let tarifasCache = {}; // Cache de tarifas por fecha
 		let eventListenersSetup = false; // Flag para evitar configurar listeners múltiples veces
+		
+		// Función para formatear fechas en español de manera consistente
+		function formatearFecha(date) {
+			if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+				return '-';
+			}
+			
+			try {
+				// Obtener día, mes y año
+				const dia = date.getDate();
+				const mes = date.getMonth(); // 0-11
+				const año = date.getFullYear();
+				
+				// Nombres de meses en español
+				const meses = translations.months || ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+				
+				// Formato: "15 de Enero de 2025"
+				return `${dia} de ${meses[mes]} de ${año}`;
+			} catch (error) {
+				// Fallback a formato ISO si hay error
+				return date.toISOString().split('T')[0];
+			}
+		}
 		let clickOutsideHandler = null; // Handler para clicks fuera del calendario
 		
 		// Función para obtener fechas ocupadas
@@ -4657,6 +4866,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		function formatearPrecioCOP(precio) {
 			// Formato: $200.000 COP
 			return '$' + precio.toLocaleString('es-CO') + ' COP';
+		}
+		
+		// Función para formatear precio en dos líneas (móvil/tablet)
+		function formatearPrecioCOP2Lineas(precio) {
+			// Formato: número arriba, "COP" abajo (mismo tamaño)
+			const numero = '$' + precio.toLocaleString('es-CO');
+			return numero + '<br>COP';
 		}
 		
 		// Cargar tarifas basándose en el mes visible actual del calendario
@@ -5128,7 +5344,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 						const precio = getTarifaPorFecha(dayDateString);
 						const priceLabel = document.createElement('div');
 						priceLabel.className = 'selected-day-price';
-						priceLabel.textContent = formatearPrecioCOP(precio);
+						priceLabel.innerHTML = formatearPrecioCOP2Lineas(precio);
 						day.style.position = 'relative';
 						day.appendChild(priceLabel);
 					}
@@ -5146,10 +5362,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			const reserveBtn = document.getElementById('reserveBtn');
 			
 			if (selectedStartDate) {
-				checkinDate.textContent = selectedStartDate.toLocaleDateString(translations.locale);
+				checkinDate.textContent = formatearFecha(selectedStartDate);
 				
 				if (selectedEndDate) {
-					checkoutDate.textContent = selectedEndDate.toLocaleDateString(translations.locale);
+					checkoutDate.textContent = formatearFecha(selectedEndDate);
 					
 					// Calcular noches
 					const timeDiff = selectedEndDate.getTime() - selectedStartDate.getTime();
@@ -6355,8 +6571,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			if (selectedStartDate && selectedEndDate) {
 				const checkinEl = document.getElementById('modalCheckinDate');
 				const checkoutEl = document.getElementById('modalCheckoutDate');
-				if (checkinEl) checkinEl.textContent = selectedStartDate.toLocaleDateString(translations.locale);
-				if (checkoutEl) checkoutEl.textContent = selectedEndDate.toLocaleDateString(translations.locale);
+				if (checkinEl) checkinEl.textContent = formatearFecha(selectedStartDate);
+				if (checkoutEl) checkoutEl.textContent = formatearFecha(selectedEndDate);
 			}
 			
 			// Actualizar resumen de costos
