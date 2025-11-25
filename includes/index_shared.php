@@ -2386,6 +2386,20 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			transform: translateX(0);
 		}
 		
+		/* Desactivar efecto de aparición en móviles/tablets */
+		@media (max-width: 992px) {
+			.scroll-reveal-left {
+				opacity: 1 !important;
+				transform: translateX(0) !important;
+				transition: none !important;
+			}
+			
+			.scroll-reveal-left.revealed {
+				opacity: 1 !important;
+				transform: translateX(0) !important;
+			}
+		}
+		
 		/* Estilos del Calendario - Aplicando estilos del formulario */
 		.calendar-container {
 			background: #ffffff !important;
@@ -5040,22 +5054,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const dayDate = new Date(date);
 					dayDate.setHours(0, 0, 0, 0);
 					
-					// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-					const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-					endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-					const isNotAvailable = dayDate >= today && dayDate <= endDate;
-					
 					if (dayDate < today) {
 						// Día pasado - estilo como other-month
 						dayElement.classList.add('other-month');
 						dayElement.title = translations.calendar.past_day;
-					} else if (isNotAvailable) {
-						// Día no disponible (hasta 31 enero 2026)
-						dayElement.classList.add('not-available');
-						dayElement.classList.add('occupied');
-						dayElement.title = translations.calendar.not_available || 'No disponible hasta el 1 de febrero 2026';
 					} else if (occupiedDates.includes(dateString)) {
-						// Día ocupado
+						// Día ocupado (solo los que realmente tienen reserva en la BD)
 						dayElement.classList.add('occupied');
 						dayElement.title = translations.calendar.not_available;
 					} else {
@@ -5096,19 +5100,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		// Seleccionar fecha
 		function selectDate(date) {
 			const dateString = date.toISOString().split('T')[0];
-			
-			// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-			endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-			const dateOnly = new Date(date);
-			dateOnly.setHours(0, 0, 0, 0);
-			
-			if (dateOnly >= today && dateOnly <= endDate) {
-				alert(translations.calendar.not_available || 'Esta fecha no está disponible hasta el 1 de febrero 2026');
-				return;
-			}
 			
 			// Verificar si el día tiene precio disponible
 			if (!tienePrecioDisponible(dateString)) {
@@ -7567,10 +7558,16 @@ function revealOnScroll() {
 	
 	const calendarioElement = document.getElementById('calendario-container');
 	if (calendarioElement) {
-		const elementTop = calendarioElement.getBoundingClientRect().top;
-		const elementVisible = 150;
-		
-		if (elementTop < window.innerHeight - elementVisible) {
+		// Solo aplicar efecto en desktop (ancho > 992px)
+		if (window.innerWidth > 992) {
+			const elementTop = calendarioElement.getBoundingClientRect().top;
+			const elementVisible = 150;
+			
+			if (elementTop < window.innerHeight - elementVisible) {
+				calendarioElement.classList.add('revealed');
+			}
+		} else {
+			// En móviles/tablets, mostrar inmediatamente sin animación
 			calendarioElement.classList.add('revealed');
 		}
 	}
