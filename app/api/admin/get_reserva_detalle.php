@@ -52,15 +52,24 @@ try {
         throw new Exception('Reserva no encontrada');
     }
     
-    // Formatear fechas
-    $reserva['fecha_entrada_formatted'] = date('d/m/Y', strtotime($reserva['fecha_entrada']));
-    $reserva['fecha_salida_formatted'] = date('d/m/Y', strtotime($reserva['fecha_salida']));
+    // Formatear fechas sin problemas de zona horaria
+    $fecha_entrada = DateTime::createFromFormat('Y-m-d', $reserva['fecha_entrada']);
+    $fecha_salida = DateTime::createFromFormat('Y-m-d', $reserva['fecha_salida']);
+    
+    // Si createFromFormat falla, usar el constructor normal
+    if (!$fecha_entrada) {
+        $fecha_entrada = new DateTime($reserva['fecha_entrada']);
+    }
+    if (!$fecha_salida) {
+        $fecha_salida = new DateTime($reserva['fecha_salida']);
+    }
+    
+    $reserva['fecha_entrada_formatted'] = $fecha_entrada->format('d/m/Y');
+    $reserva['fecha_salida_formatted'] = $fecha_salida->format('d/m/Y');
     $reserva['creado_en_formatted'] = date('d/m/Y H:i', strtotime($reserva['creado_en']));
     $reserva['actualizado_en_formatted'] = date('d/m/Y H:i', strtotime($reserva['actualizado_en']));
     
-    // Calcular número de noches
-    $fecha_entrada = new DateTime($reserva['fecha_entrada']);
-    $fecha_salida = new DateTime($reserva['fecha_salida']);
+    // Calcular número de noches correctamente
     $reserva['num_noches'] = $fecha_entrada->diff($fecha_salida)->days;
     
     echo json_encode([

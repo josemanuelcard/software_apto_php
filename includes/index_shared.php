@@ -193,7 +193,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 								<?php endif; ?>
 							<li style="display: flex; flex-direction: column; align-items: flex-end;">														
 <div id="sfcnpga1u87mu84g9kudrfy5skwu8td29lp"></div>
-<div id="sfcxds958c1a9mzdg2f1bg2yfdm1p7xxkzz"></div><script type="text/javascript" src="https://counter6.optistats.ovh/private/counter.js?c=xds958c1a9mzdg2f1bg2yfdm1p7xxkzz&down=async" async></script><noscript><a href="https://www.contadorvisitasgratis.com" title="contador de visitas online"><img src="https://counter6.optistats.ovh/private/contadorvisitasgratis.php?c=xds958c1a9mzdg2f1bg2yfdm1p7xxkzz"></a></noscript>
+<div id="sfcxds958c1a9mzdg2f1bg2yfdm1p7xxkzz"></div>
 <div style="margin-top: 5px; font-family: 'Oxygen', sans-serif; font-size: 12px; color: #333; text-align: right;">
 <?php echo __('stats.registered_users'); ?>: <strong><?php echo $total_usuarios; ?></strong>
 </div>
@@ -2386,16 +2386,58 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			transform: translateX(0);
 		}
 		
+		/* Desactivar efecto de aparición en móviles/tablets */
+		@media (max-width: 992px) {
+			.scroll-reveal-left {
+				opacity: 1 !important;
+				transform: translateX(0) !important;
+				transition: none !important;
+			}
+			
+			.scroll-reveal-left.revealed {
+				opacity: 1 !important;
+				transform: translateX(0) !important;
+			}
+		}
+		
 		/* Estilos del Calendario - Aplicando estilos del formulario */
 		.calendar-container {
 			background: #ffffff !important;
 			border-radius: 0 !important;
 			box-shadow: none !important;
-			padding: 30px 40px !important;
+			padding: 40px 50px !important;
 			max-width: 1100px;
 			margin: 0 auto;
 			border: none !important;
 			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
+		}
+		
+		/* Mejorar espaciado en desktop */
+		@media (min-width: 993px) {
+			.calendar-container {
+				padding: 40px 50px !important;
+			}
+			
+			.calendar-grid {
+				gap: 15px;
+			}
+		}
+		
+		/* Asegurar que el calendario ocupe todo el ancho en móvil/tablet */
+		@media (max-width: 992px) {
+			.calendar-container {
+				padding: 20px 0 !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 10px;
+			}
 		}
 		
 		.calendar-header {
@@ -2459,12 +2501,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		.calendar-grid {
 			display: grid;
 			grid-template-columns: repeat(7, 1fr);
-			gap: 10px;
+			gap: 15px;
 			margin-bottom: 20px;
 			max-width: 1080px;
 			margin-left: auto;
 			margin-right: auto;
-			grid-auto-rows: minmax(85px, auto);
+			grid-auto-rows: minmax(100px, auto);
 			overflow: visible; /* Permitir que las etiquetas de precio se muestren */
 		}
 		
@@ -2473,11 +2515,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			justify-content: center;
+			justify-content: flex-start;
 			cursor: pointer;
 			transition: border-bottom-color 0.3s ease;
 			position: relative;
-			min-height: 85px;
+			min-height: 100px;
+			padding: 8px 4px;
 			font-size: 18px;
 			font-family: 'Oxygen', sans-serif !important;
 			border-radius: 0 !important;
@@ -2573,114 +2616,98 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			opacity: 0.5;
 		}
 		
+		.day-number {
+			margin-top: 8px;
+			margin-bottom: auto;
+			font-size: 18px;
+			font-weight: 400;
+			line-height: 1.2;
+		}
+		
 		.day-price {
-			font-size: 0.7rem;
+			font-size: 0.75rem;
 			position: absolute;
-			bottom: 6px;
+			bottom: 8px;
 			left: 50%;
 			transform: translateX(-50%);
 			color: #333 !important;
 			font-weight: 400 !important;
 			font-family: 'Oxygen', sans-serif !important;
 			background: transparent !important;
-			padding: 3px 8px;
+			padding: 4px 6px;
 			border-radius: 0 !important;
+			white-space: nowrap;
 		}
 		
-		/* Etiqueta de precio sobre días seleccionados (solo móviles/tablets) */
+		/* Precio dentro del día seleccionado (solo móviles/tablets) - Estilo Booking.com/Airbnb */
 		.selected-day-price {
 			position: absolute;
-			top: -18px;
+			bottom: 4px;
 			left: 0;
 			right: 0;
 			width: 100%;
-			transform: translateY(-5px);
-			background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-			border: 1.5px solid #333;
-			border-bottom: 2.5px solid #333;
-			border-radius: 4px;
-			padding: 5px 4px;
-			font-size: 0.65rem;
+			background: transparent;
+			padding: 2px 4px;
+			font-size: 0.7rem;
 			color: #333;
 			font-weight: 600;
 			font-family: 'Oxygen', sans-serif;
 			text-align: center;
-			z-index: 100;
-			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+			z-index: 10;
 			display: none; /* Oculto por defecto, solo visible en móviles/tablets */
-			line-height: 1.3;
-			letter-spacing: 0.3px;
-			transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+			line-height: 1.1;
+			letter-spacing: 0;
+			transition: all 0.2s ease;
 			box-sizing: border-box;
 		}
 		
-		/* Estilos específicos según el tipo de día seleccionado */
+		/* Estilo para el precio en dos líneas - COP del mismo tamaño */
+		.selected-day-price {
+			line-height: 1.2;
+		}
+		
+		/* Estilos específicos según el tipo de día seleccionado - Todos con el mismo estilo prominente */
 		.calendar-day.checkin .selected-day-price {
-			background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
-			border-color: #FFC107;
-			border-bottom-color: #FFA000;
 			color: #E65100;
-			box-shadow: 0 3px 8px rgba(255, 193, 7, 0.4), 0 1px 3px rgba(255, 193, 7, 0.2);
+			font-weight: 700;
 		}
 		
 		.calendar-day.checkout .selected-day-price {
-			background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-			border-color: #2196F3;
-			border-bottom-color: #1976D2;
 			color: #0D47A1;
-			box-shadow: 0 3px 8px rgba(33, 150, 243, 0.4), 0 1px 3px rgba(33, 150, 243, 0.2);
+			font-weight: 700;
 		}
 		
 		.calendar-day.in-range .selected-day-price {
-			background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
-			border-color: #03A9F4;
-			border-bottom-color: #0288D1;
-			color: #01579B;
-			box-shadow: 0 3px 8px rgba(3, 169, 244, 0.35), 0 1px 3px rgba(3, 169, 244, 0.2);
+			color: #0D47A1;
+			font-weight: 700;
 		}
 		
-		/* Pequeño triángulo apuntando hacia el día */
-		.selected-day-price::after {
-			content: '';
-			position: absolute;
-			bottom: -6px;
-			left: 50%;
-			transform: translateX(-50%);
-			width: 0;
-			height: 0;
-			border-left: 5px solid transparent;
-			border-right: 5px solid transparent;
-			border-top: 6px solid #333;
-		}
-		
-		.calendar-day.checkin .selected-day-price::after {
-			border-top-color: #FFA000;
-		}
-		
-		.calendar-day.checkout .selected-day-price::after {
-			border-top-color: #1976D2;
-		}
-		
-		.calendar-day.in-range .selected-day-price::after {
-			border-top-color: #0288D1;
-		}
-		
-		/* Mostrar etiquetas de precio en días seleccionados solo en móviles/tablets */
+		/* Mostrar precios en días seleccionados solo en móviles/tablets */
 		@media (max-width: 992px) {
+			/* Ocultar precios normales en móvil/tablet */
+			.day-price {
+				display: none !important;
+			}
+			
+			/* Mostrar precios en días seleccionados */
 			.selected-day-price {
-				display: block;
-				animation: priceLabelFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+				display: block !important;
 			}
-		}
-		
-		@keyframes priceLabelFadeIn {
-			0% {
-				opacity: 0;
-				transform: translateY(-15px) scale(0.85);
+			
+			/* Subir el número del día cuando está seleccionado para aprovechar espacio */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 2px !important;
+				transform: translateY(-2px);
+				transition: all 0.2s ease;
 			}
-			100% {
-				opacity: 1;
-				transform: translateY(-5px) scale(1);
+			
+			/* Asegurar que los días seleccionados tengan suficiente espacio para el precio */
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 18px;
 			}
 		}
 		
@@ -2700,6 +2727,26 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			/* Asegurar que los precios normales se muestren correctamente en desktop */
 			.day-price {
 				display: block !important;
+				position: absolute;
+				bottom: 8px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 0.75rem;
+				color: #333 !important;
+				font-weight: 400 !important;
+				font-family: 'Oxygen', sans-serif !important;
+				background: transparent !important;
+				padding: 4px 6px;
+				border-radius: 0 !important;
+				white-space: nowrap;
+			}
+			
+			/* Mejorar espaciado del número del día en desktop */
+			.day-number {
+				margin-top: 8px;
+				margin-bottom: auto;
+				font-size: 18px;
+				font-weight: 400;
 			}
 		}
 		
@@ -3192,26 +3239,94 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		/* Adaptación para tablets */
 		@media (max-width: 992px) and (min-width: 769px) {
+			/* Asegurar que los precios normales estén ocultos en tablet */
 			.day-price {
-				display: none; /* Ocultar el precio en tablets para simplificar */
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en tablet */
+			.selected-day-price {
+				display: block !important;
+			}
+			
+			.calendar-container {
+				padding: 30px 20px !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 20px;
+				gap: 12px;
+				grid-auto-rows: minmax(90px, auto);
+			}
+			
+			.calendar-day {
+				min-height: 90px;
+				padding: 10px 5px;
+				font-size: 16px;
+			}
+			
+			.day-number {
+				margin-top: 6px;
+				font-size: 16px;
+			}
+			
+			.selected-day-price {
+				font-size: 0.7rem;
+				bottom: 6px;
+				line-height: 1.1;
+			}
+			
+			/* Subir el número del día cuando está seleccionado en tablet */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 2px !important;
+				transform: translateY(-3px);
+				transition: all 0.2s ease;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 20px;
 			}
 		}
 		
 		/* Adaptación para dispositivos pequeños */
 		@media (max-width: 768px) {
+			/* Asegurar que los precios normales estén ocultos en móvil */
+			.day-price {
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en móvil */
+			.selected-day-price {
+				display: block !important;
+			}
+			
 			.calendar-container {
-				padding: 20px 10px;
+				padding: 20px 0 !important;
+				margin: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
 			}
 			.calendar-grid {
 				gap: 2px;
 				grid-auto-rows: minmax(45px, auto);
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				padding: 0 5px;
 			}
 			.calendar-day {
 				font-size: 0.9rem;
 				min-height: 45px;
-			}
-			.day-price {
-				display: none; /* Ocultar el precio en móviles para simplificar */
 			}
 			.month-display {
 				font-size: 1.5rem;
@@ -3225,17 +3340,27 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				width: 14px;
 				height: 14px;
 			}
-			/* Ajustar etiquetas de precio en móviles */
+			/* Ajustar precios en días seleccionados en móviles */
 			.selected-day-price {
-				top: -16px;
-				padding: 4px 3px;
-				font-size: 0.6rem;
+				bottom: 3px;
+				font-size: 0.65rem;
+				padding: 1px 2px;
+				line-height: 1;
 			}
-			.selected-day-price::after {
-				border-left-width: 4px;
-				border-right-width: 4px;
-				border-top-width: 5px;
-				bottom: -5px;
+			
+			/* Subir el número del día cuando está seleccionado en móvil */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 1px !important;
+				transform: translateY(-2px);
+				transition: all 0.2s ease;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 16px;
 			}
 		}
 		
@@ -4192,12 +4317,19 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		@media (max-width: 768px) {
 			.calendar-container {
 				margin-bottom: 20px;
-				padding: 15px;
+				padding: 20px 0 !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
 			}
 			
 			.calendar-grid {
 				gap: 1px;
-				max-width: 100%;
+				max-width: 100% !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				padding: 0 5px;
 			}
 			
 			.calendar-day {
@@ -4209,9 +4341,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				font-size: 12px;
 			}
 			
+			/* Asegurar que los precios normales estén ocultos en móvil */
 			.day-price {
-				font-size: 0.6rem;
-				padding: 1px 4px;
+				display: none !important;
+			}
+			
+			/* Asegurar que los precios en días seleccionados estén visibles en móvil */
+			.selected-day-price {
+				display: block !important;
 			}
 			
 			.calendar-legend {
@@ -4284,7 +4421,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		
 		@media (max-width: 480px) {
 			.calendar-container {
-				padding: 10px;
+				padding: 15px 0 !important;
+				margin-left: 0 !important;
+				margin-right: 0 !important;
+				max-width: 100% !important;
+				width: 100% !important;
+			}
+			
+			.calendar-grid {
+				padding: 0 3px;
 			}
 			
 			.calendar-day {
@@ -4295,18 +4440,27 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				font-size: 11px;
 			}
 			
-			/* Ajustar etiquetas de precio en móviles muy pequeños */
+			/* Ajustar precios en días seleccionados en móviles muy pequeños */
 			.selected-day-price {
-				top: -14px;
-				padding: 3px 2px;
-				font-size: 0.55rem;
-				letter-spacing: 0.2px;
+				bottom: 2px;
+				font-size: 0.6rem;
+				padding: 1px 2px;
+				line-height: 1;
 			}
-			.selected-day-price::after {
-				border-left-width: 3px;
-				border-right-width: 3px;
-				border-top-width: 4px;
-				bottom: -4px;
+			
+			/* Subir el número del día cuando está seleccionado en móviles muy pequeños */
+			.calendar-day.checkin .day-number,
+			.calendar-day.checkout .day-number,
+			.calendar-day.in-range .day-number {
+				margin-top: 0px !important;
+				transform: translateY(-1px);
+				transition: all 0.2s ease;
+			}
+			
+			.calendar-day.checkin,
+			.calendar-day.checkout,
+			.calendar-day.in-range {
+				padding-bottom: 14px;
 			}
 			
 			.reservation-summary {
@@ -4652,6 +4806,42 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		let basePrice = <?php echo $base_price; ?>; // Precio base por noche en COP
 		let tarifasCache = {}; // Cache de tarifas por fecha
 		let eventListenersSetup = false; // Flag para evitar configurar listeners múltiples veces
+		
+		// Función para formatear fechas en español de manera consistente
+		function formatearFecha(date) {
+			if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+				return '-';
+			}
+			
+			try {
+				// Obtener día, mes y año
+				const dia = date.getDate();
+				const mes = date.getMonth(); // 0-11
+				const año = date.getFullYear();
+				
+				// Nombres de meses en español
+				const meses = translations.months || ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+				
+				// Formato: "15 de Enero de 2025"
+				return `${dia} de ${meses[mes]} de ${año}`;
+			} catch (error) {
+				// Fallback a formato ISO si hay error
+				return date.toISOString().split('T')[0];
+			}
+		}
+		
+		// Función para formatear fecha para el servidor sin conversión UTC
+		function formatDateForServer(date) {
+			if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+				return '';
+			}
+			// Usar fecha local, no UTC, para evitar problemas de zona horaria
+			const año = date.getFullYear();
+			const mes = String(date.getMonth() + 1).padStart(2, '0');
+			const dia = String(date.getDate()).padStart(2, '0');
+			return `${año}-${mes}-${dia}`;
+		}
+		
 		let clickOutsideHandler = null; // Handler para clicks fuera del calendario
 		
 		// Función para obtener fechas ocupadas
@@ -4703,6 +4893,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		function formatearPrecioCOP(precio) {
 			// Formato: $200.000 COP
 			return '$' + precio.toLocaleString('es-CO') + ' COP';
+		}
+		
+		// Función para formatear precio en dos líneas (móvil/tablet)
+		function formatearPrecioCOP2Lineas(precio) {
+			// Formato: número arriba, "COP" abajo (mismo tamaño)
+			const numero = '$' + precio.toLocaleString('es-CO');
+			return numero + '<br>COP';
 		}
 		
 		// Cargar tarifas basándose en el mes visible actual del calendario
@@ -4870,22 +5067,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					const dayDate = new Date(date);
 					dayDate.setHours(0, 0, 0, 0);
 					
-					// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-					const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-					endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-					const isNotAvailable = dayDate >= today && dayDate <= endDate;
-					
 					if (dayDate < today) {
 						// Día pasado - estilo como other-month
 						dayElement.classList.add('other-month');
 						dayElement.title = translations.calendar.past_day;
-					} else if (isNotAvailable) {
-						// Día no disponible (hasta 31 enero 2026)
-						dayElement.classList.add('not-available');
-						dayElement.classList.add('occupied');
-						dayElement.title = translations.calendar.not_available || 'No disponible hasta el 1 de febrero 2026';
 					} else if (occupiedDates.includes(dateString)) {
-						// Día ocupado
+						// Día ocupado (solo los que realmente tienen reserva en la BD)
 						dayElement.classList.add('occupied');
 						dayElement.title = translations.calendar.not_available;
 					} else {
@@ -4926,19 +5113,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		// Seleccionar fecha
 		function selectDate(date) {
 			const dateString = date.toISOString().split('T')[0];
-			
-			// Verificar si la fecha está en el rango no disponible (hoy hasta 31 enero 2026 inclusive)
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			const endDate = new Date(2026, 0, 31); // 31 de enero de 2026 (mes 0 = enero)
-			endDate.setHours(23, 59, 59, 999); // Incluir todo el día 31
-			const dateOnly = new Date(date);
-			dateOnly.setHours(0, 0, 0, 0);
-			
-			if (dateOnly >= today && dateOnly <= endDate) {
-				alert(translations.calendar.not_available || 'Esta fecha no está disponible hasta el 1 de febrero 2026');
-				return;
-			}
 			
 			// Verificar si el día tiene precio disponible
 			if (!tienePrecioDisponible(dateString)) {
@@ -5174,7 +5348,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 						const precio = getTarifaPorFecha(dayDateString);
 						const priceLabel = document.createElement('div');
 						priceLabel.className = 'selected-day-price';
-						priceLabel.textContent = formatearPrecioCOP(precio);
+						priceLabel.innerHTML = formatearPrecioCOP2Lineas(precio);
 						day.style.position = 'relative';
 						day.appendChild(priceLabel);
 					}
@@ -5192,10 +5366,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			const reserveBtn = document.getElementById('reserveBtn');
 			
 			if (selectedStartDate) {
-				checkinDate.textContent = selectedStartDate.toLocaleDateString(translations.locale);
+				checkinDate.textContent = formatearFecha(selectedStartDate);
 				
 				if (selectedEndDate) {
-					checkoutDate.textContent = selectedEndDate.toLocaleDateString(translations.locale);
+					checkoutDate.textContent = formatearFecha(selectedEndDate);
 					
 					// Calcular noches
 					const timeDiff = selectedEndDate.getTime() - selectedStartDate.getTime();
@@ -6401,8 +6575,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			if (selectedStartDate && selectedEndDate) {
 				const checkinEl = document.getElementById('modalCheckinDate');
 				const checkoutEl = document.getElementById('modalCheckoutDate');
-				if (checkinEl) checkinEl.textContent = selectedStartDate.toLocaleDateString(translations.locale);
-				if (checkoutEl) checkoutEl.textContent = selectedEndDate.toLocaleDateString(translations.locale);
+				if (checkinEl) checkinEl.textContent = formatearFecha(selectedStartDate);
+				if (checkoutEl) checkoutEl.textContent = formatearFecha(selectedEndDate);
 			}
 			
 			// Actualizar resumen de costos
@@ -6756,8 +6930,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				correo: userDataLocked ? userDataLocked.correo : formData.get('correo'),
 				telefono: userDataLocked ? userDataLocked.telefono : (document.getElementById('codigoPais').value + ' ' + formData.get('celular')),
 				fecha_nacimiento: userDataLocked ? userDataLocked.fecha_nacimiento : formData.get('fechaNacimiento'),
-				fecha_entrada: selectedStartDate.toISOString().split('T')[0],
-				fecha_salida: selectedEndDate.toISOString().split('T')[0],
+				fecha_entrada: formatDateForServer(selectedStartDate),
+				fecha_salida: formatDateForServer(selectedEndDate),
 				num_adultos: parseInt(formData.get('adultos')),
 				num_ninos: parseInt(formData.get('ninos')),
 				vive_palmira: formData.get('vivePalmira') === 'on',
@@ -7272,7 +7446,10 @@ window.showMyReservations = function() {
 		}
 		
 		// Obtener reservas del usuario
-		fetch('/app/api/user/get_my_reservations.php')
+		fetch('../app/api/user/get_my_reservations.php', {
+			method: 'GET',
+			credentials: 'include' // Incluir cookies de sesión
+		})
 			.then(response => response.json())
 			.then(data => {
 				document.getElementById('loadingReservations').style.display = 'none';
@@ -7397,10 +7574,16 @@ function revealOnScroll() {
 	
 	const calendarioElement = document.getElementById('calendario-container');
 	if (calendarioElement) {
-		const elementTop = calendarioElement.getBoundingClientRect().top;
-		const elementVisible = 150;
-		
-		if (elementTop < window.innerHeight - elementVisible) {
+		// Solo aplicar efecto en desktop (ancho > 992px)
+		if (window.innerWidth > 992) {
+			const elementTop = calendarioElement.getBoundingClientRect().top;
+			const elementVisible = 150;
+			
+			if (elementTop < window.innerHeight - elementVisible) {
+				calendarioElement.classList.add('revealed');
+			}
+		} else {
+			// En móviles/tablets, mostrar inmediatamente sin animación
 			calendarioElement.classList.add('revealed');
 		}
 	}

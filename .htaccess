@@ -26,3 +26,10 @@ ServerSignature Off
     Header always set X-Frame-Options SAMEORIGIN
     Header always set X-XSS-Protection "1; mode=block"
 </IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Configure el paquete “alt-php82” como el lenguaje de programación predeterminado “PHP”.
+<IfModule mime_module>
+  AddHandler application/x-httpd-alt-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

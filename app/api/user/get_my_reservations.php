@@ -4,11 +4,15 @@
  * Sistema de Reservas - My Suite In Cartagena
  */
 
-session_start();
+// Iniciar sesi車n si no est芍 iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Verificar si el usuario est獺 logueado
+// Verificar si el usuario est芍 logueado
 if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
     http_response_code(401);
+    header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
@@ -22,7 +26,7 @@ try {
     $db = $database->getConnection();
     
     if (!$db) {
-        throw new Exception("Error de conexi籀n a la base de datos");
+        throw new Exception("Error de conexi車n a la base de datos");
     }
     
     $user_id = $_SESSION['user_id'];
@@ -55,9 +59,22 @@ try {
     
     // Formatear fechas y calcular noches
     foreach ($reservations as &$reservation) {
-        $fecha_entrada = new DateTime($reservation['fecha_entrada']);
-        $fecha_salida = new DateTime($reservation['fecha_salida']);
+        // Crear objetos DateTime sin zona horaria para evitar problemas de conversi車n
+        $fecha_entrada = DateTime::createFromFormat('Y-m-d', $reservation['fecha_entrada']);
+        $fecha_salida = DateTime::createFromFormat('Y-m-d', $reservation['fecha_salida']);
+        
+        // Si createFromFormat falla, usar el constructor normal
+        if (!$fecha_entrada) {
+            $fecha_entrada = new DateTime($reservation['fecha_entrada']);
+        }
+        if (!$fecha_salida) {
+            $fecha_salida = new DateTime($reservation['fecha_salida']);
+        }
+        
+        // Calcular noches correctamente (diferencia en d赤as)
         $reservation['noches'] = $fecha_entrada->diff($fecha_salida)->days;
+        
+        // Formatear fechas sin conversi車n de zona horaria
         $reservation['fecha_entrada_formatted'] = $fecha_entrada->format('d/m/Y');
         $reservation['fecha_salida_formatted'] = $fecha_salida->format('d/m/Y');
         $reservation['creado_en_formatted'] = date('d/m/Y H:i', strtotime($reservation['creado_en']));

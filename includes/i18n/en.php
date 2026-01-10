@@ -287,7 +287,7 @@ return [
     'contact.title' => 'Contact Us',
     'contact.breadcrumb' => 'Contact Us',
     'contact.location' => 'Location',
-    'contact.location_text' => 'My Suite In Cartagena<br>Torres del Lago Residential Complex Building, El Laguito Neighborhood Carrera 1 Nº 1A - 169 Apartment 15-01 D Tower A Penthouse',
+    'contact.location_text' => 'My Suite In Cartagena<br>Torres del Lago Residential Complex Building, El Laguito Neighborhood Carrera 1 Nº 1A - 169 Apartment 15-01 D Tower A Penthouse<br>Cartagena, Bolivar, Colombia',
     'contact.email' => 'Email',
     'contact.phone' => 'Phone Numbers',
     'contact.phone_text' => 'WhatsApp<br> +57 301 5193163 - +57 312 7281713',

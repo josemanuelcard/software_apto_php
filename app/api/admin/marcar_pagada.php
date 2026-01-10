@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         " . (($reserva['metodo_pago'] === 'efectivo' || $reserva['metodo_pago'] === 'transferencia') ? "
                                             <p>Para consignar el <strong>saldo restante ($" . $saldo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
                                             <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
-                                                @COO3137910897
+                                                @millave3137910897
                                             </p>
                                             <p style='text-align: center; color: #666; font-size: 14px;'>Usa esta llave en tu aplicación bancaria para realizar la consignación del abono.</p>
                                             " : "

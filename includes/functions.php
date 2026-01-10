@@ -21,12 +21,19 @@ function getFechasOcupadas($apartamento_id = 1) {
     try {
         $fechas_ocupadas = [];
         
-        // 1. Obtener fechas de reservas aprobadas
+        // 1. Obtener fechas de reservas aprobadas, abonadas y pagadas
+        // Usar DATE_FORMAT para forzar formato string y evitar problemas de zona horaria
         $query_reservas = "
-            SELECT DISTINCT fecha_entrada, fecha_salida 
+            SELECT DISTINCT 
+                DATE_FORMAT(fecha_entrada, '%Y-%m-%d') as fecha_entrada, 
+                DATE_FORMAT(fecha_salida, '%Y-%m-%d') as fecha_salida 
             FROM reservas 
             WHERE id_apartamento = :apartamento_id 
-            AND estado = 'aprobada'
+            AND (
+                estado = 'aprobada' OR 
+                estado = 'abonada' OR
+                (estado = 'aprobada' AND estado_pago = 'pagada')
+            )
             AND fecha_salida >= CURDATE()
         ";
         
@@ -35,12 +42,52 @@ function getFechasOcupadas($apartamento_id = 1) {
         $stmt->execute();
         
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $inicio = new DateTime($row['fecha_entrada']);
-            $fin = new DateTime($row['fecha_salida']);
+            // Las fechas vienen como strings 'Y-m-d' desde MySQL
+            $fecha_entrada_str = trim($row['fecha_entrada']);
+            $fecha_salida_str = trim($row['fecha_salida']);
             
-            while ($inicio < $fin) {
-                $fechas_ocupadas[] = $inicio->format('Y-m-d');
-                $inicio->add(new DateInterval('P1D'));
+            // Validar formato de fecha
+            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $fecha_entrada_str, $match_entrada) || 
+                !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $fecha_salida_str, $match_salida)) {
+                error_log("Formato de fecha inválido en getFechasOcupadas: entrada=$fecha_entrada_str, salida=$fecha_salida_str");
+                continue;
+            }
+            
+            // Extraer año, mes y día directamente del string para evitar cualquier conversión
+            $ano_entrada = (int)$match_entrada[1];
+            $mes_entrada = (int)$match_entrada[2];
+            $dia_entrada = (int)$match_entrada[3];
+            
+            $ano_salida = (int)$match_salida[1];
+            $mes_salida = (int)$match_salida[2];
+            $dia_salida = (int)$match_salida[3];
+            
+            // Generar fechas ocupadas trabajando directamente con los componentes de fecha
+            // Para reserva del 20 al 24, se marcan ocupados: 20, 21, 22, 23 (el 24 es día de salida, no ocupado)
+            $current_ano = $ano_entrada;
+            $current_mes = $mes_entrada;
+            $current_dia = $dia_entrada;
+            
+            // Mientras la fecha actual sea menor que la fecha de salida
+            while ($current_ano < $ano_salida || 
+                   ($current_ano == $ano_salida && $current_mes < $mes_salida) || 
+                   ($current_ano == $ano_salida && $current_mes == $mes_salida && $current_dia < $dia_salida)) {
+                
+                // Formatear fecha actual
+                $fecha_actual = sprintf('%04d-%02d-%02d', $current_ano, $current_mes, $current_dia);
+                $fechas_ocupadas[] = $fecha_actual;
+                
+                // Avanzar un día
+                $current_dia++;
+                $dias_en_mes = cal_days_in_month(CAL_GREGORIAN, $current_mes, $current_ano);
+                if ($current_dia > $dias_en_mes) {
+                    $current_dia = 1;
+                    $current_mes++;
+                    if ($current_mes > 12) {
+                        $current_mes = 1;
+                        $current_ano++;
+                    }
+                }
             }
         }
         
@@ -190,8 +237,20 @@ function guardarReserva($datos) {
         $correo = trim($datos['correo']);
         $telefono = trim($datos['telefono']);
         $fecha_nacimiento = isset($datos['fecha_nacimiento']) && !empty($datos['fecha_nacimiento']) ? $datos['fecha_nacimiento'] : null;
-        $fecha_entrada = $datos['fecha_entrada'];
-        $fecha_salida = $datos['fecha_salida'];
+        
+        // Validar y normalizar fechas para evitar problemas de zona horaria
+        $fecha_entrada = trim($datos['fecha_entrada']);
+        $fecha_salida = trim($datos['fecha_salida']);
+        
+        // Validar formato de fecha (debe ser Y-m-d)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_entrada) || 
+            !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_salida)) {
+            error_log("Error: Formato de fecha inválido en guardarReserva - entrada: '$fecha_entrada', salida: '$fecha_salida'");
+            throw new Exception("Formato de fecha inválido");
+        }
+        
+        // Log para debugging (remover en producción si es necesario)
+        error_log("Guardando reserva con fechas - entrada: $fecha_entrada, salida: $fecha_salida");
         $num_adultos = (int)$datos['num_adultos'];
         $num_ninos = isset($datos['num_ninos']) ? (int)$datos['num_ninos'] : 0;
         $vive_palmira = isset($datos['vive_palmira']) && $datos['vive_palmira'] ? 1 : 0;

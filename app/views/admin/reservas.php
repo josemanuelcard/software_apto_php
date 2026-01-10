@@ -815,9 +815,21 @@ try {
                                                     </td>
                                                     <td>
                                                         <div>
-                                                            <strong>Entrada:</strong> <?php echo date('d/m/Y', strtotime($reserva['fecha_entrada'])); ?>
+                                                            <strong>Entrada:</strong> <?php 
+                                                                $fecha_entrada = DateTime::createFromFormat('Y-m-d', $reserva['fecha_entrada']);
+                                                                if (!$fecha_entrada) {
+                                                                    $fecha_entrada = new DateTime($reserva['fecha_entrada']);
+                                                                }
+                                                                echo $fecha_entrada->format('d/m/Y'); 
+                                                            ?>
                                                             <br>
-                                                            <strong>Salida:</strong> <?php echo date('d/m/Y', strtotime($reserva['fecha_salida'])); ?>
+                                                            <strong>Salida:</strong> <?php 
+                                                                $fecha_salida = DateTime::createFromFormat('Y-m-d', $reserva['fecha_salida']);
+                                                                if (!$fecha_salida) {
+                                                                    $fecha_salida = new DateTime($reserva['fecha_salida']);
+                                                                }
+                                                                echo $fecha_salida->format('d/m/Y'); 
+                                                            ?>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -1143,11 +1155,11 @@ try {
                             </tr>
                             <tr>
                                 <td><strong>Fecha de Entrada:</strong></td>
-                                <td>${new Date(reserva.fecha_entrada).toLocaleDateString('es-CO')}</td>
+                                <td>${reserva.fecha_entrada_formatted || reserva.fecha_entrada}</td>
                             </tr>
                             <tr>
                                 <td><strong>Fecha de Salida:</strong></td>
-                                <td>${new Date(reserva.fecha_salida).toLocaleDateString('es-CO')}</td>
+                                <td>${reserva.fecha_salida_formatted || reserva.fecha_salida}</td>
                             </tr>
                             <tr>
                                 <td><strong>Adultos:</strong></td>
