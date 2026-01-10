@@ -983,6 +983,15 @@ try {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditarReserva" onclick="activarEdicionReserva()">
+                        <i class="fas fa-edit me-1"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-success d-none" id="btnGuardarReserva" onclick="guardarCambiosReserva()">
+                        <i class="fas fa-save me-1"></i> Guardar Cambios
+                    </button>
+                    <button type="button" class="btn btn-secondary d-none" id="btnCancelarEdicion" onclick="cancelarEdicionReserva()">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </button>
                 </div>
             </div>
         </div>
@@ -1070,7 +1079,19 @@ try {
                 });
         }
         
+        let reservaActual = null; // Variable global para almacenar los datos de la reserva
+        let modoEdicion = false; // Variable para controlar el modo de edición
+        
         function mostrarDetalleReserva(reserva) {
+            // Guardar los datos originales de la reserva
+            reservaActual = reserva;
+            modoEdicion = false;
+            
+            // Resetear botones
+            document.getElementById('btnEditarReserva').classList.remove('d-none');
+            document.getElementById('btnGuardarReserva').classList.add('d-none');
+            document.getElementById('btnCancelarEdicion').classList.add('d-none');
+            
             let estadoClass = 'bg-secondary';
             let estadoStyle = '';
             if (reserva.estado === 'abonada') {
@@ -1105,6 +1126,37 @@ try {
             console.log('DEBUG metodoPago final:', metodoPago);
             const vivePalmira = reserva.vive_palmira == 1 ? 'Sí' : 'No';
             
+            renderizarDetalleReserva(reserva, estadoClass, estadoStyle, metodoPago, vivePalmira);
+        }
+        
+        function renderizarDetalleReserva(reserva, estadoClass, estadoStyle, metodoPago, vivePalmira) {
+            // Separar nombre y apellido si vienen juntos
+            let nombre = reserva.nombre || '';
+            let apellido = reserva.apellido || '';
+            
+            // Si no hay apellido separado, intentar separar del nombre completo
+            if (!apellido && nombre.includes(' ')) {
+                const partes = nombre.split(' ');
+                nombre = partes[0];
+                apellido = partes.slice(1).join(' ');
+            }
+            
+            const nombreDisplay = modoEdicion 
+                ? `<input type="text" class="form-control form-control-sm" id="editNombre" value="${nombre}" required>`
+                : `${nombre}`;
+            const apellidoDisplay = modoEdicion 
+                ? `<input type="text" class="form-control form-control-sm" id="editApellido" value="${apellido}" required>`
+                : `${apellido}`;
+            const correoDisplay = modoEdicion 
+                ? `<input type="email" class="form-control form-control-sm" id="editCorreo" value="${reserva.correo}" required>`
+                : `${reserva.correo}`;
+            const telefonoDisplay = modoEdicion 
+                ? `<input type="text" class="form-control form-control-sm" id="editTelefono" value="${reserva.telefono}" required>`
+                : `${reserva.telefono}`;
+            const totalDisplay = modoEdicion 
+                ? `<input type="number" class="form-control form-control-sm" id="editTotal" value="${reserva.total}" min="0" step="0.01" required>`
+                : `$${parseFloat(reserva.total).toLocaleString('es-CO')} COP`;
+            
             document.getElementById('detalleReservaContent').innerHTML = `
                 <div class="row">
                     <!-- Información General -->
@@ -1115,15 +1167,19 @@ try {
                         <table class="table table-sm">
                             <tr>
                                 <td><strong>Nombre:</strong></td>
-                                <td>${reserva.nombre} ${reserva.apellido}</td>
+                                <td>${nombreDisplay}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Apellido:</strong></td>
+                                <td>${apellidoDisplay}</td>
                             </tr>
                             <tr>
                                 <td><strong>Correo:</strong></td>
-                                <td>${reserva.correo}</td>
+                                <td>${correoDisplay}</td>
                             </tr>
                             <tr>
                                 <td><strong>Teléfono:</strong></td>
-                                <td>${reserva.telefono}</td>
+                                <td>${telefonoDisplay}</td>
                             </tr>
                             <tr>
                                 <td><strong>Fecha de Nacimiento:</strong></td>
@@ -1210,7 +1266,7 @@ try {
                                     </tr>
                                     <tr class="table-success">
                                         <td><strong>Total:</strong></td>
-                                        <td><strong>$${parseFloat(reserva.total).toLocaleString('es-CO')} COP</strong></td>
+                                        <td><strong>${totalDisplay}</strong></td>
                                     </tr>
                                 </table>
                             </div>
@@ -1273,6 +1329,150 @@ try {
                     </div>
                 </div>
             `;
+        }
+        
+        // Función para activar modo de edición
+        function activarEdicionReserva() {
+            modoEdicion = true;
+            
+            // Ocultar botón editar, mostrar guardar y cancelar
+            document.getElementById('btnEditarReserva').classList.add('d-none');
+            document.getElementById('btnGuardarReserva').classList.remove('d-none');
+            document.getElementById('btnCancelarEdicion').classList.remove('d-none');
+            
+            // Re-renderizar con campos editables
+            if (reservaActual) {
+                let estadoClass = 'bg-secondary';
+                let estadoStyle = '';
+                if (reservaActual.estado === 'abonada') {
+                    estadoClass = 'badge';
+                    estadoStyle = 'background-color: #ff8c00; color: #000000;';
+                } else {
+                    const estadoClasses = {
+                        'pendiente': 'bg-warning',
+                        'aprobada': 'bg-success',
+                        'rechazada': 'bg-danger',
+                        'cancelada': 'bg-secondary'
+                    };
+                    estadoClass = estadoClasses[reservaActual.estado] || 'bg-secondary';
+                }
+                
+                const metodoPagoValor = String(reservaActual.metodo_pago || '').toLowerCase().trim().replace(/\s+/g, '');
+                let metodoPago = 'Tarjeta de Crédito';
+                if (metodoPagoValor === 'efectivo' || metodoPagoValor === 'transferencia' ||
+                    metodoPagoValor.includes('efectivo') || metodoPagoValor.includes('transferencia')) {
+                    metodoPago = 'Transferencia';
+                }
+                
+                const vivePalmira = reservaActual.vive_palmira == 1 ? 'Sí' : 'No';
+                renderizarDetalleReserva(reservaActual, estadoClass, estadoStyle, metodoPago, vivePalmira);
+            }
+        }
+        
+        // Función para cancelar edición
+        function cancelarEdicionReserva() {
+            modoEdicion = false;
+            
+            // Mostrar botón editar, ocultar guardar y cancelar
+            document.getElementById('btnEditarReserva').classList.remove('d-none');
+            document.getElementById('btnGuardarReserva').classList.add('d-none');
+            document.getElementById('btnCancelarEdicion').classList.add('d-none');
+            
+            // Re-renderizar con valores originales
+            if (reservaActual) {
+                mostrarDetalleReserva(reservaActual);
+            }
+        }
+        
+        // Función para guardar cambios
+        function guardarCambiosReserva() {
+            if (!reservaActual) {
+                alert('Error: No hay datos de reserva cargados');
+                return;
+            }
+            
+            // Obtener valores de los campos
+            const nombre = document.getElementById('editNombre').value.trim();
+            const apellido = document.getElementById('editApellido').value.trim();
+            const correo = document.getElementById('editCorreo').value.trim();
+            const telefono = document.getElementById('editTelefono').value.trim();
+            const total = parseFloat(document.getElementById('editTotal').value);
+            
+            // Validaciones
+            if (!nombre || !apellido) {
+                alert('El nombre y apellido son obligatorios');
+                return;
+            }
+            
+            if (!correo || !correo.includes('@')) {
+                alert('Por favor ingrese un correo electrónico válido');
+                return;
+            }
+            
+            if (!telefono) {
+                alert('El teléfono es obligatorio');
+                return;
+            }
+            
+            if (isNaN(total) || total < 0) {
+                alert('Por favor ingrese un total válido (mayor o igual a 0)');
+                return;
+            }
+            
+            // Crear FormData para enviar
+            const formData = new FormData();
+            formData.append('id_reserva', reservaActual.id_reserva);
+            formData.append('nombre', nombre);
+            formData.append('apellido', apellido);
+            formData.append('correo', correo);
+            formData.append('telefono', telefono);
+            formData.append('total', total);
+            
+            // Mostrar indicador de carga
+            const btnGuardar = document.getElementById('btnGuardarReserva');
+            const textoOriginal = btnGuardar.innerHTML;
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+            
+            // Enviar datos al servidor
+            fetch('../../../app/api/admin/update_reserva_datos.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = textoOriginal;
+                
+                if (data.success) {
+                    // Actualizar los datos locales
+                    reservaActual.nombre = nombre;
+                    reservaActual.apellido = apellido;
+                    reservaActual.correo = correo;
+                    reservaActual.telefono = telefono;
+                    reservaActual.total = total;
+                    reservaActual.actualizado_en = new Date().toISOString();
+                    
+                    // Mostrar mensaje de éxito
+                    alert('Datos actualizados exitosamente');
+                    
+                    // Salir del modo edición y refrescar la vista
+                    cancelarEdicionReserva();
+                    
+                    // Recargar la tabla de reservas para reflejar los cambios
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert('Error al actualizar: ' + (data.message || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = textoOriginal;
+                console.error('Error:', error);
+                alert('Error de conexión al guardar los cambios');
+            });
         }
         
         // Función para realizar acciones (aprobar, rechazar, cancelar) sin recargar
