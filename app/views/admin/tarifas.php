@@ -410,7 +410,12 @@ if ($pdo) {
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <label class="form-label">Navegar Mes:</label>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <label class="form-label mb-0">Navegar Mes:</label>
+                                        <button type="button" class="btn btn-success" onclick="openUploadExcelModal()">
+                                            <i class="fas fa-file-excel me-1"></i> Cargar Tarifas desde Excel
+                                        </button>
+                                    </div>
                                     <div class="input-group">
                                         <input type="month" id="monthSelector" class="form-control" value="<?php echo date('Y-m'); ?>">
                                         <button type="button" class="btn btn-primary" onclick="loadCalendar()" id="loadCalendarBtn">
@@ -777,8 +782,162 @@ if ($pdo) {
         function viewClientDetails(clientId) {
             alert('Funcionalidad de detalles del cliente en desarrollo');
         }
+        
+        // Abrir modal para subir Excel
+        function openUploadExcelModal() {
+            // Resetear formulario y resultados
+            document.getElementById('uploadExcelForm').reset();
+            document.getElementById('uploadResult').innerHTML = '';
+            document.getElementById('uploadProgress').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('uploadExcelModal'));
+            modal.show();
+        }
+        
+        // Subir y procesar archivo Excel
+        function uploadExcelFile() {
+            const fileInput = document.getElementById('excel_file');
+            const form = document.getElementById('uploadExcelForm');
+            const progressDiv = document.getElementById('uploadProgress');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            // Validar que se haya seleccionado un archivo
+            if (!fileInput.files || !fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Por favor seleccione un archivo Excel.</div>';
+                return;
+            }
+            
+            // Validar tamaño del archivo (10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+            if (fileInput.files[0].size > maxSize) {
+                resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>El archivo es demasiado grande. Tamaño máximo: 10MB.</div>';
+                return;
+            }
+            
+            // Mostrar progreso
+            progressDiv.classList.remove('d-none');
+            resultDiv.innerHTML = '';
+            
+            // Crear FormData
+            const formData = new FormData(form);
+            
+            // Enviar archivo via AJAX
+            $.ajax({
+                url: '../../../app/api/admin/upload_tarifas_excel.php',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    progressDiv.classList.add('d-none');
+                    
+                    if (response.success) {
+                        let message = '<div class="alert alert-success"><h6><i class="fas fa-check-circle me-2"></i>¡Proceso completado exitosamente!</h6>';
+                        message += '<hr><strong>Estadísticas:</strong><ul class="mb-0">';
+                        message += `<li>Total procesadas: ${response.stats.procesadas}</li>`;
+                        message += `<li>Nuevas tarifas creadas: ${response.stats.creadas}</li>`;
+                        message += `<li>Tarifas actualizadas: ${response.stats.actualizadas}</li>`;
+                        message += `<li>Errores: ${response.stats.errores}</li>`;
+                        message += '</ul></div>';
+                        
+                        if (response.errores_detalle && response.errores_detalle.length > 0) {
+                            message += '<div class="alert alert-warning mt-2"><h6><i class="fas fa-exclamation-triangle me-2"></i>Errores encontrados:</h6><ul class="mb-0"><li>' + response.errores_detalle.join('</li><li>') + '</li></ul></div>';
+                        }
+                        
+                        resultDiv.innerHTML = message;
+                        
+                        // Recargar calendario después de 2 segundos si hubo cambios
+                        if (response.stats.procesadas > 0) {
+                            setTimeout(function() {
+                                loadCalendar();
+                            }, 2000);
+                        }
+                        
+                        // Cerrar modal después de 5 segundos si todo fue exitoso
+                        if (response.stats.errores === 0) {
+                            setTimeout(function() {
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadExcelModal'));
+                                if (modal) {
+                                    modal.hide();
+                                }
+                            }, 5000);
+                        }
+                    } else {
+                        resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>Error:</strong> ' + (response.message || 'Error desconocido') + '</div>';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    progressDiv.classList.add('d-none');
+                    console.error('Error AJAX:', status, error);
+                    console.error('Response:', xhr.responseText);
+                    
+                    let errorMessage = 'Error al conectar con el servidor: ' + error;
+                    
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch (e) {
+                        // Si no se puede parsear el JSON, usar el mensaje por defecto
+                    }
+                    
+                    resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>Error:</strong> ' + errorMessage + '</div>';
+                }
+            });
+        }
     </script>
     
+    <!-- Modal para subir Excel -->
+    <div class="modal fade" id="uploadExcelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-excel me-2"></i>
+                        Cargar Tarifas desde Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Instrucciones:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>El archivo Excel debe contener las columnas: <strong>AÑO</strong>, <strong>MES</strong>, <strong>DIA</strong>, y <strong>T credito 7%</strong> (o similar)</li>
+                            <li>El mes debe estar en español (ENERO, FEBRERO, etc.)</li>
+                            <li>Las tarifas existentes se actualizarán, las nuevas se crearán</li>
+                            <li>Formato aceptado: .xls, .xlsx, .csv</li>
+                        </ul>
+                    </div>
+                    <form id="uploadExcelForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="excel_file" class="form-label">Seleccionar archivo Excel:</label>
+                            <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xls,.xlsx,.csv" required>
+                            <small class="form-text text-muted">Tamaño máximo: 10MB</small>
+                        </div>
+                        <input type="hidden" name="apartamento_id" value="1">
+                    </form>
+                    <div id="uploadProgress" class="d-none mt-3">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+                                Procesando archivo...
+                            </div>
+                        </div>
+                    </div>
+                    <div id="uploadResult" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="uploadExcelFile()">
+                        <i class="fas fa-upload me-1"></i> Subir y Procesar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Gestión de Clientes -->
     <div class="modal fade" id="clientManagementModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
