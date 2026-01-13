@@ -357,6 +357,184 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <div class="section-divider" style="width: 100%; height: 80px; background: linear-gradient(to bottom, rgb(235, 234, 223) 0%, #ffffff 100%); margin: 0; padding: 0; position: relative; overflow: hidden;">
 </div>
 
+<!-- Carrusel de Google Reviews -->
+<div class="container-fluid py-5" style="background-color: #f8f9fa; padding-top: 60px; padding-bottom: 60px;">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 style="font-family: 'Abril Fatface', serif; font-weight: bold; font-size: 5rem; margin-bottom: 20px; color: #000; text-align: center; opacity: 1 !important; visibility: visible !important; display: block !important;">
+                <?php echo __('reviews.title'); ?>
+            </h2>
+            <p style="font-size: 1.2rem; color: #666; margin-top: 10px; font-style: italic;">
+                <?php echo __('reviews.subtitle'); ?>
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 d-flex justify-content-center">
+			<style>
+				/* Ocultar marca de agua de Trustmary */
+				[data-tm-edit="branding"],
+				div[data-tm-edit="branding"],
+				a[href*="trustmary.com"][href*="google-review-widget"] {
+					display: none !important;
+					visibility: hidden !important;
+					opacity: 0 !important;
+					height: 0 !important;
+					width: 0 !important;
+					overflow: hidden !important;
+				}
+			</style>
+			<script>
+				// Traducciones para el widget de Trustmary
+				var trustmaryTranslations = {
+					writeReview: <?php echo json_encode(__('reviews.write_review')); ?>,
+					opinions: <?php echo json_encode(__('reviews.opinions')); ?>
+				};
+			</script>
+			<script src="https://widget.trustmary.com/URjXbmI04"></script>
+			<script>
+				// Script simple y seguro para traducir textos del widget de Trustmary
+				(function() {
+					try {
+						// Todas las variantes posibles de los textos
+						var allWriteReviewTexts = ['Escribe una reseña', 'Escribe una Reseña', 'Write a Review', 'Scrivi una Recensione'];
+						var allOpinionsTexts = ['opinions', 'opiniones', 'opinioni'];
+						
+						function translateTrustmaryWidget() {
+							try {
+								var allElements = document.querySelectorAll('*');
+								
+								for (var i = 0; i < allElements.length; i++) {
+									var el = allElements[i];
+									if (el.children.length === 0 && el.textContent.trim() !== '') {
+										var currentText = el.textContent;
+										var textLower = currentText.toLowerCase();
+										var originalText = currentText;
+										
+										// PRIMERO: Limpiar duplicados de forma más agresiva
+										// Patrón para "7 opinions7 opiniones" (sin espacios entre opinions y 7)
+										var duplicatePattern1a = /(\d+)\s*(opinions|opiniones|opinioni)(\d+)\s*(opinions|opiniones|opinioni)/gi;
+										currentText = currentText.replace(duplicatePattern1a, function(match, num) {
+											return num + ' ' + trustmaryTranslations.opinions;
+										});
+										
+										// Patrón para "7 opinions 7 opiniones" (con espacios)
+										var duplicatePattern1b = /(\d+)\s*(opinions|opiniones|opinioni)\s*(\d+)\s*(opinions|opiniones|opinioni)/gi;
+										currentText = currentText.replace(duplicatePattern1b, function(match, num) {
+											return num + ' ' + trustmaryTranslations.opinions;
+										});
+										
+										// Patrón para "7 opinionsopiniones" (sin espacios entre las palabras)
+										var duplicatePattern1c = /(\d+)\s*(opinions|opiniones|opinioni)(opinions|opiniones|opinioni)/gi;
+										currentText = currentText.replace(duplicatePattern1c, function(match, num) {
+											return num + ' ' + trustmaryTranslations.opinions;
+										});
+										
+										// Patrón para "Write a ReviewEscribe una Reseña" (sin espacios) o con espacios
+										for (var w1 = 0; w1 < allWriteReviewTexts.length; w1++) {
+											for (var w2 = 0; w2 < allWriteReviewTexts.length; w2++) {
+												if (w1 !== w2) {
+													// Sin espacios entre las palabras
+													var pattern1 = new RegExp(allWriteReviewTexts[w1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + allWriteReviewTexts[w2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+													if (pattern1.test(currentText)) {
+														currentText = currentText.replace(pattern1, trustmaryTranslations.writeReview);
+													}
+													// Con espacios
+													var pattern2 = new RegExp(allWriteReviewTexts[w1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*' + allWriteReviewTexts[w2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+													if (pattern2.test(currentText)) {
+														currentText = currentText.replace(pattern2, trustmaryTranslations.writeReview);
+													}
+												}
+											}
+										}
+										
+										// SEGUNDO: Traducir "Write a Review" y variantes
+										// Si contiene cualquier variante pero NO contiene la traducción correcta
+										var hasWriteReviewVariant = false;
+										var hasCorrectWriteReview = currentText.indexOf(trustmaryTranslations.writeReview) !== -1;
+										
+										for (var j = 0; j < allWriteReviewTexts.length; j++) {
+											if (currentText.indexOf(allWriteReviewTexts[j]) !== -1) {
+												hasWriteReviewVariant = true;
+												break;
+											}
+										}
+										
+										if (hasWriteReviewVariant && !hasCorrectWriteReview) {
+											// Reemplazar cualquier variante con la traducción correcta
+											for (var j = 0; j < allWriteReviewTexts.length; j++) {
+												currentText = currentText.replace(new RegExp(allWriteReviewTexts[j].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), trustmaryTranslations.writeReview);
+											}
+										}
+										
+										// TERCERO: Traducir "opinions/opiniones/opinioni" a la traducción correcta
+										var hasOpinionsVariant = false;
+										var hasCorrectOpinions = textLower.indexOf(trustmaryTranslations.opinions.toLowerCase()) !== -1;
+										
+										for (var k = 0; k < allOpinionsTexts.length; k++) {
+											if (textLower.indexOf(allOpinionsTexts[k]) !== -1) {
+												hasOpinionsVariant = true;
+												break;
+											}
+										}
+										
+										if (hasOpinionsVariant && !hasCorrectOpinions) {
+											// Reemplazar cualquier variante con la traducción correcta, manteniendo el número
+											for (var k = 0; k < allOpinionsTexts.length; k++) {
+												currentText = currentText.replace(new RegExp(allOpinionsTexts[k], 'gi'), trustmaryTranslations.opinions);
+											}
+										} else if (hasOpinionsVariant && hasCorrectOpinions) {
+											// Si tiene ambas, eliminar las variantes incorrectas y dejar solo la correcta
+											for (var k = 0; k < allOpinionsTexts.length; k++) {
+												if (allOpinionsTexts[k].toLowerCase() !== trustmaryTranslations.opinions.toLowerCase()) {
+													currentText = currentText.replace(new RegExp(allOpinionsTexts[k], 'gi'), '');
+												}
+											}
+											// Limpiar espacios dobles y números duplicados
+											currentText = currentText.replace(/(\d+)\s*\d+/g, '$1');
+											currentText = currentText.replace(/\s+/g, ' ').trim();
+										}
+										
+										// Actualizar solo si cambió
+										if (currentText !== originalText) {
+											el.textContent = currentText;
+										}
+									}
+								}
+							} catch (e) {
+								console.error('Error en translateTrustmaryWidget:', e);
+							}
+						}
+						
+						// Función con debounce para resize
+						var resizeTimeout;
+						function handleResize() {
+							clearTimeout(resizeTimeout);
+							resizeTimeout = setTimeout(function() {
+								translateTrustmaryWidget();
+							}, 500);
+						}
+						
+						// Ejecutar traducción en momentos específicos
+						setTimeout(translateTrustmaryWidget, 3000);
+						setTimeout(translateTrustmaryWidget, 6000);
+						setTimeout(translateTrustmaryWidget, 9000);
+						
+						// Agregar listener para resize
+						if (window.addEventListener) {
+							window.addEventListener('resize', handleResize);
+						} else if (window.attachEvent) {
+							window.attachEvent('onresize', handleResize);
+						}
+					} catch (e) {
+						console.error('Error en script de traducción Trustmary:', e);
+					}
+				})();
+			</script>
+        </div>
+    </div>
+</div>
+
 <!-- Sistema de Reservas Interactivo -->
 <div class="container-fluid py-5" id="reservation-section">
     <!-- Título centrado en toda la pantalla -->
@@ -4795,6 +4973,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				unpaid: <?php echo json_encode(__('reservations.unpaid')); ?>,
 				cash: <?php echo json_encode(__('reservations.cash')); ?>,
 				card: <?php echo json_encode(__('reservations.card')); ?>
+			},
+			reviews: {
+				share_experience: <?php echo json_encode(__('reviews.share_experience')); ?>
 			}
 		};
 		

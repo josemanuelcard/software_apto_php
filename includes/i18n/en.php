@@ -343,5 +343,13 @@ return [
     'footer.contact' => 'Contact',
     'footer.privacy_terms' => 'Privacy & Terms',
     'footer.copyright' => '© 2025 mysuiteincartagena.com.co All Rights Reserved',
+    
+    // Reviews Widget
+    'reviews.title' => 'What Our Guests Say',
+    'reviews.subtitle' => 'Real experiences from our clients',
+    'reviews.share_experience' => 'Share your experience',
+    'reviews.write_review' => 'Write a Review',
+    'reviews.reviews_count' => 'reviews',
+    'reviews.opinions' => 'opinions',
 ];
 
