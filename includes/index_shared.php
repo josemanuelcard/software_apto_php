@@ -895,7 +895,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                             <label><?php echo __('form.payment_method'); ?> *</label>
                             <div class="payment-methods-container" style="display: flex; gap: 30px; align-items: flex-start; justify-content: center;">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="metodoPago" id="tarjetaCredito" value="tarjeta_credito" checked>
+                                    <input class="form-check-input" type="radio" name="metodoPago" id="tarjetaCredito" value="tarjeta_credito">
                                     <label class="form-check-label" for="tarjetaCredito">
                                         <?php echo __('form.credit_card'); ?>
                                     </label>
@@ -910,6 +910,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                             <div id="descuentoInfo" class="alert alert-success mt-2" style="display: none;">
                                 <small><?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% <?php echo __('form.discount_applied'); ?></small>
                             </div>
+                            <span class="error-message" id="metodoPagoError"></span>
                         </div>
                         
                         <div class="alert alert-info mt-3">
@@ -6446,6 +6447,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			currentReservationSection = prevSectionNum;
 		}
 		
+		// Mensajes de validación específicos
+		const paymentMethodRequiredMessage = <?php echo json_encode(__('form.payment_method_required')); ?>;
+		
 		// Función para validar cada sección
 		function validateReservationSection(sectionNumber) {
 			let isValid = true;
@@ -6552,8 +6556,22 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 					isValid = false;
 				}
 			} else if (sectionNumber === 4) {
-				// No hay validación específica para el método de pago
-				isValid = true;
+				// Validar método de pago
+				const metodoPagoSeleccionado = document.querySelector('input[name="metodoPago"]:checked');
+				const metodoPagoError = document.getElementById('metodoPagoError');
+				
+				if (!metodoPagoSeleccionado) {
+					if (metodoPagoError) {
+						metodoPagoError.textContent = paymentMethodRequiredMessage;
+						metodoPagoError.style.display = 'block';
+					}
+					isValid = false;
+				} else {
+					if (metodoPagoError) {
+						metodoPagoError.textContent = '';
+						metodoPagoError.style.display = 'none';
+					}
+				}
 			} else if (sectionNumber === 5) {
 				// Validar términos y condiciones
 				const aceptaPoliticaCheckbox = document.getElementById('aceptaPolitica');

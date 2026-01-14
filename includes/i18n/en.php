@@ -92,6 +92,7 @@ return [
     'form.palmira_info' => 'Includes free transport to the airport',
     'form.select' => 'Select',
     'form.payment_method' => 'Payment Method',
+    'form.payment_method_required' => 'Payment method is required',
     'form.credit_card' => 'Credit Card',
     'form.cash' => 'Cash',
     'form.cash_discount' => 'discount',

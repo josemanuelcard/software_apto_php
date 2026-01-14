@@ -92,6 +92,7 @@ return [
     'form.palmira_info' => 'Include trasporto gratuito all\'aeroporto',
     'form.select' => 'Seleziona',
     'form.payment_method' => 'Metodo di Pagamento',
+    'form.payment_method_required' => 'Il metodo di pagamento è obbligatorio',
     'form.credit_card' => 'Carta di Credito',
     'form.cash' => 'Contanti',
     'form.cash_discount' => 'sconto',
