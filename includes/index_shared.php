@@ -414,14 +414,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 										// PRIMERO: Limpiar duplicados de forma más agresiva
 										// Patrón para "7 opinions7 opiniones" (sin espacios entre opinions y 7)
 										var duplicatePattern1a = /(\d+)\s*(opinions|opiniones|opinioni)(\d+)\s*(opinions|opiniones|opinioni)/gi;
-										currentText = currentText.replace(duplicatePattern1a, function(match, num) {
-											return num + ' ' + trustmaryTranslations.opinions;
+										currentText = currentText.replace(duplicatePattern1a, function(match, num1, word1, num2, word2) {
+											// Usar el primer número capturado (num1), que es el correcto
+											return num1 + ' ' + trustmaryTranslations.opinions;
 										});
 										
 										// Patrón para "7 opinions 7 opiniones" (con espacios)
 										var duplicatePattern1b = /(\d+)\s*(opinions|opiniones|opinioni)\s*(\d+)\s*(opinions|opiniones|opinioni)/gi;
-										currentText = currentText.replace(duplicatePattern1b, function(match, num) {
-											return num + ' ' + trustmaryTranslations.opinions;
+										currentText = currentText.replace(duplicatePattern1b, function(match, num1, word1, num2, word2) {
+											// Usar el primer número capturado (num1), que es el correcto
+											return num1 + ' ' + trustmaryTranslations.opinions;
 										});
 										
 										// Patrón para "7 opinionsopiniones" (sin espacios entre las palabras)
@@ -490,8 +492,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 													currentText = currentText.replace(new RegExp(allOpinionsTexts[k], 'gi'), '');
 												}
 											}
-											// Limpiar espacios dobles y números duplicados
-											currentText = currentText.replace(/(\d+)\s*\d+/g, '$1');
+											// Limpiar espacios dobles solamente (no números duplicados genéricos que pueden afectar números como "11")
 											currentText = currentText.replace(/\s+/g, ' ').trim();
 										}
 										
@@ -628,9 +629,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <?php echo __('calendar.rates_note'); ?> <span class="bold-text" style="font-weight: 700; color: rgb(38, 38, 38);">COP ($)</span>
                     </p>
                 </div>
-                
-                <!-- Botón de Pago -->
-                <button id="pagoBtn" class="btn-pago btn-reservar-ahora w-100 mt-4" style="background-color: #FFE082; color: #333; padding: 12px 30px; font-family: 'Oxygen', sans-serif; font-size: 16px; font-weight: 600; border: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;">
+
+                <!-- Botón de Pago visible -->
+                <button
+                        id="custom-button-payment"
+                        class="btn-pago btn-reservar-ahora w-100 mt-4">
                     Botón de Pago
                 </button>
             </div>
@@ -2353,7 +2356,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		}
 		
 		/* Estilos para el botón de pago */
-		#pagoBtn, .btn-pago {
+		#custom-button-payment, .btn-pago {
 			background-color: #FFE082 !important;
 			color: #333 !important;
 			padding: 12px 30px !important;
@@ -2369,14 +2372,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			cursor: pointer !important;
 		}
 		
-		#pagoBtn:hover, .btn-pago:hover {
+		#custom-button-payment:hover, .btn-pago:hover {
 			background-color: #FFD54F !important;
 			color: #333 !important;
 			box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4) !important;
 			transform: translateY(-2px);
 		}
 		
-		#pagoBtn:active, .btn-pago:active {
+		#custom-button-payment:active, .btn-pago:active {
 			background-color: #FFC107 !important;
 			transform: translateY(0);
 		}
@@ -7302,70 +7305,70 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 		// ==========================================================
 		// INTEGRACIÓN CON BOLD - Botón de Pago
 		// ==========================================================
-		
-		// Handler para el botón de pago
-		const pagoBtn = document.getElementById('pagoBtn');
-		if (pagoBtn) {
-			pagoBtn.addEventListener('click', function(e) {
-				e.preventDefault();
-				
-				// Obtener ID de reserva desde la URL o parámetro
-				const urlParams = new URLSearchParams(window.location.search);
-				const reservaId = urlParams.get('reserva_id') || 
-								  urlParams.get('id') || 
-								  (window.reservaId ? window.reservaId : null);
-				
-				if (!reservaId) {
-					alert('No se encontró el ID de la reserva. Por favor, contacta con soporte.');
-					return;
-				}
-				
-				// Obtener el monto total (puede venir de la URL o calcularse)
-				const totalAmount = urlParams.get('total') || 
-									(window.reservaTotal ? window.reservaTotal : null);
-				
-				if (!totalAmount) {
-					alert('No se pudo obtener el monto a pagar. Por favor, contacta con soporte.');
-					return;
-				}
-				
-				// Deshabilitar botón mientras se procesa
-				pagoBtn.disabled = true;
-				pagoBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
-				
-				// Crear link de pago con Bold
-				fetch('../../app/api/payment/create_bold_link.php', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						reserva_id: reservaId,
-						total_amount: parseFloat(totalAmount)
-					})
-				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success && data.data && data.data.payment_url) {
-						// Redirigir a la URL de pago de Bold
-						window.location.href = data.data.payment_url;
-					} else {
-						// Error al crear el link
-						alert('Error al generar el link de pago: ' + (data.message || 'Error desconocido'));
-						pagoBtn.disabled = false;
-						pagoBtn.innerHTML = 'Botón de Pago';
-					}
-				})
-				.catch(error => {
-					console.error('Error:', error);
-					alert('Error de conexión al generar el link de pago. Por favor, intenta nuevamente.');
-					pagoBtn.disabled = false;
-					pagoBtn.innerHTML = 'Botón de Pago';
-				});
-			});
-		}
-		
-		// Manejar mensajes de resultado de pago (desde callback)
+
+        function initBoldCheckout() {
+            if (document.querySelector('script[src="https://checkout.bold.co/library/boldPaymentButton.js"]')) {
+                console.warn('Bold Checkout script is already present.');
+                return;
+            }
+            const js = document.createElement('script');
+            js.onload = () => window.dispatchEvent(new Event('boldCheckoutLoaded'));
+            js.onerror = () => window.dispatchEvent(new Event('boldCheckoutLoadFailed'));
+            js.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
+            document.head.appendChild(js);
+        }
+
+        async function obtenerHashDesdePHP(orderId, amount, currency) {
+            const response = await fetch("generar_hash.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ orderId, amount, currency })
+            });
+            if (!response.ok) throw new Error('Error al obtener hash: ' + response.status);
+            const data = await response.json();
+            if (!data.hash) throw new Error('Respuesta inválida del servidor');
+            return data.hash;
+        }
+
+        // Cargar la librería dinámicamente
+        initBoldCheckout();
+
+        // Si la librería se carga bien:
+        window.addEventListener('boldCheckoutLoaded', async () => {
+            try {
+                const orderId = "MI-PEDIDO-" + Date.now().toString();
+                const amount = "0";
+                const currency = "COP";
+
+                const hashHex = await obtenerHashDesdePHP(orderId, amount, currency);
+
+                // Crear la instancia
+                window.checkout = new BoldCheckout({
+                    orderId,
+                    amount: amount,
+                    currency: currency,
+                    apiKey: "7FA8bRNE1KvrXfwLiAnibCGonyYSZCXJ1WvbXHgPnGo",
+                    integritySignature: hashHex,
+                    description: "Pago libre",
+                    redirectionUrl: 'https://mysuiteincartagena.com.co/index.php'
+                });
+
+                document.getElementById("custom-button-payment")
+                    .addEventListener("click", () => checkout.open());
+
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo iniciar el pago. Revisa la consola.');
+            }
+        });
+
+        window.addEventListener('boldCheckoutLoadFailed', () => {
+            console.error("Falló la carga del script de Bold.");
+        });
+
+
+
+        // Manejar mensajes de resultado de pago (desde callback)
 		(function() {
 			const urlParams = new URLSearchParams(window.location.search);
 			if (urlParams.get('payment_success') === '1') {
@@ -7805,6 +7808,4 @@ window.addEventListener('scroll', revealOnScroll);
 
 
 </body>
-
-</html>
 </html>
