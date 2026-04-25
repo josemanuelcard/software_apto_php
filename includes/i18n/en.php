@@ -352,5 +352,13 @@ return [
     'reviews.write_review' => 'Write a Review',
     'reviews.reviews_count' => 'reviews',
     'reviews.opinions' => 'opinions',
-];
+     'reviews.loading' => 'Loading reviews...',
+     'reviews.no_reviews' => 'No reviews available yet.',
+     'reviews.error_loading' => 'Unable to load reviews right now.',
+     'reviews.guest' => 'Guest',
+     'reviews.host_reply' => 'Host reply',
+     'reviews.updated_on' => 'Updated on',
+     'reviews.total' => 'Total reviews',
+     'reviews.average_rating' => 'Average rating',
+ ];
 

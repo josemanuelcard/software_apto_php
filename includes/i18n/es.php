@@ -352,6 +352,14 @@ return [
     'reviews.share_experience' => 'Comparte tu experiencia',
     'reviews.write_review' => 'Escribe una Reseña',
     'reviews.reviews_count' => 'reseñas',
-    'reviews.opinions' => 'opiniones',
-];
+     'reviews.opinions' => 'opiniones',
+     'reviews.loading' => 'Cargando reseñas...',
+     'reviews.no_reviews' => 'Aun no hay reseñas disponibles.',
+     'reviews.error_loading' => 'No fue posible cargar las reseñas en este momento.',
+     'reviews.guest' => 'Huesped',
+     'reviews.host_reply' => 'Respuesta del anfitrion',
+     'reviews.updated_on' => 'Actualizada el',
+     'reviews.total' => 'Reseñas totales',
+     'reviews.average_rating' => 'Calificación promedio',
+ ];
 

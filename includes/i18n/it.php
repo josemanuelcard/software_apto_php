@@ -352,5 +352,13 @@ return [
     'reviews.write_review' => 'Scrivi una Recensione',
     'reviews.reviews_count' => 'recensioni',
     'reviews.opinions' => 'opinioni',
-];
+     'reviews.loading' => 'Caricamento recensioni...',
+     'reviews.no_reviews' => 'Non ci sono ancora recensioni disponibili.',
+     'reviews.error_loading' => 'Impossibile caricare le recensioni in questo momento.',
+     'reviews.guest' => 'Ospite',
+     'reviews.host_reply' => 'Risposta dell\'host',
+     'reviews.updated_on' => 'Aggiornata il',
+     'reviews.total' => 'Totale recensioni',
+     'reviews.average_rating' => 'Valutazione media',
+ ];
 
