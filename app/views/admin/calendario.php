@@ -1438,10 +1438,11 @@ require_once __DIR__ . '/../../../includes/functions.php';
                 }
                 
                 // Verificar si hay reservas (siempre definir dayReservations)
+                // Regla: la fecha de salida es exclusiva, así que el día checkout queda libre para una nueva reserva.
                 const dayReservations = reservations.filter(res => {
                     const startDate = new Date(res.fecha_entrada);
                     const endDate = new Date(res.fecha_salida);
-                    return date >= startDate && date <= endDate;
+                    return date >= startDate && date < endDate;
                 });
                 
                 if (isBlocked) {

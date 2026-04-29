@@ -5942,9 +5942,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     function validateDateRangePrice(startDate, endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-
-        // Verificar cada día en el rango (incluyendo check-in y check-out)
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        
+        // La fecha de salida es exclusiva: solo validamos las noches realmente reservadas.
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
             const dateString = d.toISOString().split('T')[0];
             if (!tienePrecioDisponible(dateString)) {
                 return false;
