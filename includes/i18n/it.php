@@ -49,9 +49,23 @@ return [
     'calendar.selected_range' => 'Intervallo selezionato',
     'calendar.past_day' => 'Giorno passato',
     'calendar.not_available' => 'Non disponibile',
-    'calendar.price_per_night' => 'Prezzo per notte',
-
-    // Button payment
+     'calendar.price_per_night' => 'Prezzo per notte',
+     'calendar.full_day_occupied' => 'Giorno intero occupato: check-out alle 11:00 e check-in alle 15:00',
+     'calendar.checkout_available' => 'Check-out degli ospiti alle 11:00 — Disponibile per check-in alle 15:00',
+     'calendar.checkin_available' => 'Disponibile per check-out fino alle 11:00 — Occupato dalle 15:00',
+     
+     // Calendar - Date Errors
+     'calendar.checkin_blocked_title' => '⚠️ Giorno non disponibile per il check-in',
+     'calendar.checkin_blocked_msg' => 'Il {date} ha già ospiti che entrano alle 15:00.',
+     'calendar.checkin_blocked_exp' => 'Puoi sceglierlo come data di check-out (check-out fino alle 11:00).',
+     'calendar.checkout_blocked_title' => '⚠️ Giorno non disponibile per il check-out',
+     'calendar.checkout_blocked_msg' => 'Il {date} ha già ospiti che escono alle 11:00.',
+     'calendar.checkout_blocked_exp' => 'Puoi sceglierlo come data di check-in (check-in dalle 15:00).',
+     'calendar.range_overlap_title' => '⚠️ Intervallo non disponibile',
+     'calendar.range_overlap_msg' => 'Il {date} è occupato da un\'altra prenotazione.',
+     'calendar.range_overlap_exp' => 'Si prega di selezionare un intervallo di date che non si sovrapponga alle prenotazioni esistenti.',
+     
+     // Reservation Summary
     'button.payment.label' => 'PULSANTE DI PAGAMENTO PER GLI ACQUISTI',
     'button.payment.description' => 'Questo pulsante è riservato esclusivamente ai pagamenti aggiuntivi, come danni, articoli sostitutivi o spese extra. Non utilizzare questo pulsante per pagare le prenotazioni.',
 

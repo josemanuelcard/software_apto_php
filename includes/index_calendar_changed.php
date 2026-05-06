@@ -4680,12 +4680,24 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			months: <?php echo I18n::getJS('months'); ?>,
 			days: <?php echo I18n::getJS('days'); ?>,
 			locale: <?php echo json_encode(I18n::getJS('locale')); ?>,
-			calendar: {
-				past_day: <?php echo json_encode(__('calendar.past_day')); ?>,
-				not_available: <?php echo json_encode(__('calendar.not_available')); ?>,
-				price_per_night: <?php echo json_encode(__('calendar.price_per_night')); ?>
-			},
-			messages: {
+		calendar: {
+			past_day: <?php echo json_encode(__('calendar.past_day')); ?>,
+			not_available: <?php echo json_encode(__('calendar.not_available')); ?>,
+			price_per_night: <?php echo json_encode(__('calendar.price_per_night')); ?>,
+			full_day_occupied: <?php echo json_encode(__('calendar.full_day_occupied')); ?>,
+			checkout_available: <?php echo json_encode(__('calendar.checkout_available')); ?>,
+			checkin_available: <?php echo json_encode(__('calendar.checkin_available')); ?>,
+			checkin_blocked_title: <?php echo json_encode(__('calendar.checkin_blocked_title')); ?>,
+			checkin_blocked_msg: <?php echo json_encode(__('calendar.checkin_blocked_msg')); ?>,
+			checkin_blocked_exp: <?php echo json_encode(__('calendar.checkin_blocked_exp')); ?>,
+			checkout_blocked_title: <?php echo json_encode(__('calendar.checkout_blocked_title')); ?>,
+			checkout_blocked_msg: <?php echo json_encode(__('calendar.checkout_blocked_msg')); ?>,
+			checkout_blocked_exp: <?php echo json_encode(__('calendar.checkout_blocked_exp')); ?>,
+			range_overlap_title: <?php echo json_encode(__('calendar.range_overlap_title')); ?>,
+			range_overlap_msg: <?php echo json_encode(__('calendar.range_overlap_msg')); ?>,
+			range_overlap_exp: <?php echo json_encode(__('calendar.range_overlap_exp')); ?>
+		},
+		messages: {
 				success_sent: <?php echo json_encode(__('message.success_sent')); ?>,
 				error_sending: <?php echo json_encode(__('message.error_sending')); ?>,
 				error_retry: <?php echo json_encode(__('message.error_retry')); ?>
@@ -4980,14 +4992,14 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         // Completamente ocupado: sale uno a las 11:00 y entra otro a las 15:00
                         dayElement.classList.add('occupied');
                         dayElement.classList.add('day-checkin-checkout');
-                        dayElement.title = 'Día completo ocupado: salida a las 11:00 y entrada a las 15:00';
+                        dayElement.title = translations.calendar.full_day_occupied;
 
                     } else if (isCheckout) {
                         // Check-OUT de reserva existente: tarde libre para nuevo check-in (15:00)
                         // Triángulo rojo esquina superior izquierda
                         dayElement.classList.add('available');
                         dayElement.classList.add('day-checkout-available');
-                        dayElement.title = 'Salida de huéspedes a las 11:00 — Disponible para check-in a las 15:00';
+                        dayElement.title = translations.calendar.checkout_available;
                         dayElement.addEventListener('click', () => selectDate(date));
 
                         const priceElement = document.createElement('div');
@@ -5001,7 +5013,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         // Triángulo rojo esquina inferior derecha
                         dayElement.classList.add('available');
                         dayElement.classList.add('day-checkin-only');
-                        dayElement.title = 'Disponible para check-out hasta las 11:00 — Ocupado desde las 15:00';
+                        dayElement.title = translations.calendar.checkin_available;
                         dayElement.addEventListener('click', () => selectDate(date));
 
                         const priceElement = document.createElement('div');
@@ -5274,9 +5286,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             const msg   = modalElement.querySelector('#rangeErrorModal h6');
             const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = '⚠️ Día no disponible para check-in';
-            if (msg)   msg.textContent   = `El ${fechaFormateada} ya tiene huéspedes entrando a las 15:00.`;
-            if (exp)   exp.textContent   = 'Puedes elegirlo como fecha de salida (check-out hasta las 11:00).';
+            if (title) title.textContent = translations.calendar.checkin_blocked_title;
+            if (msg)   msg.textContent   = translations.calendar.checkin_blocked_msg.replace('{date}', fechaFormateada);
+            if (exp)   exp.textContent   = translations.calendar.checkin_blocked_exp;
 
             showRangeError();
         }
@@ -5288,9 +5300,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             const msg   = modalElement.querySelector('#rangeErrorModal h6');
             const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = '⚠️ Día no disponible para check-out';
-            if (msg)   msg.textContent   = `El ${fechaFormateada} ya tiene huéspedes saliendo a las 11:00.`;
-            if (exp)   exp.textContent   = 'Puedes elegirlo como fecha de entrada (check-in desde las 15:00).';
+            if (title) title.textContent = translations.calendar.checkout_blocked_title;
+            if (msg)   msg.textContent   = translations.calendar.checkout_blocked_msg.replace('{date}', fechaFormateada);
+            if (exp)   exp.textContent   = translations.calendar.checkout_blocked_exp;
 
             showRangeError();
         }
@@ -5302,9 +5314,9 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             const msg   = modalElement.querySelector('#rangeErrorModal h6');
             const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = '⚠️ Rango no disponible';
-            if (msg)   msg.textContent   = `El ${fechaFormateada} está ocupado por otra reserva.`;
-            if (exp)   exp.textContent   = 'Por favor elige un rango de fechas que no cruce con reservas existentes.';
+            if (title) title.textContent = translations.calendar.range_overlap_title;
+            if (msg)   msg.textContent   = translations.calendar.range_overlap_msg.replace('{date}', fechaFormateada);
+            if (exp)   exp.textContent   = translations.calendar.range_overlap_exp;
 
             showRangeError();
         }

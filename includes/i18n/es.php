@@ -49,9 +49,23 @@ return [
     'calendar.selected_range' => 'Rango seleccionado',
     'calendar.past_day' => 'Día pasado',
     'calendar.not_available' => 'No disponible',
-    'calendar.price_per_night' => 'Precio por noche',
-    
-    // Reservation Summary
+     'calendar.price_per_night' => 'Precio por noche',
+     'calendar.full_day_occupied' => 'Día completo ocupado: salida a las 11:00 y entrada a las 15:00',
+     'calendar.checkout_available' => 'Salida de huéspedes a las 11:00 — Disponible para check-in a las 15:00',
+     'calendar.checkin_available' => 'Disponible para check-out hasta las 11:00 — Ocupado desde las 15:00',
+     
+     // Calendar - Date Errors
+     'calendar.checkin_blocked_title' => '⚠️ Día no disponible para check-in',
+     'calendar.checkin_blocked_msg' => 'El {date} ya tiene huéspedes entrando a las 15:00.',
+     'calendar.checkin_blocked_exp' => 'Puedes elegirlo como fecha de salida (check-out hasta las 11:00).',
+     'calendar.checkout_blocked_title' => '⚠️ Día no disponible para check-out',
+     'calendar.checkout_blocked_msg' => 'El {date} ya tiene huéspedes saliendo a las 11:00.',
+     'calendar.checkout_blocked_exp' => 'Puedes elegirlo como fecha de entrada (check-in desde las 15:00).',
+     'calendar.range_overlap_title' => '⚠️ Rango no disponible',
+     'calendar.range_overlap_msg' => 'El {date} está ocupado por otra reserva.',
+     'calendar.range_overlap_exp' => 'Por favor elige un rango de fechas que no cruce con reservas existentes.',
+     
+     // Reservation Summary
     'reservation.summary' => 'Resumen de Reserva',
     'reservation.checkin_date' => 'Fecha de entrada',
     'reservation.checkout_date' => 'Fecha de salida',

@@ -49,9 +49,23 @@ return [
     'calendar.selected_range' => 'Selected range',
     'calendar.past_day' => 'Past day',
     'calendar.not_available' => 'Not available',
-    'calendar.price_per_night' => 'Price per night',
-    
-    // Reservation Summary
+     'calendar.price_per_night' => 'Price per night',
+     'calendar.full_day_occupied' => 'Full day occupied: checkout at 11:00 and check-in at 15:00',
+     'calendar.checkout_available' => 'Guest checkout at 11:00 — Available for check-in at 15:00',
+     'calendar.checkin_available' => 'Available for check-out until 11:00 — Occupied from 15:00',
+     
+     // Calendar - Date Errors
+     'calendar.checkin_blocked_title' => '⚠️ Day unavailable for check-in',
+     'calendar.checkin_blocked_msg' => '{date} already has guests checking in at 15:00.',
+     'calendar.checkin_blocked_exp' => 'You can choose it as a checkout date (check-out until 11:00).',
+     'calendar.checkout_blocked_title' => '⚠️ Day unavailable for check-out',
+     'calendar.checkout_blocked_msg' => '{date} already has guests checking out at 11:00.',
+     'calendar.checkout_blocked_exp' => 'You can choose it as a check-in date (check-in from 15:00).',
+     'calendar.range_overlap_title' => '⚠️ Range unavailable',
+     'calendar.range_overlap_msg' => '{date} is occupied by another reservation.',
+     'calendar.range_overlap_exp' => 'Please select a date range that does not overlap with existing reservations.',
+     
+     // Reservation Summary
     'reservation.summary' => 'Reservation Summary',
     'reservation.checkin_date' => 'Check-in date',
     'reservation.checkout_date' => 'Check-out date',
