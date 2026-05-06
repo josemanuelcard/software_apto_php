@@ -16,14 +16,20 @@ if (!((isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === t
 }
 
 require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../../includes/functions.php';
 
 header('Content-Type: application/json');
 
 try {
     $db = (new Database())->getConnection();
     
-    $month = $_GET['month'] ?? date('n') - 1; // 0-11
-    $year = $_GET['year'] ?? date('Y');
+    $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('n') - 1; // 0-11
+    $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+    $apartamento_id = isset($_GET['apartamento_id']) ? (int)$_GET['apartamento_id'] : 1;
+
+    $monthStart = new DateTime(sprintf('%04d-%02d-01', $year, $month + 1));
+    $monthEnd = clone $monthStart;
+    $monthEnd->modify('last day of this month');
     
     // Obtener reservas del mes
     $query_reservations = "
@@ -79,6 +85,20 @@ try {
     foreach ($blocked_dates as &$blocked) {
         $blocked['fecha_inicio'] = date('Y-m-d', strtotime($blocked['fecha_inicio']));
         $blocked['fecha_fin'] = date('Y-m-d', strtotime($blocked['fecha_fin']));
+        $blocked['origen'] = 'manual';
+    }
+
+    // Agregar bloqueos externos sincronizados por iCal (Airbnb/Booking)
+    $externalDates = getFechasOcupadasIcal($apartamento_id, $monthStart, $monthEnd);
+    foreach ($externalDates as $date) {
+        $blocked_dates[] = [
+            'fecha_inicio' => $date,
+            'fecha_fin' => $date,
+            'motivo' => 'reserva_externa',
+            'descripcion' => 'Fecha ocupada por sincronizacion iCal (Airbnb/Booking)',
+            'activo' => 1,
+            'origen' => 'ical'
+        ];
     }
     
     echo json_encode([

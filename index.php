@@ -12,7 +12,7 @@ ini_set('display_errors', 0);
 
 session_start();
 
-date_default_timezone_set('America/Bogota'); 
+date_default_timezone_set('America/Bogota');
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -49,6 +49,9 @@ I18n::init($lang);
 
 // Obtener fechas ocupadas y precio base desde la base de datos
 $occupied_dates = getFechasOcupadas();
+$checkin_checkout = getCheckinCheckoutDates(1);
+$checkin_dates    = $checkin_checkout['checkin'];   // días de entrada de reservas existentes
+$checkout_dates   = $checkin_checkout['checkout'];  // días de salida de reservas existentes
 $base_price = 200000;
 
 // Obtener descuentos desde la base de datos
@@ -60,7 +63,7 @@ try {
     $stmt = $db->prepare($query);
     $stmt->execute();
     $descuentos_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     foreach ($descuentos_db as $descuento) {
         $descuentos[$descuento['tipo_descuento']] = [
             'porcentaje' => floatval($descuento['porcentaje']),
@@ -123,7 +126,7 @@ try {
     $stmt_count->execute();
     $result_count = $stmt_count->fetch(PDO::FETCH_ASSOC);
     $total_usuarios = $result_count['total'] ?? 0;
-    
+
     // Obtener ID del último usuario logueado (si hay uno)
     if ($user_logged_in && isset($_SESSION['user_id'])) {
         $ultimo_usuario_id = $_SESSION['user_id'];

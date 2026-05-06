@@ -5,6 +5,95 @@
  */
 
 session_start();
+/**
+ * Enviar email de confirmación cuando el pago queda completamente confirmado (reserva PAGADA)
+ */
+function enviarEmailPagoConfirmado($reserva) {
+    try {
+        if (!class_exists('GmailSender')) {
+            error_log('Error: GmailSender no disponible para enviar confirmación de pago');
+            return false;
+        }
+
+        $gmail = new GmailSender();
+        $hotel_image_path = $gmail->getHotelImagePath();
+        $destinatario = $reserva['correo'] ?? ($reserva['usuario_correo'] ?? null);
+        if (empty($destinatario) || !filter_var($destinatario, FILTER_VALIDATE_EMAIL)) {
+            error_log('Email de cliente no válido para reserva: ' . ($reserva['id_reserva'] ?? 'N/A'));
+            return false;
+        }
+
+        $asunto = "✅ Pago Confirmado - My Suite In Cartagena #" . ($reserva['id_reserva'] ?? 'N/A');
+
+        // Preparar datos legibles
+        $nombre_huesped = trim(($reserva['usuario_nombre'] ?? '') . ' ' . ($reserva['usuario_apellido'] ?? ''));
+        if (empty($nombre_huesped)) {
+            $nombre_huesped = trim($reserva['nombre'] ?? ($reserva['nombre_huesped'] ?? ''));
+        }
+        $nombre_huesped_html = $nombre_huesped !== '' ? '<p><strong>Huésped:</strong> ' . htmlspecialchars($nombre_huesped) . '</p>' : '';
+
+        $fecha_entrada = !empty($reserva['fecha_entrada']) ? date('d/m/Y', strtotime($reserva['fecha_entrada'])) : 'N/A';
+        $fecha_salida = !empty($reserva['fecha_salida']) ? date('d/m/Y', strtotime($reserva['fecha_salida'])) : 'N/A';
+        $adultos = (int)($reserva['num_adultos'] ?? 0);
+        $ninos = (int)($reserva['num_ninos'] ?? 0);
+        $personas = $adultos + $ninos;
+        $metodo_raw = (string)($reserva['metodo_pago'] ?? 'Transferencia');
+        $metodo = ucwords(str_replace('_', ' ', strtolower($metodo_raw)));
+        $total = isset($reserva['total']) ? (float)$reserva['total'] : (isset($reserva['precio_total']) ? (float)$reserva['precio_total'] : 0);
+        $total_text = $total > 0 ? number_format($total, 0, ',', '.') : 'N/A';
+        $reserva_ref = htmlspecialchars((string)($reserva['id_reserva'] ?? 'N/A'));
+        $carta_texto = "Cordial saludo\n"
+            . "Señor(a) {$nombre_huesped}\n"
+            . "Nos complace informarle que el pago de su reserva fue confirmado exitosamente.\n"
+            . "Referencia de reserva: #{$reserva_ref}\n"
+            . "Fechas de estadia: {$fecha_entrada} - {$fecha_salida}\n"
+            . "Cantidad de personas: {$personas} ({$adultos} adultos, {$ninos} ninos)\n"
+            . "Metodo de pago: {$metodo}\n"
+            . "Total pagado: $ " . $total_text . " COP\n"
+            . "Su reserva ya quedo en estado PAGADA y confirmada en nuestro sistema.\n"
+            . "Si requiere asistencia adicional o desea compartir informacion de horarios de vuelo,\n"
+            . "puede responder a este correo y con gusto le apoyaremos.\n"
+            . "Cordialmente,\n"
+            . "Andrés Diaz\n"
+            . "Soporte My Suite In Cartagena";
+        $carta_texto_html = nl2br(htmlspecialchars($carta_texto));
+
+        $message = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 700px; margin: 0 auto; background: #ffffff; padding: 20px; }
+                .header { text-align: right; margin-bottom: 30px; }
+                .logo { width: 80px; height: auto; }
+                .letter { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #333; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='cid:hotel_logo' alt='My Suite In Cartagena' class='logo'>
+                </div>
+                <div class='letter'>{$carta_texto_html}</div>
+            </div>
+        </body>
+        </html>
+        HTML;
+
+        // Enviar el email con la imagen del hotel embebida
+        return $gmail->sendEmail($destinatario, $asunto, $message, true, $hotel_image_path, true);
+
+    } catch (Exception $e) {
+        error_log('Error enviando email de confirmación de pago: ' . $e->getMessage());
+        return false;
+    } catch (Error $e) {
+        error_log('Error fatal enviando email de confirmación de pago: ' . $e->getMessage());
+        return false;
+    }
+}
+
 
 // Verificar si el usuario está logueado como admin
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
@@ -17,6 +106,99 @@ require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../includes/GmailSender.php';
 
 header('Content-Type: application/json');
+
+/**
+ * Notificación interna a Evelyn cuando una reserva queda pagada
+ */
+function enviarNotificacionPagoAEvelyn($reserva) {
+    try {
+        if (!class_exists('GmailSender')) {
+            error_log('Error: GmailSender no disponible para notificación interna');
+            return false;
+        }
+
+        $gmail = new GmailSender();
+        $hotel_image_path = $gmail->getHotelImagePath();
+        $destinatario = 'mysuiteincartagena@gmail.com';
+        $subject = '✅ Reserva Pagada - My Suite In Cartagena #' . $reserva['id_reserva'];
+
+        $nombre_huesped = '';
+        if (!empty($reserva['usuario_id'])) {
+            $nombre_huesped = trim(($reserva['usuario_nombre'] ?? '') . ' ' . ($reserva['usuario_apellido'] ?? ''));
+        }
+
+        $whatsapp = trim($reserva['usuario_telefono'] ?? $reserva['telefono'] ?? '');
+        $cantidad_adultos = (int)($reserva['num_adultos'] ?? 0);
+        $cantidad_ninos = (int)($reserva['num_ninos'] ?? 0);
+        $cantidad_personas = $cantidad_adultos + $cantidad_ninos;
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+
+        $nombre_huesped_html = '';
+        if ($nombre_huesped !== '') {
+            $nombre_huesped_html = '<p><strong>Huésped registrado:</strong> ' . htmlspecialchars($nombre_huesped) . '</p>';
+        }
+
+        $whatsapp_html = !empty($whatsapp) ? htmlspecialchars($whatsapp) : 'No disponible';
+
+        $message = <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+                .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 30px 20px; text-align: center; }
+                .content { padding: 30px; background: #f8f9fa; }
+                .info-box { background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2196f3; }
+                .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+                h1, h2, h3 { margin: 0 0 15px 0; }
+                p { margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
+                        <img src='cid:hotel_logo' alt='My Suite In Cartagena' style='width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;' />
+                        <span style='vertical-align: middle; display: inline-block;'>My Suite In Cartagena</span>
+                    </h1>
+                    <h2>✅ Reserva Pagada</h2>
+                </div>
+                <div class='content'>
+                    <p>Hola Evelyn,</p>
+                    <p>Se confirmó el pago de una reserva. Por favor revisar la siguiente información:</p>
+
+                    <div class='info-box'>
+                        <h3>📋 Datos de la Reserva</h3>
+                        <p><strong>ID Reserva:</strong> #{$reserva['id_reserva']}</p>
+                        {$nombre_huesped_html}
+                        <p><strong>WhatsApp:</strong> {$whatsapp_html}</p>
+                        <p><strong>Cantidad de personas:</strong> {$cantidad_personas} ({$cantidad_adultos} adultos, {$cantidad_ninos} niños)</p>
+                        <p><strong>Fecha de ingreso:</strong> {$fecha_entrada}</p>
+                        <p><strong>Fecha de salida:</strong> {$fecha_salida}</p>
+                    </div>
+
+                    <p>La reserva ya quedó en estado <strong>PAGADA</strong>.</p>
+                </div>
+                <div class='footer'>
+                    <p>Saludos cordiales,<br><strong>My Suite In Cartagena</strong></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        HTML;
+
+        return $gmail->sendEmail($destinatario, $subject, $message, true, $hotel_image_path, true);
+    } catch (Exception $e) {
+        error_log('Error enviando notificación a Evelyn: ' . $e->getMessage());
+        return false;
+    } catch (Error $e) {
+        error_log('Error fatal enviando notificación a Evelyn: ' . $e->getMessage());
+        return false;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reserva_id = $_POST['reserva_id'] ?? '';
@@ -102,9 +284,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Se cambió de aprobada a abonada - enviar correo de abono
                 // Obtener datos de la reserva para enviar el correo
                 $query_reserva = "SELECT r.*, 
-                                COALESCE(u.nombre, r.nombre) as nombre, 
-                                COALESCE(u.apellido, r.apellido) as apellido,
-                                COALESCE(u.correo, r.correo) as correo
+                                u.id_usuario AS usuario_id,
+                                u.nombre AS usuario_nombre,
+                                u.apellido AS usuario_apellido,
+                                u.telefono AS usuario_telefono,
+                                u.correo AS usuario_correo
                                 FROM reservas r 
                                 LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario 
                                 WHERE r.id_reserva = ?";
@@ -117,151 +301,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($reserva && $correo_cliente && filter_var($correo_cliente, FILTER_VALIDATE_EMAIL)) {
                     // Enviar correo de abono
-                    try {
+                     try {
                         $gmail = new GmailSender();
-                        
-                        // Obtener ruta de la imagen del hotel de forma robusta
-                        $hotel_image_path = $gmail->getHotelImagePath();
-                        
-                        $asunto = "💰 Abono Recibido - My Suite In Cartagena #" . $reserva_id;
-                        
-                        // Calcular fechas y montos
-                        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
-                        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
-                        $total = (float)$reserva['total'];
-                        $abono_20 = $total * 0.20;
-                        $saldo_pendiente = $total * 0.80;
 
-                        // --- INICIO: LÓGICA DEL ENLACE DE PAGO ---
-                        // Datos para generar enlace de pago
-                        $total_num = isset($reserva['total']) ? (float)$reserva['total'] : 0;
+                        // Enviar el email de SALDO/ABONO (80% pendiente) usando las plantillas nuevas
+                        $metodo = strtolower(trim($reserva['metodo_pago'] ?? 'transferencia'));
+                        if ($metodo === 'tarjeta' || $metodo === 'card' || $metodo === 'tarjeta_credito') {
+                            $sent = $gmail->sendSaldoTarjeta80($reserva, false);
+                        } else {
+                            // Por defecto tratar como transferencia/efectivo
+                            $sent = $gmail->sendSaldoTransferencia80($reserva, false);
+                        }
 
-                        // Calcula el monto SIN formatear
-                        // Usamos (int) round() para asegurarnos que sea un entero, como lo espera Bold.
-                        $anticipo_amount_raw = (int) round($total_num * 0.20);
+                        if ($sent) {
+                            error_log("Email de saldo 80% (plantilla) enviado a: " . $correo_cliente . " para reserva #" . $reserva_id);
+                            $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente y correo de saldo enviado';
+                        } else {
+                            error_log("Error enviando email de saldo 80% (plantilla) a: " . $correo_cliente);
+                            $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente (error al enviar correo)';
+                        }
 
-                        $order_id = 'RES-' . $reserva['id_reserva'] . '-' . time();
-                        $currency = 'COP';
-                        $percent = 0.80;
-
-                        // Creamos la URL que apunta a tu script de pago
-                        $payment_url = 'https://mysuiteincartagena.com.co/checkout.php?' . http_build_query([
-                                'orderId' => $order_id,
-                                'amount'  => $anticipo_amount_raw, // Pasamos el monto (aunque checkout.php lo ignorará por seguridad)
-                                'currency'=> $currency,
-                                'reserva' => $reserva['id_reserva'], // ¡Este es el dato CLAVE y de confianza!
-                                'percent' => $percent // Porcentaje a calcular, en este caso 80% para terminar de pagar la reserva
-                            ]);
-                        
-                        $total_formateado = number_format($total, 0, ',', '.');
-                        $abono_formateado = number_format($abono_20, 0, ',', '.');
-                        $saldo_formateado = number_format($saldo_pendiente, 0, ',', '.');
-                        
-                        $mensaje = "
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta charset='UTF-8'>
-                            <style>
-                                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-                                .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
-                                .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 30px 20px; text-align: center; }
-                                .content { padding: 30px; background: #f8f9fa; }
-                                .success-box { background: #d4edda; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #28a745; }
-                                .info-box { background: #fff3cd; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ffc107; }
-                                .details-box { background: white; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #ddd; }
-                                .highlight { color: #2a5298; font-weight: bold; }
-                                .amount { font-size: 18px; font-weight: bold; color: #28a745; }
-                                .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
-                                h1, h2, h3 { margin: 0 0 15px 0; }
-                                p { margin: 10px 0; }
-                                .field-label { font-weight: bold; color: #555; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class='container'>
-                                <div class='header'>
-                                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
-                                        <img src=\"https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
-                                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
-                                    </h1>
-                                    <h2>💰 Abono Recibido</h2>
-                                </div>
-                                <div class='content'>
-                                    <div class='success-box'>
-                                        <h3>✅ ¡Hemos recibido tu abono exitosamente!</h3>
-                                        <p>Tu reserva está oficialmente confirmada.</p>
-                                    </div>
-                                    
-                                    <p>Hola <strong>" . htmlspecialchars(($reserva['nombre'] ?? '') . ' ' . ($reserva['apellido'] ?? '')) . "</strong>,</p>
-                                    
-                                    <div class='details-box'>
-                                        <h3>📋 Detalles de tu Reserva:</h3>
-                                        <p><span class='field-label'>Fecha de entrada:</span> <strong>$fecha_entrada</strong></p>
-                                        <p style='margin-left: 20px; color: #666;'>Check in: 3 p.m.</p>
-                                        
-                                        <p><span class='field-label'>Fecha de salida:</span> <strong>$fecha_salida</strong></p>
-                                        <p style='margin-left: 20px; color: #666;'>Check out: 11 a.m.</p>
-                                    </div>
-                                    
-                                    <div class='info-box'>
-                                        <h3>💵 Información de Pago:</h3>
-                                        <p><span class='field-label'>Total de la reserva:</span> <span class='amount'>$$total_formateado COP</span></p>
-                                        <p><span class='field-label'>Abono recibido (20%):</span> <span class='amount'>$$abono_formateado COP</span></p>
-                                        <p><span class='field-label'>Saldo pendiente por pagar (80%):</span> <span class='amount'>$$saldo_formateado COP</span></p>
-                                    </div>
-                                    
-                                    
-                                    <div class='info-box'>
-                                        <h3>📧 Instrucciones para el Pago del Saldo:</h3>
-                                        <p>El saldo restante se cancela el día anterior al check-in.</p>
-                                        " . (($reserva['metodo_pago'] === 'efectivo' || $reserva['metodo_pago'] === 'transferencia') ? "
-                                            <p>Para consignar el <strong>saldo restante ($" . $saldo_formateado . " COP)</strong>, puedes usar la siguiente llave de pago:</p>
-                                            <p style='text-align: center; font-size: 24px; font-weight: bold; color: #2196f3; margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 2px solid #2196f3;'>
-                                                @millave3137910897
-                                            </p>
-                                            <p style='text-align: center; color: #666; font-size: 14px;'>Usa esta llave en tu aplicación bancaria para realizar la consignación del abono.</p>
-                                            " : "
-                                            <p>Para realizar el pago del <strong>saldo restante ($" . $saldo_formateado . " COP)</strong>, puedes usar el siguiente botón:</p>
-                                            <div style='text-align: center; margin-top: 25px;'>
-                                                <a href=\"" . htmlspecialchars($payment_url) . "\" style='display: inline-block; background-color: #FFE082; color: #333; padding: 15px 40px; font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 50px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); text-transform: uppercase; letter-spacing: 1px;'>
-                                                    Pagar ahora con tarjeta
-                                                </a>
-                                            </div>
-                                            ") . "
-                                    </div>
-                                    
-                                    <div class='details-box'>
-                                        <h3>📞 Información de Contacto:</h3>
-                                        <p><strong>📧 Email:</strong> gerencia@mysuiteincartagena.com.co</p>
-                                        <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
-                                    </div>
-                                    
-                                    <p>¡Esperamos darte la bienvenida pronto a My Suite In Cartagena!</p>
-                                </div>
-                                <div class='footer'>
-                                    <p>Saludos cordiales,<br>
-                                    <strong>Equipo My Suite In Cartagena</strong></p>
-                                    <p>Este es un email automático, por favor no responder a esta dirección.</p>
-                                </div>
-                            </div>
-                        </body>
-                        </html>";
-                        
-                        $gmail->sendEmail(
-                            $correo_cliente,
-                            $asunto,
-                            $mensaje,
-                            true,
-                            $hotel_image_path
-                        );
-                        
-                        error_log("Email de abono enviado a: " . $correo_cliente . " para reserva #" . $reserva_id);
-                        $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente y correo de abono enviado';
-                        
                     } catch (Exception $e) {
-                        // Log del error pero no fallar la operación
-                        error_log("Error enviando correo de abono: " . $e->getMessage());
+                        error_log("Error enviando correo de saldo: " . $e->getMessage());
                         $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente (error al enviar correo)';
                     }
                 } else {
@@ -273,9 +334,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Se cambió de abonada a pagada - enviar correo
                 // Obtener datos de la reserva para enviar el correo
                 $query_reserva = "SELECT r.*, 
-                                COALESCE(u.nombre, r.nombre) as nombre, 
-                                COALESCE(u.apellido, r.apellido) as apellido,
-                                COALESCE(u.correo, r.correo) as correo
+                                u.id_usuario AS usuario_id,
+                                u.nombre AS usuario_nombre,
+                                u.apellido AS usuario_apellido,
+                                u.telefono AS usuario_telefono,
+                                u.correo AS usuario_correo
                                 FROM reservas r 
                                 LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario 
                                 WHERE r.id_reserva = ?";
@@ -294,98 +357,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Enviar correo de confirmación de pago
                     try {
                         $gmail = new GmailSender();
-                        
-                        // Obtener ruta de la imagen del hotel de forma robusta
-                        $hotel_image_path = $gmail->getHotelImagePath();
-                        
-                        $asunto = "✅ Pago Confirmado - My Suite In Cartagena";
-                        
-                        $mensaje = "
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta charset='UTF-8'>
-                            <style>
-                                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                                .header { background: linear-gradient(135deg, rgb(199, 156, 65), rgb(186, 117, 13)); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                                .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-                                .success-box { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                                .reservation-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                                .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-                                .highlight { color: rgb(199, 156, 65); font-weight: bold; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class='container'>
-                                <div class='header'>
-                                    <h1 style='text-align: center; margin: 0 0 15px 0; line-height: 50px;'>
-                                        <img src=\"cid:hotel_logo\" alt=\"My Suite In Cartagena\" style=\"width: 50px; height: 50px; vertical-align: middle; margin-right: 10px; display: inline-block;\" />
-                                        <span style=\"vertical-align: middle; display: inline-block;\">My Suite In Cartagena</span>
-                                    </h1>
-                                    <h2>🎉 ¡Pago Confirmado!</h2>
-                                </div>
-                                <div class='content'>
-                                    <div class='success-box'>
-                                        <h3>✅ ¡Excelente noticia!</h3>
-                                        <p>Hemos recibido y confirmado el pago completo de tu reserva. Tu reserva está oficialmente confirmada y pagada al 100%.</p>
-                                    </div>
-                                    
-                                    <p>Hola <strong>" . htmlspecialchars(($reserva['nombre'] ?? '') . ' ' . ($reserva['apellido'] ?? '')) . "</strong>,</p>
-                                    
-                                    <p>Nos complace informarte que hemos recibido y confirmado el <strong>pago completo</strong> de tu reserva. Ya has cancelado el <strong>100% del total</strong> y tu reserva está oficialmente confirmada y lista para tu llegada.</p>
-                                    
-                                    <div class='reservation-details'>
-                                        <h3>📋 Detalles de tu Reserva:</h3>
-                                        <p><strong>ID de Reserva:</strong> #" . $reserva['id_reserva'] . "</p>
-                                        <p><strong>Fecha de Entrada:</strong> " . date('d/m/Y', strtotime($reserva['fecha_entrada'])) . "</p>
-                                        <p style='margin-left: 20px; color: #666;'>Check in: 3 p.m.</p>
-                                        <p><strong>Fecha de Salida:</strong> " . date('d/m/Y', strtotime($reserva['fecha_salida'])) . "</p>
-                                        <p style='margin-left: 20px; color: #666;'>Check out: 11 a.m.</p>
-                                        <p><strong>Número de Adultos:</strong> " . $reserva['num_adultos'] . "</p>
-                                        <p><strong>Número de Niños:</strong> " . $reserva['num_ninos'] . "</p>
-                                    </div>
-                                    
-                                    <div class='success-box' style='background: #d1ecf1; border-color: #bee5eb; color: #0c5460;'>
-                                        <h3>💵 Estado de Pago:</h3>
-                                        <p><strong>Total de la Reserva:</strong> $" . number_format($reserva['total'], 0, ',', '.') . " COP</p>
-                                        <p style='font-size: 18px; margin-top: 10px;'><strong>✅ Total Pagado (100%):</strong> <span class='highlight' style='color: #28a745; font-size: 20px;'>$" . number_format($reserva['total'], 0, ',', '.') . " COP</span></p>
-                                        <p style='margin-top: 10px;'><strong>🎉 ¡Tu reserva está completamente pagada!</strong></p>
-                                    </div>
-                                    
-                                    <div class='reservation-details'>
-                                        <h3>📞 Información de Contacto:</h3>
-                                        <p><strong>📧 Email:</strong> gerencia@mysuiteincartagena.com.co</p>
-                                        <p><strong>📱 WhatsApp:</strong> +57 3105495149</p>
-                                    </div>
-                                    
-                                    <h3>🏖️ ¡Te esperamos en Cartagena!</h3>
-                                    <p>Estamos emocionados de recibirte en My Suite In Cartagena. Tu reserva está completamente confirmada y pagada. Si tienes alguna pregunta o necesitas información adicional, no dudes en contactarnos.</p>
-                                    
-                                    <p>¡Que tengas un excelente viaje y nos vemos pronto en Cartagena! 🌴</p>
-                                    
-                                    <p>Saludos cordiales,<br><strong>Equipo My Suite In Cartagena</strong></p>
-                                </div>
-                                <div class='footer'>
-                                    <p>© 2025 My Suite In Cartagena - Todos los derechos reservados</p>
-                                </div>
-                            </div>
-                        </body>
-                        </html>";
-                        
-                        $gmail->sendEmail(
-                            $correo_cliente,
-                            $asunto,
-                            $mensaje,
-                            true,
-                            $hotel_image_path
-                        );
-                        
-                        error_log("Email de confirmación de pago enviado a: " . $correo_cliente . " para reserva #" . $reserva_id);
-                        $mensaje_respuesta = 'Reserva marcada como PAGADA exitosamente y correo de confirmación enviado';
-                        
+
+                        // Enviar el email final de CONFIRMACIÓN (reserva PAGADA) usando la nueva plantilla
+                        $sent = enviarEmailPagoConfirmado($reserva);
+
+                        $notificacion_evelyn = enviarNotificacionPagoAEvelyn($reserva);
+
+                        if ($sent) {
+                            error_log("Email de confirmación (plantilla) enviado a: " . $correo_cliente . " para reserva #" . $reserva_id);
+                            if ($notificacion_evelyn) {
+                                error_log("Notificación interna enviada a Evelyn para reserva #" . $reserva_id);
+                            }
+                            $mensaje_respuesta = 'Reserva marcada como PAGADA exitosamente y correo de confirmación enviado';
+                        } else {
+                            error_log("Error enviando email de confirmación (plantilla) a: " . $correo_cliente);
+                            $mensaje_respuesta = 'Reserva marcada como PAGADA exitosamente (error al enviar correo)';
+                        }
+
                     } catch (Exception $e) {
-                        // Log del error pero no fallar la operación
                         error_log("Error enviando correo de confirmación de pago: " . $e->getMessage());
                         $mensaje_respuesta = 'Reserva marcada como PAGADA exitosamente (error al enviar correo)';
                     }

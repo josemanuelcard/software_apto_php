@@ -79,8 +79,8 @@ try {
     
     // Verificar si hay reservas aprobadas en esas fechas
     // Tratar la fecha de salida como exclusiva: una reserva 10-12 no bloquea el día 12 como inicio de otra reserva.
-    $checkReservas = "SELECT COUNT(*) FROM reservas 
-                      WHERE estado = 'aprobada' 
+    $checkReservas = "SELECT COUNT(*) FROM reservas
+                      WHERE estado = 'aprobada'
                       AND (fecha_entrada < :end_date AND fecha_salida > :start_date)";
     $checkReservasStmt = $db->prepare($checkReservas);
     $checkReservasStmt->execute(['start_date' => $startDate, 'end_date' => $endDate]);

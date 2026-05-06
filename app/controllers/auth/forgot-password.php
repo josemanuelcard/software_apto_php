@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 </body>
                 </html>";
                 
-                $result = $gmailSender->sendEmail($to, $subject, $htmlContent);
+                $result = $gmailSender->sendEmail($to, $subject, $htmlContent, true, null, false); // false = sin CC a gerencia
                 
                 if ($result) {
                     $step = 'code';

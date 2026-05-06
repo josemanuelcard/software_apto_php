@@ -58,16 +58,22 @@ class GmailSender {
 
     /**
      * Enviar email usando SMTP (cPanel)
+     * @param string $to Destinatario
+     * @param string $subject Asunto
+     * @param string $message Mensaje
+     * @param bool $is_html Formato HTML
+     * @param string|null $image_path Ruta de imagen
+     * @param bool $addCC Agregar CC a gerencia (por defecto true)
      */
-    public function sendEmail($to, $subject, $message, $is_html = true, $image_path = null) {
+    public function sendEmail($to, $subject, $message, $is_html = true, $image_path = null, $addCC = true) {
         try {
             // Intentar usar PHPMailer si está disponible
             if (self::isPHPMailerAvailable()) {
-                return $this->sendWithPHPMailer($to, $subject, $message, $is_html, $image_path);
+                return $this->sendWithPHPMailer($to, $subject, $message, $is_html, $image_path, $addCC);
             } else {
                 // Fallback a método básico si PHPMailer no está disponible
                 error_log("PHPMailer no disponible, usando método básico para enviar email");
-                return $this->sendWithBasic($to, $subject, $message, $is_html);
+                return $this->sendWithBasic($to, $subject, $message, $is_html, $addCC);
             }
 
         } catch (Exception $e) {
@@ -84,7 +90,7 @@ class GmailSender {
     /**
      * Envío con PHPMailer (recomendado)
      */
-    private function sendWithPHPMailer($to, $subject, $message, $is_html, $image_path = null) {
+    private function sendWithPHPMailer($to, $subject, $message, $is_html, $image_path = null, $addCC = true) {
         try {
             if (!self::isPHPMailerAvailable() || !class_exists('PHPMailer\PHPMailer\PHPMailer')) {
                 error_log("PHPMailer no disponible, no se puede enviar email");
@@ -114,6 +120,9 @@ class GmailSender {
             // Remitente y destinatario
             $mail->setFrom($this->from_email, $this->from_name);
             $mail->addAddress($to);
+            if ($addCC) {
+                $mail->addCC('gerencia@mysuiteincartagena.com.co'); // CC a gerencia
+            }
             $mail->addReplyTo($this->from_email, $this->from_name);
 
             // Configurar HTML antes de agregar imágenes
@@ -199,7 +208,7 @@ class GmailSender {
     /**
      * Envío básico (fallback)
      */
-    private function sendWithBasic($to, $subject, $message, $is_html) {
+    private function sendWithBasic($to, $subject, $message, $is_html, $addCC = true) {
         // Configurar PHP para SMTP
         ini_set('SMTP', $this->smtp_host);
         ini_set('smtp_port', $this->smtp_port);
@@ -210,8 +219,14 @@ class GmailSender {
             'Content-type: ' . ($is_html ? 'text/html' : 'text/plain') . '; charset=UTF-8',
             'From: ' . $this->from_name . ' <' . $this->from_email . '>',
             'Reply-To: ' . $this->from_email,
-            'X-Mailer: PHP/' . phpversion()
         ];
+
+        // Agregar CC solo si está habilitado
+        if ($addCC) {
+            $headers[] = 'Cc: gerencia@mysuiteincartagena.com.co';
+        }
+
+        $headers[] = 'X-Mailer: PHP/' . phpversion();
 
         $result = mail($to, $subject, $message, implode("\r\n", $headers));
 
@@ -222,6 +237,24 @@ class GmailSender {
         }
 
         return $result;
+    }
+
+    /**
+     * Guardar HTML a archivo de debug para inspección
+     */
+    private function saveDebugHTML($html, $reservation_id, $template_name) {
+        try {
+            $logDir = __DIR__ . '/../logs';
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0755, true);
+            }
+            $safeId = preg_replace('/[^0-9A-Za-z_\-]/', '_', $reservation_id);
+            $logFile = $logDir . "/last_aprobada_reserva_{$safeId}.html";
+            @file_put_contents($logFile, $html);
+            error_log("DEBUG: Email $template_name (reserva #{$safeId}) guardado en: $logFile");
+        } catch (Exception $e) {
+            error_log("DEBUG: No se pudo guardar el HTML del email: " . $e->getMessage());
+        }
     }
 
     /**
@@ -309,6 +342,145 @@ class GmailSender {
     }
 
     /**
+     * Enviar email de aprobación de reserva - Transferencia 20%
+     */
+    public function sendReservaAprobadaTransferencia20($reserva, $addCC = false) {
+        $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
+        $hotel_image_path = $this->getHotelImagePath();
+        
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+        $total = (float)$reserva['total'];
+        $anticipo_20 = $total * 0.20;
+        $saldo_restante = $total * 0.80;
+        $manillas = $this->j($reserva['num_adultos'] + $reserva['num_ninos']);
+        $early_checkin = $this->getPrecioServicioAdicional('early_checkin');
+        $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
+
+        $message = $this->getEmailTemplateTransferencia20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $saldo_restante, $manillas, $early_checkin, $late_checkout);
+        
+        // Guardar HTML a archivo de debug
+        $this->saveDebugHTML($message, $reserva['id_reserva'], 'Transferencia20');
+        
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+    }
+
+    /**
+     * Enviar email de aprobación de reserva - Tarjeta de Crédito 20%
+     */
+    public function sendReservaAprobadaTarjeta20($reserva, $addCC = false) {
+        $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
+        $hotel_image_path = $this->getHotelImagePath();
+        
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+        $total = (float)$reserva['total'];
+        $anticipo_20 = $total * 0.20;
+        $manillas = $this->j($reserva['num_adultos'] + $reserva['num_ninos']);
+        $early_checkin = $this->getPrecioServicioAdicional('early_checkin');
+        $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
+
+        $message = $this->getEmailTemplateTarjeta20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $manillas, $early_checkin, $late_checkout);
+        
+        // Guardar HTML a archivo de debug
+        $this->saveDebugHTML($message, $reserva['id_reserva'], 'Tarjeta20');
+        
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+    }
+
+    /**
+     * Enviar email de saldo pendiente - Transferencia 80%
+     */
+    public function sendSaldoTransferencia80($reserva, $addCC = false) {
+        $subject = "💰 Saldo Pendiente - My Suite In Cartagena #" . $reserva['id_reserva'];
+        $hotel_image_path = $this->getHotelImagePath();
+        
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+        $total = (float)$reserva['total'];
+        $saldo_80 = $total * 0.80;
+        $manillas = $this->j($reserva['num_adultos'] + $reserva['num_ninos']);
+        $early_checkin = $this->getPrecioServicioAdicional('early_checkin');
+        $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
+
+        $message = $this->getEmailTemplateTransferencia80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout);
+        
+        // Guardar HTML a archivo de debug
+        $this->saveDebugHTML($message, $reserva['id_reserva'], 'Transferencia80');
+        
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+    }
+
+    /**
+     * Enviar email de saldo pendiente - Tarjeta de Crédito 80%
+     */
+    public function sendSaldoTarjeta80($reserva, $addCC = false) {
+        $subject = "💳 Saldo Pendiente - My Suite In Cartagena #" . $reserva['id_reserva'];
+        $hotel_image_path = $this->getHotelImagePath();
+        
+        $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
+        $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
+        $total = (float)$reserva['total'];
+        $saldo_80 = $total * 0.80;
+        $manillas = $this->j($reserva['num_adultos'] + $reserva['num_ninos']);
+        $early_checkin = $this->getPrecioServicioAdicional('early_checkin');
+        $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
+
+        $message = $this->getEmailTemplateTarjeta80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout);
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+    }
+
+    /**
+     * Obtener precio de servicio adicional desde BD
+     */
+    private function getPrecioServicioAdicional($tipo) {
+        try {
+            require_once __DIR__ . '/../config/database.php';
+            $db = (new \Database())->getConnection();
+            $query = "SELECT precio FROM servicios_adicionales WHERE tipo = ? AND activo = 1 LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$tipo]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $result ? (float)$result['precio'] : 0;
+        } catch (Exception $e) {
+            error_log("Error obteniendo precio de servicio: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Obtener precio de manillas según cantidad de personas desde BD
+     */
+    private function j($cantidad_personas) {
+        try {
+            require_once __DIR__ . '/../config/database.php';
+            $db = (new \Database())->getConnection();
+            
+            // Buscar el rango que aplique (tabla: manillas_tarifas)
+            $query = "SELECT precio FROM manillas_tarifas 
+                      WHERE personas_desde <= ? 
+                      AND (personas_hasta >= ? OR personas_hasta IS NULL)
+                      AND activo = 1
+                      ORDER BY personas_desde DESC
+                      LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$cantidad_personas, $cantidad_personas]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                error_log("✅ Precio de manillas encontrado para $cantidad_personas personas: " . $result['precio']);
+                return (float)$result['precio'];
+            } else {
+                error_log("⚠️ No se encontró precio de manillas para $cantidad_personas personas");
+                return 0;
+            }
+        } catch (Exception $e) {
+            error_log("❌ Error obteniendo precio de manillas: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * Enviar email de aprobación de reserva
      */
     public function sendReservaAprobada($reserva) {
@@ -339,6 +511,21 @@ class GmailSender {
         $saldo_formateado = number_format($saldo_restante, 0, ',', '.');
 
         $message = $this->getEmailTemplate($reserva, $fecha_entrada, $fecha_salida, $total_formateado, $anticipo_formateado, $saldo_formateado);
+
+        // DEBUG: Guardar una copia del HTML generado para inspección en caso de que
+        // se esté enviando el template anterior o haya caching/opcache activo.
+        try {
+            $logDir = __DIR__ . '/../logs';
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0755, true);
+            }
+            $safeId = isset($reserva['id_reserva']) ? preg_replace('/[^0-9A-Za-z_\-]/', '_', $reserva['id_reserva']) : 'unknown';
+            $logFile = $logDir . "/last_aprobada_reserva_{$safeId}.html";
+            @file_put_contents($logFile, $message);
+            error_log("DEBUG: Email de aprobación (reserva #{$safeId}) guardado en: $logFile");
+        } catch (Exception $e) {
+            error_log("DEBUG: No se pudo guardar el HTML del email: " . $e->getMessage());
+        }
 
         return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
@@ -394,6 +581,362 @@ class GmailSender {
         $message = $this->getEmailTemplateCancelacion($reserva, $fecha_entrada, $fecha_salida);
 
         return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
+    }
+
+    /**
+     * Template HTML - Carta modelo transferencia 20%
+     */
+    private function getEmailTemplateTransferencia20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $saldo_80, $manillas, $early_checkin, $late_checkout) {
+        $nombre = $reserva['nombre'] . ' ' . $reserva['apellido'];
+        $total = $anticipo_20 + $saldo_80;
+        $anticipo_format = number_format($anticipo_20, 0, ',', '.');
+        $saldo_format = number_format($saldo_80, 0, ',', '.');
+        $total_format = number_format($total, 0, ',', '.');
+        $manillas_format = number_format($manillas, 0, ',', '.');
+        $early_format = number_format($early_checkin, 0, ',', '.');
+        $late_format = number_format($late_checkout, 0, ',', '.');
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 700px; margin: 0 auto; background: #ffffff; padding: 20px; }
+                .header { text-align: right; margin-bottom: 30px; }
+                .logo { width: 80px; height: auto; }
+                .letter { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #333; }
+                .highlight { background-color: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png' alt='My Suite' class='logo'>
+                </div>
+                <div class='letter'>Cordial Saludo
+
+Señor(a) {$nombre}
+
+Mi nombre es Andrés Diaz del área de soporte de My Suite In Cartagena.
+
+ANTES DE HACER EL PAGO QUEREMOS CONFIRMAR CON USTED LA SIGUIENTE INFORMACIÓN
+
+1. No se aceptan visitas de personas que no hagan parte del registro inicial
+
+2. Recordar que el check-in es a las 3pm y el check-out a las 11 am.
+   Para no tener inconvenientes en este sentido, nos gustaría saber cuáles 
+   son los horarios de sus vuelos tanto de llegada como de salida para de 
+   esta manera brindarle una atención más completa y una mejor experiencia 
+   en su visita a nuestro apartamento.
+
+   Si usted desea ingresar antes de esa hora por favor avísenos para 
+   ofrecerle si hay disponibilidad un early check-in a un costo de \${$early_format} 
+   y para ello nosotros no atendemos huéspedes la noche anterior. En el 
+   mismo sentido le podemos ofrecerle una salida más tarde si tenemos 
+   disponibilidad con un costo de \${$late_format}.
+
+Si esta de acuerdo con las normas anteriores, entonces queremos informarle 
+que el valor total a pagar por su estadía en el apartamento es de \${$total_format}.
+
+Para reservar es necesario pagar el 20% equivalente a \${$anticipo_format} 
+por transferencia a través de la siguiente llave:
+@millave3137910897
+
+Le solicito el favor de enviar comprobante de pago a vuelta de correo a
+gerencia@mysuiteincartagena.com.co.
+
+El saldo \${$saldo_format} deberá pagarlo un día antes del ingreso al 
+apartamento.
+
+El día del ingreso al apartamento en la recepción del edificio deberá 
+cancelar el valor de \${$manillas_format} correspondiente a las manillas 
+que lo identifican como huésped y poder disfrutar de la piscina, gimnasio 
+y reconocido por la seguridad del edificio.
+
+
+Cordialmente,
+
+Andrés Diaz
+Soporte My Suite In Cartagena
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
+    /**
+     * Template HTML - Carta modelo tarjeta de crédito 20%
+     */
+    private function getEmailTemplateTarjeta20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $manillas, $early_checkin, $late_checkout) {
+        // --- INICIO: LÓGICA DEL ENLACE DE PAGO ---
+        // Datos para generar enlace de pago
+        $total_num = isset($reserva['total']) ? (float)$reserva['total'] : 0;
+
+        // Calcula el monto SIN formatear (ej: 50000)
+        // Usamos (int) round() para asegurarnos que sea un entero, como lo espera Bold.
+        $anticipo_amount_raw = (int) round($total_num * 0.20);
+
+        $order_id = 'RES-' . $reserva['id_reserva'] . '-' . time();
+        $currency = 'COP';
+        $percent = 0.20;
+
+        // Creamos la URL que apunta a tu script de pago
+        $payment_url = 'https://mysuiteincartagena.com.co/checkout.php?' . http_build_query([
+                'orderId' => $order_id,
+                'amount'  => $anticipo_amount_raw, // Pasamos el monto (aunque checkout.php lo ignorará por seguridad)
+                'currency'=> $currency,
+                'reserva' => $reserva['id_reserva'], // ¡Este es el dato CLAVE y de confianza!
+                'percent' => $percent // Porcentaje a calcular, en este caso 20% para abono
+            ]);
+
+        $nombre = $reserva['nombre'] . ' ' . $reserva['apellido'];
+        $total = $anticipo_20 * 5; // 20% es el anticipado, el total será 5 veces esto
+        $anticipo_format = number_format($anticipo_20, 0, ',', '.');
+        $total_format = number_format($total, 0, ',', '.');
+        $manillas_format = number_format($manillas, 0, ',', '.');
+        $early_format = number_format($early_checkin, 0, ',', '.');
+        $late_format = number_format($late_checkout, 0, ',', '.');
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 700px; margin: 0 auto; background: #ffffff; padding: 20px; }
+                .header { text-align: right; margin-bottom: 30px; }
+                .logo { width: 80px; height: auto; }
+                .letter { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #333; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png' alt='My Suite' class='logo'>
+                </div>
+                <div class='letter'>Cordial Saludo
+
+Señor(a) {$nombre}
+
+Bienvenido a My Suite In Cartagena, su sitio de descanso.
+
+Antes de hacer el pago queremos confirmar con usted la siguiente información
+
+1. No se aceptan visitas de personas que no hagan parte del registro inicial
+
+2. Recordar que el check-in es a las 3pm y el check-out a las 11 am.
+   Para no tener inconvenientes en este sentido, nos gustaría saber cuáles 
+   son los horarios de sus vuelos tanto de llegada como de salida para de 
+   esta manera brindarle una atención más completa y una mejor experiencia 
+   en su visita a nuestro apartamento.
+
+   Si usted desea ingresar antes de esa hora por favor avísenos para 
+   ofrecerle si hay disponibilidad un early check-in a un costo de \${$early_format} 
+   y para ello nosotros no atendemos huéspedes la noche anterior. En el 
+   mismo sentido le podemos ofrecerle una salida más tarde si tenemos 
+   disponibilidad con un costo de \${$late_format}.
+
+3. El día del ingreso al apartamento en la recepción del edificio deberá 
+   cancelar el valor de \${$manillas_format} correspondiente a las manillas 
+   que lo identifican como huésped y poder disfrutar de la piscina, gimnasio 
+   y reconocido por la seguridad del edificio.
+
+Si está de acuerdo con las normas anteriores, entonces queremos informarle 
+que el valor total a pagar por su estadía en el apartamento es de \${$total_format}.
+
+Para reservar es necesario pagar el 20% equivalente a \${$anticipo_format} 
+por MEDIO DEL SIGUIENTE LINK DE PAGO DE BOLD:
+<a href='{$payment_url}' target='_blank' style='color: #1a73e8; font-weight: bold;'>
+Pagar con tarjeta
+</a>.
+Le solicito el favor de enviar comprobante de pago a vuelta de correo a
+gerencia@mysuiteincartagena.com.co.
+
+El saldo deberá pagarlo un día antes del ingreso al apartamento.
+
+
+Cordialmente,
+
+Andrés Diaz
+Soporte My Suite In Cartagena
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
+    /**
+     * Template HTML - Carta modelo transferencia 80%
+     */
+    private function getEmailTemplateTransferencia80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout) {
+        $nombre = $reserva['nombre'] . ' ' . $reserva['apellido'];
+        $saldo_format = number_format($saldo_80, 0, ',', '.');
+        $manillas_format = number_format($manillas, 0, ',', '.');
+        $early_format = number_format($early_checkin, 0, ',', '.');
+        $late_format = number_format($late_checkout, 0, ',', '.');
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 700px; margin: 0 auto; background: #ffffff; padding: 20px; }
+                .header { text-align: right; margin-bottom: 30px; }
+                .logo { width: 80px; height: auto; }
+                .letter { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #333; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png' alt='My Suite' class='logo'>
+                </div>
+                <div class='letter'>Cordial Saludo
+
+Señor(a) {$nombre}
+
+Bienvenido a My Suite In Cartagena, su sitio de descanso
+
+ANTES DE HACER EL PAGO QUEREMOS CONFIRMAR CON USTED LA SIGUIENTE INFORMACIÓN
+
+1. No se aceptan visitas de personas que no hagan parte del registro inicial
+
+2. Recordar que el check-in es a las 3pm y el check-out a las 11 am.
+   Para no tener inconvenientes en este sentido, nos gustaría saber cuáles 
+   son los horarios de sus vuelos tanto de llegada como de salida para de 
+   esta manera brindarle una atención más completa y una mejor experiencia 
+   en su visita a nuestro apartamento.
+
+   Si usted desea ingresar antes de esa hora por favor avísenos para 
+   ofrecerle si hay disponibilidad un early check-in a un costo de \${$early_format} 
+   y para ello nosotros no atendemos huéspedes la noche anterior. En el 
+   mismo sentido le podemos ofrecerle una salida más tarde si tenemos 
+   disponibilidad con un costo de \${$late_format}.
+
+Para pagar el 80% equivalente a \${$saldo_format} lo puede hacer por 
+transferencia a través de la siguiente llave:
+@millave3137910897
+
+Le solicito el favor de enviar comprobante de pago a vuelta de correo a
+gerencia@mysuiteincartagena.com.co.
+
+El día del ingreso al apartamento en la recepción del edificio deberá 
+cancelar el valor de \${$manillas_format} correspondiente a las manillas 
+que lo identifican como huésped y poder disfrutar de la piscina, gimnasio 
+y reconocido por la seguridad del edificio
+
+
+Cordialmente,
+
+Andrés Diaz
+Soporte My Suite In Cartagena
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
+    /**
+     * Template HTML - Carta modelo tarjeta de crédito 80%
+     */
+    private function getEmailTemplateTarjeta80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout) {
+        // --- INICIO: LÓGICA DEL ENLACE DE PAGO ---
+        // Datos para generar enlace de pago
+        $total_num = isset($reserva['total']) ? (float)$reserva['total'] : 0;
+
+        // Calcula el monto SIN formatear (ej: 50000)
+        // Usamos (int) round() para asegurarnos que sea un entero, como lo espera Bold.
+        $restante_amount_raw = (int) round($total_num * 0.80);
+
+        $order_id = 'RES-' . $reserva['id_reserva'] . '-' . time();
+        $currency = 'COP';
+        $percent = 0.80;
+
+        // Creamos la URL que apunta a tu script de pago
+        $payment_url = 'https://mysuiteincartagena.com.co/checkout.php?' . http_build_query([
+                'orderId' => $order_id,
+                'amount'  => $restante_amount_raw, // Pasamos el monto (aunque checkout.php lo ignorará por seguridad)
+                'currency'=> $currency,
+                'reserva' => $reserva['id_reserva'], // ¡Este es el dato CLAVE y de confianza!
+                'percent' => $percent // Porcentaje a calcular, en este caso 80% para abono
+            ]);
+        $nombre = $reserva['nombre'] . ' ' . $reserva['apellido'];
+        $saldo_format = number_format($saldo_80, 0, ',', '.');
+        $manillas_format = number_format($manillas, 0, ',', '.');
+        $early_format = number_format($early_checkin, 0, ',', '.');
+        $late_format = number_format($late_checkout, 0, ',', '.');
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 700px; margin: 0 auto; background: #ffffff; padding: 20px; }
+                .header { text-align: right; margin-bottom: 30px; }
+                .logo { width: 80px; height: auto; }
+                .letter { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8; color: #333; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png' alt='My Suite' class='logo'>
+                </div>
+                <div class='letter'>Cordial Saludo
+
+Señor(a) {$nombre}
+
+Bienvenido a My Suite In Cartagena, su sitio de descanso.
+
+ANTES DE HACER EL PAGO QUEREMOS CONFIRMAR CON USTED LA SIGUIENTE INFORMACIÓN
+
+1. No se aceptan visitas de personas que no hagan parte del registro inicial
+
+2. Recordar que el check-in es a las 3pm y el check-out a las 11 am.
+   Para no tener inconvenientes en este sentido, nos gustaría saber cuáles 
+   son los horarios de sus vuelos tanto de llegada como de salida para de 
+   esta manera brindarle una atención más completa y una mejor experiencia 
+   en su visita a nuestro apartamento.
+
+   Si usted desea ingresar antes de esa hora por favor avísenos para 
+   ofrecerle si hay disponibilidad un early check-in a un costo de \${$early_format} 
+   y para ello nosotros no atendemos huéspedes la noche anterior. En el 
+   mismo sentido le podemos ofrecerle una salida más tarde si tenemos 
+   disponibilidad con un costo de \${$late_format}.
+
+Para pagar el 80% equivalente a \${$saldo_format} lo puede hacer por 
+MEDIO DEL SIGUIENTE LINK DE PAGO DE BOLD:. 
+<a href='{$payment_url}' target='_blank' style='color: #1a73e8; font-weight: bold;'>
+Pagar con tarjeta
+</a>.
+Le solicito el favor de enviar comprobante de pago a vuelta de correo a
+gerencia@mysuiteincartagena.com.co
+
+El día del ingreso al apartamento en la recepción del edificio deberá 
+cancelar el valor de \${$manillas_format} correspondiente a las manillas 
+que lo identifican como huésped y poder disfrutar de la piscina, gimnasio 
+y reconocido por la seguridad del edificio
+
+
+Cordialmente,
+
+Andrés Diaz
+Soporte My Suite In Cartagena
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
     }
 
     /**

@@ -100,7 +100,7 @@ CREATE TABLE reservas (
   fecha_salida DATE NOT NULL,
   num_adultos INT DEFAULT 1,
   num_ninos INT DEFAULT 0,
-  metodo_pago ENUM('efectivo','tarjeta_credito') NOT NULL,
+  metodo_pago ENUM('transferencia','tarjeta_credito') NOT NULL,
   costo_base DECIMAL(10,2) NOT NULL,
   descuento_fidelizacion DECIMAL(10,2) DEFAULT 0,
   descuento_cumpleanios DECIMAL(10,2) DEFAULT 0,
@@ -183,6 +183,20 @@ CREATE TABLE descuentos_config (
   id_config INT AUTO_INCREMENT PRIMARY KEY,
   tipo_descuento ENUM('fidelidad','cumpleanos','vendedor','promocional') NOT NULL UNIQUE,
   porcentaje DECIMAL(5,2) NOT NULL,
+  activo BOOLEAN DEFAULT TRUE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ==========================================================
+-- TABLA: servicios_adicionales (Early check-in y Late checkout)
+-- ==========================================================
+CREATE TABLE servicios_adicionales (
+  id_servicio INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  tipo ENUM('early_checkin','late_checkout') NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
+  descripcion TEXT,
   activo BOOLEAN DEFAULT TRUE,
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

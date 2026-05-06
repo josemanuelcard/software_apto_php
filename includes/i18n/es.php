@@ -90,7 +90,7 @@ return [
     'form.payment_method' => 'Método de Pago',
     'form.payment_method_required' => 'El método de pago es requerido',
     'form.credit_card' => 'Tarjeta de Crédito',
-    'form.cash' => 'Efectivo',
+    'form.cash' => 'Transferencia',
     'form.cash_discount' => 'descuento',
     'form.discount_applied' => 'descuento aplicado por pago en transferencia!',
     'form.payment_receipt_title' => 'Importante - Comprobante de Pago:',

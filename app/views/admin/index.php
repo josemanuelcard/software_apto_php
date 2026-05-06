@@ -330,6 +330,16 @@ $estadisticas = getEstadisticasReservas();
                                 <i class="fas fa-percentage me-2"></i> Descuentos
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/manillas.php">
+                                <i class="fas fa-ring me-2"></i> Manillas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/servicios_adicionales.php">
+                                <i class="fas fa-plus me-2"></i> Servicios adicionales
+                            </a>
+                        </li>
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1">
                             <span>Enlaces</span>
                         </h6>
@@ -544,7 +554,7 @@ $estadisticas = getEstadisticasReservas();
         new Chart(ctxMetodosPago, {
             type: 'bar',
             data: {
-                labels: ['Tarjeta de Crédito', 'Efectivo'],
+                labels: ['Tarjeta de Crédito', 'transferencia'],
                 datasets: [{
                     label: 'Cantidad de Reservas',
                     data: [estadisticas.metodo_tarjeta || 0, estadisticas.metodo_efectivo || 0],

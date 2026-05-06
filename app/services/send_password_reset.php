@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </html>";
         
         // Enviar el correo
-        $result = $gmailSender->sendEmail($to, $subject, $htmlContent);
+        $result = $gmailSender->sendEmail($to, $subject, $htmlContent, true, null, false); // false = sin CC a gerencia
         
         if ($result) {
             echo json_encode(['success' => true, 'message' => 'Correo enviado exitosamente']);

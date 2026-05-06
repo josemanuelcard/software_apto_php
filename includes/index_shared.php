@@ -2940,6 +2940,104 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         transform: none !important;
         box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3) !important;
     }
+    /* ── Día que es CHECK-OUT de reserva existente ──
+   Mañana ocupada (sale a las 11:00), tarde disponible para nuevo check-in (15:00)
+   Visual: triángulo rojo en esquina superior izquierda */
+    .calendar-day.day-checkout-available {
+        background: #ffffff !important;
+        cursor: pointer !important;
+        border-bottom: 1px solid #e1e5e9 !important;
+    }
+
+    .calendar-day.day-checkout-available::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 18px 18px 0 0;
+        border-color: #e57373 transparent transparent transparent;
+        z-index: 2;
+    }
+
+    .calendar-day.day-checkout-available:hover {
+        border-bottom: 1px solid #333 !important;
+    }
+
+    /* ── Día que es CHECK-IN de reserva existente ──
+       Mañana libre (puede recibir check-out hasta 11:00), tarde ocupada (entra a las 15:00)
+       Visual: triángulo rojo en esquina inferior derecha */
+    .calendar-day.day-checkin-only {
+        background: #ffffff !important;
+        cursor: pointer !important;
+        border-bottom: 1px solid #e1e5e9 !important;
+    }
+
+    .calendar-day.day-checkin-only::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 18px 18px;
+        border-color: transparent transparent #e57373 transparent;
+        z-index: 2;
+    }
+
+    .calendar-day.day-checkin-only:hover {
+        border-bottom: 1px solid #333 !important;
+    }
+
+    /* ── Día que es CHECK-OUT y CHECK-IN a la vez (reservas consecutivas) ──
+       Completamente ocupado todo el día
+       Visual: triángulo rojo en esquina superior izquierda Y inferior derecha */
+    .calendar-day.day-checkin-checkout {
+        background: #ffffff !important;
+        cursor: not-allowed !important;
+        opacity: 0.6;
+        border-bottom: 1px solid #e1e5e9 !important;
+    }
+
+    .calendar-day.day-checkin-checkout::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 18px 18px 0 0;
+        border-color: #e57373 transparent transparent transparent;
+        z-index: 2;
+    }
+
+    .calendar-day.day-checkin-checkout::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 18px 18px;
+        border-color: transparent transparent #e57373 transparent;
+        z-index: 2;
+    }
+
+    /* Asegurar que el número y precio queden por encima de los triángulos */
+    .calendar-day.day-checkout-available .day-number,
+    .calendar-day.day-checkout-available .day-price,
+    .calendar-day.day-checkin-only .day-number,
+    .calendar-day.day-checkin-only .day-price,
+    .calendar-day.day-checkin-checkout .day-number,
+    .calendar-day.day-checkin-checkout .day-price {
+        position: relative;
+        z-index: 3;
+    }
 
     .calendar-day.checkout {
         background: #E3F2FD !important;
@@ -3714,6 +3812,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             padding-bottom: 16px;
         }
     }
+
 
     /* Estilos para modal manual (fallback) */
     .modal {
@@ -5161,9 +5260,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     let currentDate = new Date();
     let selectedStartDate = null;
     let selectedEndDate = null;
-    let occupiedDates = <?php echo json_encode($occupied_dates); ?>;
-    let basePrice = <?php echo $base_price; ?>; // Precio base por noche en COP
-    let tarifasCache = {}; // Cache de tarifas por fecha
+    let occupiedDates  = <?php echo json_encode($occupied_dates); ?>;
+    let checkinDates   = <?php echo json_encode($checkin_dates ?? []); ?>;   // días de check-in de reservas existentes
+    let checkoutDates  = <?php echo json_encode($checkout_dates ?? []); ?>;  // días de check-out de reservas existentes
+    let basePrice      = <?php echo $base_price; ?>;let tarifasCache = {}; // Cache de tarifas por fecha
     let eventListenersSetup = false; // Flag para evitar configurar listeners múltiples veces
     let googleReviewsCache = [];
     let googleReviewsSlideIndex = 0;
@@ -5823,25 +5923,64 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 const dayDate = new Date(date);
                 dayDate.setHours(0, 0, 0, 0);
 
+                const isCheckin  = checkinDates.includes(dateString);
+                const isCheckout = checkoutDates.includes(dateString);
+
                 if (dayDate < today) {
-                    // Día pasado - estilo como other-month
+                    // Día pasado
                     dayElement.classList.add('other-month');
+                    dayElement.style.cursor = 'not-allowed';
                     dayElement.title = translations.calendar.past_day;
+
                 } else if (occupiedDates.includes(dateString)) {
-                    // Día ocupado (solo los que realmente tienen reserva en la BD)
+                    // Día intermedio de una reserva: completamente bloqueado
                     dayElement.classList.add('occupied');
                     dayElement.title = translations.calendar.not_available;
+
+                } else if (isCheckin && isCheckout) {
+                    // Mismo día es check-OUT de una reserva y check-IN de otra
+                    // Completamente ocupado: sale uno a las 11:00 y entra otro a las 15:00
+                    dayElement.classList.add('occupied');
+                    dayElement.classList.add('day-checkin-checkout');
+                    dayElement.title = 'Día completo ocupado: salida a las 11:00 y entrada a las 15:00';
+
+                } else if (isCheckout) {
+                    // Check-OUT de reserva existente: tarde libre para nuevo check-in (15:00)
+                    // Triángulo rojo esquina superior izquierda
+                    dayElement.classList.add('available');
+                    dayElement.classList.add('day-checkout-available');
+                    dayElement.title = 'Salida de huéspedes a las 11:00 — Disponible para check-in a las 15:00';
+                    dayElement.addEventListener('click', () => selectDate(date));
+
+                    const priceElement = document.createElement('div');
+                    priceElement.className = 'day-price';
+                    priceElement.textContent = formatearPrecioCOP(getTarifaPorFecha(dateString));
+                    priceElement.title = `${translations.calendar.price_per_night}: ${formatearPrecioCOP(getTarifaPorFecha(dateString))}`;
+                    dayElement.appendChild(priceElement);
+
+                } else if (isCheckin) {
+                    // Check-IN de reserva existente: mañana libre para check-out (hasta 11:00)
+                    // Triángulo rojo esquina inferior derecha
+                    dayElement.classList.add('available');
+                    dayElement.classList.add('day-checkin-only');
+                    dayElement.title = 'Disponible para check-out hasta las 11:00 — Ocupado desde las 15:00';
+                    dayElement.addEventListener('click', () => selectDate(date));
+
+                    const priceElement = document.createElement('div');
+                    priceElement.className = 'day-price';
+                    priceElement.textContent = formatearPrecioCOP(getTarifaPorFecha(dateString));
+                    priceElement.title = `${translations.calendar.price_per_night}: ${formatearPrecioCOP(getTarifaPorFecha(dateString))}`;
+                    dayElement.appendChild(priceElement);
+
                 } else {
-                    // Día disponible
+                    // Día completamente libre
                     dayElement.classList.add('available');
                     dayElement.addEventListener('click', () => selectDate(date));
 
-                    // Agregar precio formateado en pesos colombianos
-                    const precio = getTarifaPorFecha(dateString);
                     const priceElement = document.createElement('div');
                     priceElement.className = 'day-price';
-                    priceElement.textContent = formatearPrecioCOP(precio);
-                    priceElement.title = `${translations.calendar.price_per_night}: ${formatearPrecioCOP(precio)}`;
+                    priceElement.textContent = formatearPrecioCOP(getTarifaPorFecha(dateString));
+                    priceElement.title = `${translations.calendar.price_per_night}: ${formatearPrecioCOP(getTarifaPorFecha(dateString))}`;
                     dayElement.appendChild(priceElement);
                 }
 
@@ -5870,46 +6009,95 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     function selectDate(date) {
         const dateString = date.toISOString().split('T')[0];
 
-        // Verificar si el día tiene precio disponible
-        if (!tienePrecioDisponible(dateString)) {
-            showNoPriceError();
-            return;
-        }
+        const isExistingCheckin  = checkinDates.includes(dateString);
+        const isExistingCheckout = checkoutDates.includes(dateString);
 
         if (selectedStartDate === null) {
-            // Primera selección (check-in)
+            // ── Seleccionando CHECK-IN ──
+
+            // No se puede hacer check-in en un día que ya tiene check-in de otra reserva
+            // (ese día a las 15:00 ya estaría ocupado)
+            if (isExistingCheckin && !isExistingCheckout) {
+                showCheckinBlockedError(date);
+                return;
+            }
+
+            if (!tienePrecioDisponible(dateString)) {
+                showNoPriceError();
+                return;
+            }
+
             selectedStartDate = date;
             updateReservationSummary();
             updateSelectionStates();
 
         } else if (selectedEndDate === null) {
-            // Segunda selección (check-out)
+            // ── Seleccionando CHECK-OUT ──
+
             if (date <= selectedStartDate) {
-                // Si la fecha es anterior o igual, hacer nueva selección
+                // Fecha anterior o igual: reiniciar selección con este día como check-in
                 clearSelection();
+                if (isExistingCheckin && !isExistingCheckout) {
+                    showCheckinBlockedError(date);
+                    return;
+                }
+                if (!tienePrecioDisponible(dateString)) {
+                    showNoPriceError();
+                    return;
+                }
                 selectedStartDate = date;
                 updateReservationSummary();
                 updateSelectionStates();
-            } else {
-                // Validar que no haya días ocupados en el rango
-                if (validateDateRange(selectedStartDate, date)) {
-                    // Validar que todos los días del rango tengan precio
-                    if (validateDateRangePrice(selectedStartDate, date)) {
-                        selectedEndDate = date;
-                        updateReservationSummary();
-                        updateSelectionStates();
-                    } else {
-                        showNoPriceError();
-                    }
+                return;
+            }
+
+            // No se puede hacer check-out en un día que ya tiene check-out de otra reserva
+            // (ese día a las 11:00 ya estaría ocupado para salir)
+            if (isExistingCheckout && !isExistingCheckin) {
+                showCheckoutBlockedError(date);
+                return;
+            }
+
+            // Validar todo el rango
+            const rangeResult = validateDateRange(selectedStartDate, date);
+
+            if (rangeResult !== true) {
+                // Mostrar error específico según el tipo de conflicto
+                if (rangeResult.error === 'checkin_blocked') {
+                    showCheckinBlockedError(rangeResult.date);
+                } else if (rangeResult.error === 'checkout_blocked') {
+                    showCheckoutBlockedError(rangeResult.date);
+                } else if (rangeResult.error === 'overlap') {
+                    showOverlapError(rangeResult.date);
                 } else {
                     showRangeError();
                 }
+                return;
             }
+
+            // Validar precios en el rango
+            if (!validateDateRangePrice(selectedStartDate, date)) {
+                showNoPriceError();
+                return;
+            }
+
+            selectedEndDate = date;
+            updateReservationSummary();
+            updateSelectionStates();
+
         } else {
-            // Nueva selección
+            // Ya había check-in y check-out: reiniciar con este día como nuevo check-in
             clearSelection();
+            if (isExistingCheckin && !isExistingCheckout) {
+                showCheckinBlockedError(date);
+                return;
+            }
+            if (!tienePrecioDisponible(dateString)) {
+                showNoPriceError();
+                return;
+            }
             selectedStartDate = date;
-            selectedEndDate = null;
+            selectedEndDate   = null;
             updateReservationSummary();
             updateSelectionStates();
         }
@@ -5924,18 +6112,49 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
 
     // Validar rango de fechas
+    // Retorna: true si válido, o un objeto { error, date } si hay conflicto
     function validateDateRange(startDate, endDate) {
         const start = new Date(startDate);
-        const end = new Date(endDate);
+        const end   = new Date(endDate);
 
-        // Verificar cada día en el rango
-        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-            const dateString = d.toISOString().split('T')[0];
-            if (occupiedDates.includes(dateString)) {
-                return false;
-            }
+        const startStr = start.toISOString().split('T')[0];
+        const endStr   = end.toISOString().split('T')[0];
+
+        // 1. El check-in elegido no puede ser un día que ya tiene check-in de otra reserva
+        //    (a las 15:00 ya habría alguien entrando)
+        if (checkinDates.includes(startStr) && !checkoutDates.includes(startStr)) {
+            return { error: 'checkin_blocked', date: start };
         }
-        return true;
+
+        // 2. El check-out elegido no puede ser un día que ya tiene check-out de otra reserva
+        //    (a las 11:00 ya habría alguien saliendo)
+        if (checkoutDates.includes(endStr) && !checkinDates.includes(endStr)) {
+            return { error: 'checkout_blocked', date: end };
+        }
+
+        // 3. Verificar que ningún día INTERMEDIO esté bloqueado
+        //    ni sea check-in o check-out de otra reserva
+        //    (un día intermedio con checkin/checkout ajeno significa solapamiento total)
+        const current = new Date(start);
+        current.setDate(current.getDate() + 1); // empezar desde el día siguiente al check-in
+
+        while (current < end) { // < excluye el día de check-out
+            const dateString = current.toISOString().split('T')[0];
+
+            if (occupiedDates.includes(dateString)) {
+                return { error: 'occupied', date: new Date(current) };
+            }
+
+            // Si un día intermedio es check-in o check-out de otra reserva,
+            // significa que hay una reserva que empieza o termina en medio del rango
+            if (checkinDates.includes(dateString) || checkoutDates.includes(dateString)) {
+                return { error: 'overlap', date: new Date(current) };
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
+        return true; // sin conflictos
     }
 
     // Validar que todos los días del rango tengan precio disponible
@@ -6008,6 +6227,48 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
             }
         }
+    }
+
+    function showCheckinBlockedError(date) {
+        const fechaFormateada = formatearFecha(date);
+        const modalElement = document.getElementById('rangeErrorModal');
+        const title = modalElement.querySelector('.modal-title');
+        const msg   = modalElement.querySelector('#rangeErrorModal h6');
+        const exp   = modalElement.querySelector('#rangeErrorModal p');
+
+        if (title) title.textContent = '⚠️ Día no disponible para check-in';
+        if (msg)   msg.textContent   = `El ${fechaFormateada} ya tiene huéspedes entrando a las 15:00.`;
+        if (exp)   exp.textContent   = 'Puedes elegirlo como fecha de salida (check-out hasta las 11:00).';
+
+        showRangeError();
+    }
+
+    function showCheckoutBlockedError(date) {
+        const fechaFormateada = formatearFecha(date);
+        const modalElement = document.getElementById('rangeErrorModal');
+        const title = modalElement.querySelector('.modal-title');
+        const msg   = modalElement.querySelector('#rangeErrorModal h6');
+        const exp   = modalElement.querySelector('#rangeErrorModal p');
+
+        if (title) title.textContent = '⚠️ Día no disponible para check-out';
+        if (msg)   msg.textContent   = `El ${fechaFormateada} ya tiene huéspedes saliendo a las 11:00.`;
+        if (exp)   exp.textContent   = 'Puedes elegirlo como fecha de entrada (check-in desde las 15:00).';
+
+        showRangeError();
+    }
+
+    function showOverlapError(date) {
+        const fechaFormateada = formatearFecha(date);
+        const modalElement = document.getElementById('rangeErrorModal');
+        const title = modalElement.querySelector('.modal-title');
+        const msg   = modalElement.querySelector('#rangeErrorModal h6');
+        const exp   = modalElement.querySelector('#rangeErrorModal p');
+
+        if (title) title.textContent = '⚠️ Rango no disponible';
+        if (msg)   msg.textContent   = `El ${fechaFormateada} está ocupado por otra reserva.`;
+        if (exp)   exp.textContent   = 'Por favor elige un rango de fechas que no cruce con reservas existentes.';
+
+        showRangeError();
     }
 
     // Mostrar error de rango

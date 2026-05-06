@@ -7,120 +7,285 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
+ * Obtener URLs iCal configuradas por apartamento.
+ */
+function getIcalFeedUrls($apartamento_id = 1) {
+    $configPath = __DIR__ . '/../config/ical_feeds.php';
+
+    if (!file_exists($configPath)) {
+        return [];
+    }
+
+    $config = require $configPath;
+    if (!is_array($config)) {
+        return [];
+    }
+
+    $feeds = $config[$apartamento_id] ?? $config[(string)$apartamento_id] ?? [];
+    if (!is_array($feeds)) {
+        return [];
+    }
+
+    return array_values(array_filter($feeds, function ($url) {
+        return is_string($url) && filter_var($url, FILTER_VALIDATE_URL);
+    }));
+}
+
+/**
+ * Obtener fechas ocupadas desde feeds iCal externos (Airbnb/Booking).
+ */
+function getFechasOcupadasIcal($apartamento_id = 1, $fechaInicio = null, $fechaFin = null) {
+    $feedUrls = getIcalFeedUrls($apartamento_id);
+    if (empty($feedUrls)) {
+        return [];
+    }
+
+    require_once __DIR__ . '/CalendarIntegrator.php';
+
+    $integrator = new CalendarIntegrator();
+    $occupiedDates = [];
+
+    $fechaInicioStr = $fechaInicio instanceof DateTimeInterface ? $fechaInicio->format('Y-m-d') : null;
+    $fechaFinStr = $fechaFin instanceof DateTimeInterface ? $fechaFin->format('Y-m-d') : null;
+
+    foreach ($feedUrls as $url) {
+        try {
+            $icalContent = $integrator->fetchIcalUrl($url);
+            if (!$icalContent) {
+                continue;
+            }
+
+            $events = $integrator->parseIcalData($icalContent);
+            $dates = $integrator->getOccupiedDates($events);
+
+            if ($fechaInicioStr || $fechaFinStr) {
+                $dates = array_values(array_filter($dates, function ($date) use ($fechaInicioStr, $fechaFinStr) {
+                    if ($fechaInicioStr && $date < $fechaInicioStr) {
+                        return false;
+                    }
+                    if ($fechaFinStr && $date > $fechaFinStr) {
+                        return false;
+                    }
+                    return true;
+                }));
+            }
+
+            $occupiedDates = array_merge($occupiedDates, $dates);
+        } catch (Exception $e) {
+            error_log('Error al procesar feed iCal (' . $url . '): ' . $e->getMessage());
+        }
+    }
+
+    $occupiedDates = array_unique($occupiedDates);
+    sort($occupiedDates);
+
+    return $occupiedDates;
+}
+
+/**
  * Obtener fechas ocupadas para el calendario (reservas + fechas bloqueadas)
+ *
+ * REGLA check-in 15:00 / check-out 11:00:
+ * Solo se bloquean los días INTERMEDIOS de cada reserva.
+ * Ni el día de check-in ni el de check-out se bloquean,
+ * porque ambos pueden ser el extremo opuesto de otra reserva.
+ *
+ * Ejemplo:
+ *   Reserva A: 10 mayo → 13 mayo
+ *   Bloquea: 11, 12
+ *   Libre: 10 ← puede ser check-OUT de Reserva C (7→10)
+ *   Libre: 13 ← puede ser check-IN  de Reserva B (13→15)
  */
 function getFechasOcupadas($apartamento_id = 1) {
     $database = new Database();
     $db = $database->getConnection();
-    
-    // Si no hay conexión, retornar array vacío
+
     if (!$db) {
         return [];
     }
-    
+
     try {
         $fechas_ocupadas = [];
-        
-        // 1. Obtener fechas de reservas aprobadas, abonadas y pagadas
-        // Usar DATE_FORMAT para forzar formato string y evitar problemas de zona horaria
+
+        // 1. Reservas aprobadas / abonadas
         $query_reservas = "
-            SELECT DISTINCT 
-                DATE_FORMAT(fecha_entrada, '%Y-%m-%d') as fecha_entrada, 
-                DATE_FORMAT(fecha_salida, '%Y-%m-%d') as fecha_salida 
-            FROM reservas 
-            WHERE id_apartamento = :apartamento_id 
-            AND (
-                estado = 'aprobada' OR 
-                estado = 'abonada' OR
-                (estado = 'aprobada' AND estado_pago = 'pagada')
-            )
-            AND fecha_salida >= CURDATE()
+            SELECT DISTINCT
+                DATE_FORMAT(fecha_entrada, '%Y-%m-%d') as fecha_entrada,
+                DATE_FORMAT(fecha_salida,  '%Y-%m-%d') as fecha_salida
+            FROM reservas
+            WHERE id_apartamento = :apartamento_id
+              AND (estado = 'aprobada' OR estado = 'abonada')
+              AND fecha_salida >= CURDATE()
         ";
-        
+
         $stmt = $db->prepare($query_reservas);
         $stmt->bindParam(':apartamento_id', $apartamento_id);
         $stmt->execute();
-        
+
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // Las fechas vienen como strings 'Y-m-d' desde MySQL
             $fecha_entrada_str = trim($row['fecha_entrada']);
-            $fecha_salida_str = trim($row['fecha_salida']);
-            
-            // Validar formato de fecha
-            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $fecha_entrada_str, $match_entrada) || 
-                !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $fecha_salida_str, $match_salida)) {
+            $fecha_salida_str  = trim($row['fecha_salida']);
+
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_entrada_str) ||
+                !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_salida_str)) {
                 error_log("Formato de fecha inválido en getFechasOcupadas: entrada=$fecha_entrada_str, salida=$fecha_salida_str");
                 continue;
             }
-            
-            // Extraer año, mes y día directamente del string para evitar cualquier conversión
-            $ano_entrada = (int)$match_entrada[1];
-            $mes_entrada = (int)$match_entrada[2];
-            $dia_entrada = (int)$match_entrada[3];
-            
-            $ano_salida = (int)$match_salida[1];
-            $mes_salida = (int)$match_salida[2];
-            $dia_salida = (int)$match_salida[3];
-            
-            // Generar fechas ocupadas trabajando directamente con los componentes de fecha
-            // Para reserva del 20 al 24, se marcan ocupados: 20, 21, 22, 23 (el 24 es día de salida, no ocupado)
-            $current_ano = $ano_entrada;
-            $current_mes = $mes_entrada;
-            $current_dia = $dia_entrada;
-            
-            // Mientras la fecha actual sea menor que la fecha de salida
-            while ($current_ano < $ano_salida || 
-                   ($current_ano == $ano_salida && $current_mes < $mes_salida) || 
-                   ($current_ano == $ano_salida && $current_mes == $mes_salida && $current_dia < $dia_salida)) {
-                
-                // Formatear fecha actual
-                $fecha_actual = sprintf('%04d-%02d-%02d', $current_ano, $current_mes, $current_dia);
-                $fechas_ocupadas[] = $fecha_actual;
-                
-                // Avanzar un día
-                $current_dia++;
-                $dias_en_mes = cal_days_in_month(CAL_GREGORIAN, $current_mes, $current_ano);
-                if ($current_dia > $dias_en_mes) {
-                    $current_dia = 1;
-                    $current_mes++;
-                    if ($current_mes > 12) {
-                        $current_mes = 1;
-                        $current_ano++;
-                    }
-                }
+
+            // Empezar desde el día SIGUIENTE al check-in
+            $current = new DateTime($fecha_entrada_str);
+            $current->modify('+1 day');
+
+            // Terminar en el día ANTERIOR al check-out (< exclusivo)
+            $end = new DateTime($fecha_salida_str);
+
+            // Solo días intermedios: ni check-in ni check-out se bloquean
+            while ($current < $end) {
+                $fechas_ocupadas[] = $current->format('Y-m-d');
+                $current->modify('+1 day');
             }
         }
-        
-        // 2. Obtener fechas bloqueadas manualmente
+
+        // 2. Fechas bloqueadas manualmente (bloqueo total, ambos extremos incluidos)
         $query_bloqueadas = "
-            SELECT fecha_inicio, fecha_fin 
-            FROM fechas_bloqueadas 
+            SELECT fecha_inicio, fecha_fin
+            FROM fechas_bloqueadas
             WHERE activo = 1
-            AND fecha_fin >= CURDATE()
+              AND fecha_fin >= CURDATE()
         ";
-        
+
         $stmt = $db->prepare($query_bloqueadas);
         $stmt->execute();
-        
+
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $inicio = new DateTime($row['fecha_inicio']);
-            $fin = new DateTime($row['fecha_fin']);
-            
-            while ($inicio <= $fin) {
+            $fin    = new DateTime($row['fecha_fin']);
+            $fin->modify('+1 day'); // inclusivo en ambos extremos
+
+            while ($inicio < $fin) {
                 $fechas_ocupadas[] = $inicio->format('Y-m-d');
-                $inicio->add(new DateInterval('P1D'));
+                $inicio->modify('+1 day');
             }
         }
-        
-        // Eliminar duplicados y ordenar
+
+        // 3. iCal externo (Airbnb / Booking)
+        $fechas_ocupadas = array_merge(
+            $fechas_ocupadas,
+            getFechasOcupadasIcal($apartamento_id)
+        );
+
         $fechas_ocupadas = array_unique($fechas_ocupadas);
         sort($fechas_ocupadas);
-        
+
         return $fechas_ocupadas;
+
     } catch (Exception $e) {
-        // Si hay error, retornar array vacío
         error_log("Error en getFechasOcupadas: " . $e->getMessage());
         return [];
+    }
+}
+
+/**
+ * Obtener días de check-in y check-out de reservas existentes.
+ * Sirve para mostrarlos en el calendario con estilo diferente:
+ * - checkoutDates: día libre por la mañana (salida 11:00), disponible para nuevo check-in (15:00)
+ * - checkinDates:  día libre por la mañana si viene de otro check-out, ocupado desde las 15:00
+ *
+ * Un mismo día puede estar en AMBOS arrays si es check-out de una reserva
+ * y check-in de otra (reservas consecutivas).
+ */
+function getCheckinCheckoutDates($apartamento_id = 1) {
+    $database = new Database();
+    $db = $database->getConnection();
+
+    if (!$db) {
+        return ['checkin' => [], 'checkout' => []];
+    }
+
+    try {
+        $query = "
+            SELECT DISTINCT
+                DATE_FORMAT(fecha_entrada, '%Y-%m-%d') as fecha_entrada,
+                DATE_FORMAT(fecha_salida,  '%Y-%m-%d') as fecha_salida
+            FROM reservas
+            WHERE id_apartamento = :apartamento_id
+              AND (estado = 'aprobada' OR estado = 'abonada')
+              AND fecha_salida >= CURDATE()
+        ";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':apartamento_id', $apartamento_id);
+        $stmt->execute();
+
+        $checkin_dates  = [];
+        $checkout_dates = [];
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $checkin_dates[]  = trim($row['fecha_entrada']);
+            $checkout_dates[] = trim($row['fecha_salida']);
+        }
+
+        return [
+            'checkin'  => array_values(array_unique($checkin_dates)),
+            'checkout' => array_values(array_unique($checkout_dates)),
+        ];
+
+    } catch (Exception $e) {
+        error_log("Error en getCheckinCheckoutDates: " . $e->getMessage());
+        return ['checkin' => [], 'checkout' => []];
+    }
+}
+
+/**
+ * Verificar si un rango está disponible en la base de datos.
+ *
+ * Dos reservas se SOLAPAN si:
+ *   existing.fecha_entrada < nueva.fecha_salida
+ *   AND existing.fecha_salida > nueva.fecha_entrada
+ *
+ * Si nueva_entrada == existing_salida (mismo día, check-in = check-out anterior)
+ * la condición fecha_salida > nueva_entrada es FALSA → no hay solapamiento. ✅
+ *
+ * @param string   $fecha_entrada_nueva  'Y-m-d'
+ * @param string   $fecha_salida_nueva   'Y-m-d'
+ * @param int      $apartamento_id
+ * @param int|null $excluir_reserva_id   Para ediciones: ignorar la propia reserva
+ * @return bool    true = disponible, false = ocupado
+ */
+function isRangoDisponible($fecha_entrada_nueva, $fecha_salida_nueva, $apartamento_id = 1, $excluir_reserva_id = null) {
+    $database = new Database();
+    $db = $database->getConnection();
+    if (!$db) return false;
+
+    try {
+        $sql = "
+            SELECT COUNT(*)
+            FROM reservas
+            WHERE id_apartamento = :apartamento_id
+              AND estado IN ('aprobada', 'abonada', 'pendiente')
+              AND fecha_entrada < :fecha_salida_nueva
+              AND fecha_salida  > :fecha_entrada_nueva
+        ";
+
+        $params = [
+            ':apartamento_id'      => $apartamento_id,
+            ':fecha_entrada_nueva' => $fecha_entrada_nueva,
+            ':fecha_salida_nueva'  => $fecha_salida_nueva,
+        ];
+
+        if ($excluir_reserva_id) {
+            $sql .= " AND id_reserva != :excluir_id";
+            $params[':excluir_id'] = $excluir_reserva_id;
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        return (int)$stmt->fetchColumn() === 0;
+
+    } catch (Exception $e) {
+        error_log("Error en isRangoDisponible: " . $e->getMessage());
+        return false;
     }
 }
 
@@ -251,16 +416,21 @@ function guardarReserva($datos) {
         
         // Log para debugging (remover en producción si es necesario)
         error_log("Guardando reserva con fechas - entrada: $fecha_entrada, salida: $fecha_salida");
+        // Validar disponibilidad real antes de insertar
+        $id_apartamento_check = isset($datos['id_apartamento']) ? (int)$datos['id_apartamento'] : 1;
+        if (!isRangoDisponible($fecha_entrada, $fecha_salida, $id_apartamento_check)) {
+            error_log("Rango no disponible al guardar reserva: $fecha_entrada → $fecha_salida");
+            if ($db->inTransaction()) {
+                $db->rollback();
+            }
+            return 'rango_no_disponible'; // string para distinguirlo de false genérico
+        }
         $num_adultos = (int)$datos['num_adultos'];
         $num_ninos = isset($datos['num_ninos']) ? (int)$datos['num_ninos'] : 0;
         $vive_palmira = isset($datos['vive_palmira']) && $datos['vive_palmira'] ? 1 : 0;
         // Validar y normalizar metodo_pago
         $metodo_pago = isset($datos['metodo_pago']) ? trim(strtolower($datos['metodo_pago'])) : 'tarjeta_credito';
-        // Mapear 'transferencia' a 'efectivo' para compatibilidad con la base de datos
-        if ($metodo_pago === 'transferencia') {
-            $metodo_pago = 'efectivo';
-        }
-        if (!in_array($metodo_pago, ['efectivo', 'tarjeta_credito'])) {
+        if (!in_array($metodo_pago, ['transferencia', 'tarjeta_credito'])) {
             error_log("Warning: metodo_pago inválido: '$metodo_pago', usando 'tarjeta_credito' por defecto");
             $metodo_pago = 'tarjeta_credito';
         }
@@ -437,7 +607,7 @@ function getEstadisticasReservas() {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['metodo_tarjeta'] = (int)$result['total'];
         
-        $query_efectivo = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'efectivo'";
+        $query_efectivo = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'transferencia'";
         $stmt = $db->prepare($query_efectivo);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);

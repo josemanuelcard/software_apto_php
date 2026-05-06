@@ -361,6 +361,16 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="/admin/manillas.php">
+                                <i class="fas fa-ring me-2"></i> Manillas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/servicios_adicionales.php">
+                                <i class="fas fa-plus me-2"></i> Servicios adicionales
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="descuentos.php">
                                 <i class="fas fa-percentage me-2"></i> Descuentos
                             </a>

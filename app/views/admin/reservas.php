@@ -45,7 +45,7 @@ require_once $functions_path;
 require_once $gmail_sender_path;
 
 /**
- * Enviar email de aprobación al cliente
+ * Enviar email de aprobación al cliente usando plantillas nuevas
  */
 function enviarEmailAprobacion($reserva) {
     try {
@@ -54,13 +54,24 @@ function enviarEmailAprobacion($reserva) {
             return false;
         }
         $emailSender = new GmailSender();
-        return $emailSender->sendReservaAprobada($reserva);
+        
+        // Determinar el método de pago y usar la plantilla correspondiente
+        $metodo_pago = strtolower(trim($reserva['metodo_pago'] ?? 'transferencia'));
+        
+        // Usar plantilla correspondiente según método de pago
+        // El parámetro false asegura que NO se envíe CC a gerencia en el correo del cliente
+        if ($metodo_pago === 'tarjeta' || $metodo_pago === 'card' || $metodo_pago === 'tarjeta_credito') {
+            return $emailSender->sendReservaAprobadaTarjeta20($reserva, false);
+        } else {
+            // Por defecto transferencia/efectivo
+            return $emailSender->sendReservaAprobadaTransferencia20($reserva, false);
+        }
     } catch (Exception $e) {
-        error_log("Error enviando email: " . $e->getMessage());
+        error_log("Error enviando email de aprobación: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
         return false;
     } catch (Error $e) {
-        error_log("Error fatal enviando email: " . $e->getMessage());
+        error_log("Error fatal enviando email de aprobación: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
         return false;
     }
@@ -675,6 +686,16 @@ try {
                         <li class="nav-item">
                             <a class="nav-link" href="descuentos.php">
                                 <i class="fas fa-percentage me-2"></i> Descuentos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/manillas.php">
+                                <i class="fas fa-ring me-2"></i> Manillas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/servicios_adicionales.php">
+                                <i class="fas fa-plus me-2"></i> Servicios adicionales
                             </a>
                         </li>
                         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1">

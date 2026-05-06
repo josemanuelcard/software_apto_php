@@ -285,6 +285,16 @@ if ($pdo) {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="/admin/manillas.php">
+                                <i class="fas fa-ring me-2"></i> Manillas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/servicios_adicionales.php">
+                                <i class="fas fa-plus me-2"></i> Servicios adicionales
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link active" href="descuentos.php">
                                 <i class="fas fa-percentage me-2"></i> Descuentos
                             </a>
@@ -337,7 +347,7 @@ if ($pdo) {
                                                             $nombres = [
                                                                 'fidelidad' => 'Descuento por Fidelidad',
                                                                 'cumpleanos' => 'Descuento por Cumpleaños',
-                                                                'promocional' => 'Descuento por Pago en Efectivo'
+                                                                'promocional' => 'Descuento por Pago por Transferencia'
                                                             ];
                                                             $tipo = isset($descuento['tipo_descuento']) ? $descuento['tipo_descuento'] : 'promocional';
                                                             echo isset($nombres[$tipo]) ? $nombres[$tipo] : 'Descuento';
@@ -396,8 +406,8 @@ if ($pdo) {
                                                                 <strong>Ejemplo:</strong> Si el total es $300,000 y el descuento es 30%, se aplicarán $90,000 de descuento.
                                                             </div>
                                                         <?php else: ?>
-                                                            <p class="mb-2"><strong>Descuento por Pago en Efectivo:</strong></p>
-                                                            <p class="text-muted small">Se aplica automáticamente cuando el cliente selecciona "Efectivo" como método de pago. Este descuento se suma al total de la reserva.</p>
+                                                            <p class="mb-2"><strong>Descuento por Pago por Transferencia:</strong></p>
+                                                            <p class="text-muted small">Se aplica automáticamente cuando el cliente selecciona "Transferencia" como método de pago. Este descuento se suma al total de la reserva.</p>
                                                             <div class="alert alert-primary small">
                                                                 <i class="fas fa-lightbulb me-1"></i>
                                                                 <strong>Ejemplo:</strong> Si el total es $300,000 y el descuento es 3%, se aplicarán $9,000 de descuento.
@@ -480,7 +490,7 @@ if ($pdo) {
                                         <div class="col-4">
                                             <div class="border rounded p-2">
                                                 <h5 class="text-primary mb-0"><?php echo $promocional ? $promocional['porcentaje'] : '0'; ?>%</h5>
-                                                <small class="text-muted">Efectivo</small>
+                                                <small class="text-muted">Transferencia</small>
                                             </div>
                                         </div>
                                     </div>
