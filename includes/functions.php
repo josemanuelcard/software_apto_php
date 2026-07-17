@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/GmailSender.php';
 
 /**
  * Obtener URLs iCal configuradas por apartamento.
@@ -168,11 +169,6 @@ function getFechasOcupadas($apartamento_id = 1) {
             }
         }
 
-        // 3. iCal externo (Airbnb / Booking)
-        $fechas_ocupadas = array_merge(
-            $fechas_ocupadas,
-            getFechasOcupadasIcal($apartamento_id)
-        );
 
         $fechas_ocupadas = array_unique($fechas_ocupadas);
         sort($fechas_ocupadas);
@@ -295,12 +291,12 @@ function isRangoDisponible($fecha_entrada_nueva, $fecha_salida_nueva, $apartamen
 function getTarifaPorFecha($fecha, $apartamento_id = 1) {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     // Si no hay conexión, retornar precio base
     if (!$db) {
         return 200000;
     }
-    
+
     try {
         $query = "
             SELECT precio 
@@ -308,12 +304,12 @@ function getTarifaPorFecha($fecha, $apartamento_id = 1) {
             WHERE id_apartamento = :apartamento_id 
             AND fecha = :fecha
         ";
-        
+
         $stmt = $db->prepare($query);
         $stmt->bindParam(':apartamento_id', $apartamento_id);
         $stmt->bindParam(':fecha', $fecha);
         $stmt->execute();
-        
+
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['precio'] : 200000;
     } catch (Exception $e) {
@@ -335,20 +331,20 @@ function guardarReserva($datos) {
             return false;
         }
     }
-    
+
     // Crear conexión a la base de datos
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if (!$db) {
         error_log("Error: No se pudo conectar a la base de datos en guardarReserva");
         return false;
     }
-    
+
     try {
         // Iniciar transacción
         $db->beginTransaction();
-        
+
         // Preparar query de inserción
         $query = "INSERT INTO reservas (
             id_apartamento, 
@@ -391,9 +387,9 @@ function guardarReserva($datos) {
             :total, 
             'pendiente'
         )";
-        
+
         $stmt = $db->prepare($query);
-        
+
         // Bind de parámetros
         $id_apartamento = isset($datos['id_apartamento']) ? (int)$datos['id_apartamento'] : 1;
         $id_usuario = isset($datos['id_usuario']) && !empty($datos['id_usuario']) ? (int)$datos['id_usuario'] : null;
@@ -402,18 +398,18 @@ function guardarReserva($datos) {
         $correo = trim($datos['correo']);
         $telefono = trim($datos['telefono']);
         $fecha_nacimiento = isset($datos['fecha_nacimiento']) && !empty($datos['fecha_nacimiento']) ? $datos['fecha_nacimiento'] : null;
-        
+
         // Validar y normalizar fechas para evitar problemas de zona horaria
         $fecha_entrada = trim($datos['fecha_entrada']);
         $fecha_salida = trim($datos['fecha_salida']);
-        
+
         // Validar formato de fecha (debe ser Y-m-d)
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_entrada) || 
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_entrada) ||
             !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_salida)) {
             error_log("Error: Formato de fecha inválido en guardarReserva - entrada: '$fecha_entrada', salida: '$fecha_salida'");
             throw new Exception("Formato de fecha inválido");
         }
-        
+
         // Log para debugging (remover en producción si es necesario)
         error_log("Guardando reserva con fechas - entrada: $fecha_entrada, salida: $fecha_salida");
         // Validar disponibilidad real antes de insertar
@@ -439,7 +435,7 @@ function guardarReserva($datos) {
         $descuento_cumpleanios = isset($datos['descuento_cumpleanios']) ? (float)$datos['descuento_cumpleanios'] : 0;
         $descuento_promocional = isset($datos['descuento_promocional']) ? (float)$datos['descuento_promocional'] : 0;
         $total = (float)$datos['total'];
-        
+
         $stmt->bindParam(':id_apartamento', $id_apartamento, PDO::PARAM_INT);
         $stmt->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
         $stmt->bindParam(':nombre', $nombre, PDO::PARAM_STR);
@@ -458,25 +454,47 @@ function guardarReserva($datos) {
         $stmt->bindParam(':descuento_cumpleanios', $descuento_cumpleanios, PDO::PARAM_STR);
         $stmt->bindParam(':descuento_promocional', $descuento_promocional, PDO::PARAM_STR);
         $stmt->bindParam(':total', $total, PDO::PARAM_STR);
-        
+
         // Ejecutar inserción
         $stmt->execute();
-        
+
         // Obtener ID de la reserva insertada
         $reserva_id = $db->lastInsertId();
-        
+
         // Confirmar transacción
         $db->commit();
-        
+
+        // Notificar a gerencia que existe una reserva pendiente por aprobar
+        try {
+            if (class_exists('GmailSender')) {
+                $reserva_para_email = $datos;
+                $reserva_para_email['id_reserva'] = $reserva_id;
+                $reserva_para_email['num_adultos'] = $num_adultos;
+                $reserva_para_email['num_ninos'] = $num_ninos;
+                $reserva_para_email['vive_palmira'] = $vive_palmira;
+                $reserva_para_email['metodo_pago'] = $metodo_pago;
+                $reserva_para_email['costo_base'] = $costo_base;
+                $reserva_para_email['descuento_fidelizacion'] = $descuento_fidelizacion;
+                $reserva_para_email['descuento_cumpleanios'] = $descuento_cumpleanios;
+                $reserva_para_email['descuento_promocional'] = $descuento_promocional;
+                $reserva_para_email['total'] = $total;
+
+                $gmailSender = new GmailSender();
+                $gmailSender->sendReservaPendienteGerencia($reserva_para_email);
+            }
+        } catch (Throwable $emailError) {
+            error_log("Error al enviar correo de reserva pendiente a gerencia (no crítico): " . $emailError->getMessage());
+        }
+
         // Intentar enviar email (no crítico, no debe fallar la reserva si falla el email)
         try {
             enviarEmailConfirmacion($datos, $reserva_id);
         } catch (Exception $emailError) {
             error_log("Error al enviar email de confirmación (no crítico): " . $emailError->getMessage());
         }
-        
+
         return $reserva_id;
-        
+
     } catch (PDOException $e) {
         // Rollback en caso de error
         if ($db->inTransaction()) {
@@ -500,7 +518,7 @@ function guardarReserva($datos) {
  */
 function enviarEmailConfirmacion($datos, $reserva_id) {
     $asunto = "Nueva Solicitud de Reserva #$reserva_id - My Suite In Cartagena";
-    
+
     $mensaje = "
     <h2>Nueva Solicitud de Reserva</h2>
     <p><strong>ID de Reserva:</strong> #$reserva_id</p>
@@ -528,11 +546,11 @@ function enviarEmailConfirmacion($datos, $reserva_id) {
     
     <p>Por favor, revisa esta solicitud en el panel de administración.</p>
     ";
-    
+
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     $headers .= "From: noreply@mysuitecartagena.com" . "\r\n";
-    
+
     // Para desarrollo, solo log
     error_log("Email de reserva #$reserva_id: " . $mensaje);
 }
@@ -543,7 +561,7 @@ function enviarEmailConfirmacion($datos, $reserva_id) {
 function getEstadisticasReservas() {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if (!$db) {
         return [
             'total_reservas' => 0,
@@ -554,65 +572,65 @@ function getEstadisticasReservas() {
             'ingresos_totales' => 0
         ];
     }
-    
+
     try {
         $estadisticas = [];
-        
+
         // Total de reservas
         $query_total = "SELECT COUNT(*) as total FROM reservas";
         $stmt = $db->prepare($query_total);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['total_reservas'] = (int)$result['total'];
-        
+
         // Reservas pendientes
         $query_pendientes = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'pendiente'";
         $stmt = $db->prepare($query_pendientes);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['reservas_pendientes'] = (int)$result['total'];
-        
+
         // Reservas aprobadas
         $query_aprobadas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'aprobada'";
         $stmt = $db->prepare($query_aprobadas);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['reservas_aprobadas'] = (int)$result['total'];
-        
+
         // Reservas rechazadas
         $query_rechazadas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'rechazada'";
         $stmt = $db->prepare($query_rechazadas);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['reservas_rechazadas'] = (int)$result['total'];
-        
+
         // Reservas canceladas
         $query_canceladas = "SELECT COUNT(*) as total FROM reservas WHERE estado = 'cancelada'";
         $stmt = $db->prepare($query_canceladas);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['reservas_canceladas'] = (int)$result['total'];
-        
+
         // Ingresos totales (solo reservas aprobadas)
         $query_ingresos = "SELECT SUM(total) as ingresos FROM reservas WHERE estado = 'aprobada'";
         $stmt = $db->prepare($query_ingresos);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['ingresos_totales'] = (float)($result['ingresos'] ?? 0);
-        
+
         // Métodos de pago
         $query_tarjeta = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'tarjeta_credito'";
         $stmt = $db->prepare($query_tarjeta);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['metodo_tarjeta'] = (int)$result['total'];
-        
+
         $query_efectivo = "SELECT COUNT(*) as total FROM reservas WHERE metodo_pago = 'transferencia'";
         $stmt = $db->prepare($query_efectivo);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $estadisticas['metodo_efectivo'] = (int)$result['total'];
-        
+
         return $estadisticas;
     } catch (Exception $e) {
         error_log("Error en getEstadisticasReservas: " . $e->getMessage());
@@ -633,11 +651,11 @@ function getEstadisticasReservas() {
 function getReservasRecientes($limite = 10) {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if (!$db) {
         return [];
     }
-    
+
     try {
         $query = "
             SELECT r.*, a.nombre as apartamento_nombre 
@@ -646,11 +664,11 @@ function getReservasRecientes($limite = 10) {
             ORDER BY r.creado_en DESC 
             LIMIT :limite
         ";
-        
+
         $stmt = $db->prepare($query);
         $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
         $stmt->execute();
-        
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         error_log("Error en getReservasRecientes: " . $e->getMessage());

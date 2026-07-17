@@ -815,15 +815,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     <div class="modal-dialog">
         <div class="modal-content" style="background-color: #ffffff; border: none; border-radius: 0; box-shadow: none; font-family: 'Oxygen', sans-serif;">
             <div class="modal-header" style="background: #ffffff; border: none; border-bottom: 1px solid #e1e5e9; border-radius: 0; padding: 30px 40px 20px 40px;">
-                <h5 class="modal-title" id="rangeErrorModalLabel" style="font-family: 'Oxygen', sans-serif; font-size: 1.5rem; font-weight: 400; color: #333; margin: 0;">⚠️ <?php echo __('modal.range_error_title'); ?></h5>
+                <h5 class="modal-title" id="rangeErrorModalLabel" style="font-family: 'Oxygen', sans-serif; font-size: 1.5rem; font-weight: 400; color: #333; margin: 0;" data-default="⚠️ <?php echo __('modal.range_error_title'); ?>">⚠️ <?php echo __('modal.range_error_title'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background: transparent; border: none; border-bottom: 1px solid #e1e5e9; color: #333; font-size: 1.5rem; padding: 0; width: auto; height: auto; opacity: 1;"></button>
             </div>
             <div class="modal-body" style="padding: 30px 40px; background: #ffffff;">
                 <div class="text-center">
                     <div style="font-size: 3rem; margin-bottom: 1.5rem;">⚠️</div>
-                    <h6 style="font-family: 'Oxygen', sans-serif; font-size: 1.25rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_message'); ?></h6>
-                    <p style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_explanation'); ?></p>
-                    <p style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 0;"><?php echo __('modal.range_error_action'); ?></p>
+                    <h6 id="rangeErrorMessage" style="font-family: 'Oxygen', sans-serif; font-size: 1.25rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_message'); ?></h6>
+                    <p id="rangeErrorExplanation" style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_explanation'); ?></p>
+                    <p id="rangeErrorAction" style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 0;"><?php echo __('modal.range_error_action'); ?></p>
                 </div>
             </div>
             <div class="modal-footer" style="background: #ffffff; border: none; border-top: 1px solid #e1e5e9; border-radius: 0; padding: 20px 40px 30px 40px;">
@@ -862,7 +862,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="reservationModalLabel"><?php echo __('modal.reservation_form'); ?></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<?php echo __('modal.close'); ?>"></button>
             </div>
             <div class="modal-body">
                 <form id="reservationForm">
@@ -885,15 +885,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                     <!-- Paso 1: Información Personal -->
                     <div class="form-section active" id="section1">
                         <div class="section-header">
-                            <h3>Paso 1 de 5</h3>
-                            <p>Información Personal</p>
+                            <h3><?php echo __('reservation.form.step1_title'); ?></h3>
+                            <p><?php echo __('reservation.form.step1_subtitle'); ?></p>
                         </div>
 
                         <div class="input-group-ihg">
                             <label for="nombres"><?php echo __('form.first_name'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('avatar.webp'); ?>" alt="avatar" style="width: 24px; height: 24px; flex-shrink: 0;">
-                                <input type="text" class="form-control" id="nombres" name="nombres" placeholder="Nombre" value="<?php echo $user_data ? htmlspecialchars($user_data['nombre']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                                <img src="<?php echo I18n::sharedAsset('avatar.webp'); ?>" alt="<?php echo __('reservation.form.avatar_alt'); ?>" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <input type="text" class="form-control" id="nombres" name="nombres" placeholder="<?php echo __('reservation.form.first_name_placeholder'); ?>" value="<?php echo $user_data ? htmlspecialchars($user_data['nombre']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
                             </div>
                             <span class="error-message" id="nombresError"></span>
                         </div>
@@ -902,7 +902,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                             <label for="apellidos"><?php echo __('form.last_name'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="width: 24px; height: 24px; flex-shrink: 0;"></div>
-                                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Apellido" value="<?php echo $user_data ? htmlspecialchars($user_data['apellido']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="<?php echo __('reservation.form.last_name_placeholder'); ?>" value="<?php echo $user_data ? htmlspecialchars($user_data['apellido']) : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : ''; ?> required>
                             </div>
                             <span class="error-message" id="apellidosError"></span>
                         </div>
@@ -910,7 +910,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="celular"><?php echo __('form.phone'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('receptor-de-telefono.webp'); ?>" alt="teléfono" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('receptor-de-telefono.webp'); ?>" alt="<?php echo __('reservation.form.phone_alt'); ?>" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <?php
                                 $codigoPaisValue = '+57';
                                 $celularValue = '';
@@ -964,30 +964,30 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         <div class="input-group-ihg">
                             <label for="fechaNacimiento"><?php echo __('form.birthday'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px; position: relative; flex: 1;">
-                                <img src="https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png" alt="calendario" style="width: 24px; height: 24px; flex-shrink: 0; opacity: 0.7;">
+                                <img src="https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png" alt="<?php echo __('reservation.form.calendar_alt'); ?>" style="width: 24px; height: 24px; flex-shrink: 0; opacity: 0.7;">
                                 <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" value="<?php echo $user_data && $user_data['fecha_nacimiento'] ? $user_data['fecha_nacimiento'] : ''; ?>" <?php echo ($user_logged_in && $user_data) ? 'readonly' : 'required'; ?> onkeydown="return false;" onpaste="return false;" autocomplete="off" style="flex: 1;">
                             </div>
                             <span class="error-message" id="fechaNacimientoError"></span>
                         </div>
 
                         <div class="section-buttons">
-                            <button type="button" class="next-btn" onclick="nextReservationSection(1)">Continuar</button>
+                            <button type="button" class="next-btn" onclick="nextReservationSection(1)"><?php echo __('reservation.form.button_continue'); ?></button>
                         </div>
                     </div>
 
                     <!-- Paso 2: Huéspedes -->
                     <div class="form-section" id="section2">
                         <div class="section-header">
-                            <h3>Paso 2 de 5</h3>
-                            <p>Información de Huéspedes</p>
+                            <h3><?php echo __('reservation.form.step2_title'); ?></h3>
+                            <p><?php echo __('reservation.form.children_youngers'); ?></p>
                         </div>
 
                         <div class="input-group-ihg">
                             <label for="adultos"><?php echo __('form.adults'); ?> *</label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('hombre.webp'); ?>" alt="adultos" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('hombre.webp'); ?>" alt="<?php echo __('reservation.form.adults_alt'); ?>" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <select class="form-control" id="adultos" name="adultos" required>
-                                    <option value="" disabled selected>Adultos</option>
+                                    <option value="" disabled selected><?php echo __('reservation.form.adults_placeholder'); ?></option>
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
@@ -998,28 +998,28 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                     <option value="8">8</option>
                                 </select>
                             </div>
-                            <span class="error-message" id="adultosError"></span>
                         </div>
 
                         <div class="input-group-ihg">
                             <label for="ninos"><?php echo __('form.children'); ?></label>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="<?php echo I18n::sharedAsset('ninos.webp'); ?>" alt="niños" style="width: 24px; height: 24px; flex-shrink: 0;">
+                                <img src="<?php echo I18n::sharedAsset('ninos.webp'); ?>" alt="<?php echo __('reservation.form.children_alt'); ?>" style="width: 24px; height: 24px; flex-shrink: 0;">
                                 <select class="form-control" id="ninos" name="ninos">
-                                    <option value="0" selected>Niños</option>
+                                    <option value="0" selected><?php echo __('reservation.form.children_placeholder'); ?></option>
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
                                     <option value="4">4</option>
                                 </select>
                             </div>
+                            <span class="error-message" id="ninosError"></span>
                         </div>
 
                         <div class="input-group-ihg">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="vivePalmira" name="vivePalmira">
                                 <label class="form-check-label" for="vivePalmira">
-                                    ¿Vives en Palmira?
+                                    <?php echo __('reservation.form.live_palmira_label'); ?>
                                 </label>
                             </div>
                             <div id="palmiraInfo" class="alert alert-info mt-2" style="display: none;">
@@ -1028,39 +1028,39 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         </div>
 
                         <div class="section-buttons">
-                            <button type="button" class="back-btn" onclick="prevReservationSection(2)">Atrás</button>
-                            <button type="button" class="next-btn" onclick="nextReservationSection(2)">Continuar</button>
+                            <button type="button" class="back-btn" onclick="prevReservationSection(2)"><?php echo __('reservation.form.button_back'); ?></button>
+                            <button type="button" class="next-btn" onclick="nextReservationSection(2)"><?php echo __('reservation.form.button_continue'); ?></button>
                         </div>
                     </div>
 
                     <!-- Paso 3: Correo Electrónico -->
                     <div class="form-section" id="section3">
                         <div class="section-header">
-                            <h3>Paso 3 de 5</h3>
-                            <p>Correo Electrónico</p>
+                            <h3><?php echo __('reservation.form.step3_title'); ?></h3>
+                            <p><?php echo __('reservation.form.step3_subtitle'); ?></p>
                         </div>
 
                         <div class="input-group-ihg">
                             <label for="correo"><?php echo __('form.email'); ?> *</label>
-                            <input type="email" class="form-control" id="correo" name="correo" placeholder="Correo Electrónico" value="<?php echo $user_data ? htmlspecialchars($user_data['correo']) : ''; ?>" required>
+                            <input type="email" class="form-control" id="correo" name="correo" placeholder="<?php echo __('reservation.form.email_placeholder'); ?>" value="<?php echo $user_data ? htmlspecialchars($user_data['correo']) : ''; ?>" required>
                             <span class="error-message" id="correoError"></span>
                         </div>
 
                         <div class="alert alert-info mt-3">
-                            <small><strong>Nota:</strong> Confirma tu correo antes de continuar; el seguimiento de tu reserva se enviarán a esa dirección.</small>
+                            <small><strong><?php echo __('reservation.form.note_title'); ?></strong> <?php echo __('reservation.form.note_message'); ?></small>
                         </div>
 
                         <div class="section-buttons">
-                            <button type="button" class="back-btn" onclick="prevReservationSection(3)">Atrás</button>
-                            <button type="button" class="next-btn" onclick="nextReservationSection(3)">Continuar</button>
+                            <button type="button" class="back-btn" onclick="prevReservationSection(3)"><?php echo __('reservation.form.button_back'); ?></button>
+                            <button type="button" class="next-btn" onclick="nextReservationSection(3)"><?php echo __('reservation.form.button_continue'); ?></button>
                         </div>
                     </div>
 
                     <!-- Paso 4: Método de Pago -->
                     <div class="form-section" id="section4">
                         <div class="section-header">
-                            <h3>Paso 4 de 5</h3>
-                            <p>Método de Pago</p>
+                            <h3><?php echo __('reservation.form.step4_title'); ?></h3>
+                            <p><?php echo __('reservation.form.step4_subtitle'); ?></p>
                         </div>
 
                         <div class="input-group-ihg">
@@ -1075,7 +1075,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="metodoPago" id="transferencia" value="transferencia">
                                     <label class="form-check-label" for="transferencia">
-                                        Transferencia (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% <?php echo __('form.cash_discount'); ?>)
+                                        <?php echo __('reservation.form.payment_method_transfer'); ?> (<?php echo isset($descuentos['promocional']) && $descuentos['promocional']['activo'] ? $descuentos['promocional']['porcentaje'] : 3; ?>% <?php echo __('form.cash_discount'); ?>)
                                     </label>
                                 </div>
                             </div>
@@ -1086,53 +1086,52 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                         </div>
 
                         <div class="alert alert-info mt-3">
-                            <h6 class="mb-2"><strong>Importante:</strong></h6>
+                            <h6 class="mb-2"><strong><?php echo __('reservation.form.important_title'); ?></strong></h6>
                             <p class="mb-0">
-                                Una vez aprobada tu reserva, deberás pagar el 20% del total y enviar el comprobante a <strong>gerencia@mysuiteincartagena.com.co</strong>. El saldo restante se cancelará el día anterior al check-in.
+                                <?php echo __('reservation.form.important_message'); ?>
                             </p>
                         </div>
 
                         <div class="section-buttons">
-                            <button type="button" class="back-btn" onclick="prevReservationSection(4)">Atrás</button>
-                            <button type="button" class="next-btn" onclick="nextReservationSection(4)">Continuar</button>
+                            <button type="button" class="back-btn" onclick="prevReservationSection(4)"><?php echo __('reservation.form.button_back'); ?></button>
+                            <button type="button" class="next-btn" onclick="nextReservationSection(4)"><?php echo __('reservation.form.button_continue'); ?></button>
                         </div>
                     </div>
 
                     <!-- Paso 5: Resumen y Confirmación -->
                     <div class="form-section" id="section5">
                         <div class="section-header">
-                            <h3>Paso 5 de 5</h3>
-                            <p>Resumen y Confirmación</p>
+                            <h3><?php echo __('reservation.form.step5_title'); ?></h3>
+                            <p><?php echo __('reservation.form.step5_subtitle'); ?></p>
                         </div>
 
                         <div class="reservation-summary-section">
-                            <h6>Resumen de tu Reserva</h6>
+                            <h6><?php echo __('reservation.form.summary_title'); ?></h6>
                             <div class="summary-item">
-                                <span class="summary-label">Nombre:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_name'); ?>:</span>
                                 <span class="summary-value" id="summaryNombres">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Apellidos:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_last_name'); ?>:</span>
                                 <span class="summary-value" id="summaryApellidos">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Celular:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_phone'); ?>:</span>
                                 <span class="summary-value" id="summaryCelular">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Correo:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_email'); ?>:</span>
                                 <span class="summary-value" id="summaryCorreo">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Adultos:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_adults'); ?>:</span>
                                 <span class="summary-value" id="summaryAdultos">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Niños:</span>
+                                <span class="summary-label"><?php echo __('reservation.form.summary_children'); ?>:</span>
                                 <span class="summary-value" id="summaryNinos">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">Método de Pago:</span>
                                 <span class="summary-value" id="summaryMetodoPago">-</span>
                             </div>
                             <div class="summary-item" style="border-top: 2px solid #FFE082; margin-top: 10px; padding-top: 15px;">
@@ -2940,13 +2939,22 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         transform: none !important;
         box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3) !important;
     }
-    /* ── Día que es CHECK-OUT de reserva existente ──
-   Mañana ocupada (sale a las 11:00), tarde disponible para nuevo check-in (15:00)
-   Visual: triángulo rojo en esquina superior izquierda */
+    /* Evitar que el borde de selección cambie el tamaño del día
+   cuando el día ya tiene clases especiales de check-in/checkout */
+    .calendar-day.day-checkout-available.checkin,
+    .calendar-day.day-checkin-only.checkin,
+    .calendar-day.day-checkout-available.checkout,
+    .calendar-day.day-checkin-only.checkout {
+        box-sizing: border-box !important;
+        border: 3px solid #FFC107 !important;
+    }
+
+    /* Triángulo superior izquierdo - día de checkout disponible */
     .calendar-day.day-checkout-available {
         background: #ffffff !important;
         cursor: pointer !important;
         border-bottom: 1px solid #e1e5e9 !important;
+        overflow: visible !important;
     }
 
     .calendar-day.day-checkout-available::before {
@@ -2960,20 +2968,69 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         border-width: 18px 18px 0 0;
         border-color: #e57373 transparent transparent transparent;
         z-index: 2;
+        pointer-events: none;
+    }
+
+    /* Triángulo inferior derecho - día de checkin ocupado */
+    .calendar-day.day-checkin-only {
+        background: #ffffff !important;
+        cursor: pointer !important;
+        border-bottom: 1px solid #e1e5e9 !important;
+        overflow: visible !important;
+    }
+
+    /* IMPORTANTE: usar un pseudo-elemento que no conflictúe con selected-day-price */
+    .calendar-day.day-checkin-only::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 18px 18px;
+        border-color: transparent transparent #e57373 transparent;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* Día completamente bloqueado (checkout + checkin el mismo día) */
+    .calendar-day.day-checkin-checkout {
+        background: #ffffff !important;
+        cursor: not-allowed !important;
+        opacity: 0.5;
+        border-bottom: 1px solid #e1e5e9 !important;
+    }
+
+    .calendar-day.day-checkin-checkout::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 18px 18px 0 0;
+        border-color: #e57373 transparent transparent transparent;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* Mantener números y precios por encima de los triángulos */
+    .calendar-day.day-checkout-available .day-number,
+    .calendar-day.day-checkout-available .day-price,
+    .calendar-day.day-checkin-only .day-number,
+    .calendar-day.day-checkin-only .day-price,
+    .calendar-day.day-checkin-checkout .day-number,
+    .calendar-day.day-checkin-checkout .day-price {
+        position: relative;
+        z-index: 3;
     }
 
     .calendar-day.day-checkout-available:hover {
         border-bottom: 1px solid #333 !important;
     }
 
-    /* ── Día que es CHECK-IN de reserva existente ──
-       Mañana libre (puede recibir check-out hasta 11:00), tarde ocupada (entra a las 15:00)
-       Visual: triángulo rojo en esquina inferior derecha */
-    .calendar-day.day-checkin-only {
-        background: #ffffff !important;
-        cursor: pointer !important;
-        border-bottom: 1px solid #e1e5e9 !important;
-    }
 
     .calendar-day.day-checkin-only::after {
         content: '';
@@ -2992,29 +3049,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         border-bottom: 1px solid #333 !important;
     }
 
-    /* ── Día que es CHECK-OUT y CHECK-IN a la vez (reservas consecutivas) ──
-       Completamente ocupado todo el día
-       Visual: triángulo rojo en esquina superior izquierda Y inferior derecha */
-    .calendar-day.day-checkin-checkout {
-        background: #ffffff !important;
-        cursor: not-allowed !important;
-        opacity: 0.6;
-        border-bottom: 1px solid #e1e5e9 !important;
-    }
-
-    .calendar-day.day-checkin-checkout::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 0;
-        height: 0;
-        border-style: solid;
-        border-width: 18px 18px 0 0;
-        border-color: #e57373 transparent transparent transparent;
-        z-index: 2;
-    }
-
     .calendar-day.day-checkin-checkout::after {
         content: '';
         position: absolute;
@@ -3026,17 +3060,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         border-width: 0 0 18px 18px;
         border-color: transparent transparent #e57373 transparent;
         z-index: 2;
-    }
-
-    /* Asegurar que el número y precio queden por encima de los triángulos */
-    .calendar-day.day-checkout-available .day-number,
-    .calendar-day.day-checkout-available .day-price,
-    .calendar-day.day-checkin-only .day-number,
-    .calendar-day.day-checkin-only .day-price,
-    .calendar-day.day-checkin-checkout .day-number,
-    .calendar-day.day-checkin-checkout .day-price {
-        position: relative;
-        z-index: 3;
     }
 
     .calendar-day.checkout {
@@ -6241,44 +6264,73 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         }
     }
 
+    // Textos por defecto del modal (para restaurar después)
+    const rangeErrorDefaults = {
+        title:       document.getElementById('rangeErrorModalLabel')?.dataset.default || translations.calendar.range_default_title,
+        message:     document.getElementById('rangeErrorMessage')?.textContent        || '',
+        explanation: document.getElementById('rangeErrorExplanation')?.textContent    || '',
+        action:      document.getElementById('rangeErrorAction')?.textContent         || ''
+    };
+
+    function setRangeErrorContent(title, message, explanation, action) {
+        const titleEl       = document.getElementById('rangeErrorModalLabel');
+        const messageEl     = document.getElementById('rangeErrorMessage');
+        const explanationEl = document.getElementById('rangeErrorExplanation');
+        const actionEl      = document.getElementById('rangeErrorAction');
+
+        if (titleEl)       titleEl.textContent      = title;
+        if (messageEl)     messageEl.textContent    = message;
+        if (explanationEl) explanationEl.textContent = explanation;
+        if (actionEl)      actionEl.textContent    = action;
+    }
+
+    function restoreRangeErrorDefaults() {
+        const titleEl       = document.getElementById('rangeErrorModalLabel');
+        const messageEl     = document.getElementById('rangeErrorMessage');
+        const explanationEl = document.getElementById('rangeErrorExplanation');
+        const actionEl      = document.getElementById('rangeErrorAction');
+
+        if (titleEl)       titleEl.textContent      = rangeErrorDefaults.title;
+        if (messageEl)     messageEl.textContent    = rangeErrorDefaults.message;
+        if (explanationEl) explanationEl.textContent = rangeErrorDefaults.explanation;
+        if (actionEl)      actionEl.textContent    = rangeErrorDefaults.action;
+    }
+
     function showCheckinBlockedError(date) {
         const fechaFormateada = formatearFecha(date);
-        const modalElement = document.getElementById('rangeErrorModal');
-        const title = modalElement.querySelector('.modal-title');
-        const msg   = modalElement.querySelector('#rangeErrorModal h6');
-        const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-        if (title) title.textContent = translations.calendar.checkin_blocked_title;
-        if (msg)   msg.textContent   = translations.calendar.checkin_blocked_msg.replace('{date}', fechaFormateada);
-        if (exp)   exp.textContent   = translations.calendar.checkin_blocked_exp;
+        setRangeErrorContent(
+            translations.calendar.checkin_blocked_title,
+            translations.calendar.checkin_blocked_msg.replace('{date}', fechaFormateada),
+            translations.calendar.checkin_blocked_exp,
+            translations.calendar.checkin_blocked_action
+        );
 
         showRangeError();
     }
 
     function showCheckoutBlockedError(date) {
         const fechaFormateada = formatearFecha(date);
-        const modalElement = document.getElementById('rangeErrorModal');
-        const title = modalElement.querySelector('.modal-title');
-        const msg   = modalElement.querySelector('#rangeErrorModal h6');
-        const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-        if (title) title.textContent = translations.calendar.checkout_blocked_title;
-        if (msg)   msg.textContent   = translations.calendar.checkout_blocked_msg.replace('{date}', fechaFormateada);
-        if (exp)   exp.textContent   = translations.calendar.checkout_blocked_exp;
+        setRangeErrorContent(
+            translations.calendar.checkout_blocked_title,
+            translations.calendar.checkout_blocked_msg.replace('{date}', fechaFormateada),
+            translations.calendar.checkout_blocked_exp,
+            translations.calendar.checkout_blocked_action
+        );
 
         showRangeError();
     }
 
     function showOverlapError(date) {
         const fechaFormateada = formatearFecha(date);
-        const modalElement = document.getElementById('rangeErrorModal');
-        const title = modalElement.querySelector('.modal-title');
-        const msg   = modalElement.querySelector('#rangeErrorModal h6');
-        const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-        if (title) title.textContent = translations.calendar.range_overlap_title;
-        if (msg)   msg.textContent   = translations.calendar.range_overlap_msg.replace('{date}', fechaFormateada);
-        if (exp)   exp.textContent   = translations.calendar.range_overlap_exp;
+        setRangeErrorContent(
+            translations.calendar.range_overlap_title,
+            translations.calendar.range_overlap_msg.replace('{date}', fechaFormateada),
+            translations.calendar.range_overlap_exp,
+            translations.calendar.range_overlap_action
+        );
 
         showRangeError();
     }
@@ -6286,53 +6338,44 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     // Mostrar error de rango
     function showRangeError() {
         const modalElement = document.getElementById('rangeErrorModal');
+
+        // Restaurar textos por defecto cuando se cierre el modal
+        modalElement.addEventListener('hidden.bs.modal', restoreRangeErrorDefaults, { once: true });
+
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            // Bootstrap 5
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
-
-            // Asegurar z-index después de que Bootstrap muestre el modal
             setTimeout(() => {
                 modalElement.style.zIndex = '1050';
                 if (modalElement.querySelector('.modal-dialog')) {
                     modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
                 }
-                // Ajustar backdrop si existe
                 const existingBackdrop = document.querySelector('.modal-backdrop');
                 if (existingBackdrop) {
                     existingBackdrop.style.zIndex = '1040';
                 }
             }, 100);
         } else if (typeof $ !== 'undefined' && $.fn.modal) {
-            // Bootstrap 4 con jQuery
             $(modalElement).modal('show');
-
-            // Asegurar z-index después de que jQuery muestre el modal
             setTimeout(() => {
                 modalElement.style.zIndex = '1050';
                 if (modalElement.querySelector('.modal-dialog')) {
                     modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
                 }
-                // Ajustar backdrop si existe
                 const existingBackdrop = document.querySelector('.modal-backdrop');
                 if (existingBackdrop) {
                     existingBackdrop.style.zIndex = '1040';
                 }
             }, 100);
         } else {
-            // Fallback manual
             modalElement.style.display = 'block';
             modalElement.classList.add('show');
             document.body.classList.add('modal-open');
-
-            // Crear backdrop
             const backdrop = document.createElement('div');
             backdrop.className = 'modal-backdrop fade show';
             backdrop.id = 'rangeErrorBackdrop';
             backdrop.style.zIndex = '1040';
             document.body.appendChild(backdrop);
-
-            // Asegurar que el modal esté por encima
             modalElement.style.zIndex = '1050';
             if (modalElement.querySelector('.modal-dialog')) {
                 modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
@@ -7214,11 +7257,47 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 }
             });
         }
+
+        const adultosInput = document.getElementById('adultos');
+        const ninosInput = document.getElementById('ninos');
+        if (adultosInput && ninosInput) {
+            adultosInput.addEventListener('change', validateReservationGuestCount);
+            ninosInput.addEventListener('change', validateReservationGuestCount);
+        }
     }
 
     // Variables globales para el control de secciones del formulario de reserva
     let currentReservationSection = 1;
     const totalReservationSections = 5;
+
+    function validateReservationGuestCount() {
+        const adultosInput = document.getElementById('adultos');
+        const ninosInput = document.getElementById('ninos');
+        const adultosError = document.getElementById('adultosError');
+        const ninosError = document.getElementById('ninosError');
+
+        if (!adultosInput || !ninosInput) {
+            return true;
+        }
+
+        const adultosNum = parseInt(adultosInput.value || '0', 10) || 0;
+        const ninosNum = parseInt(ninosInput.value || '0', 10) || 0;
+
+        if (adultosNum > 0 && adultosNum + ninosNum > 8) {
+            const message = <?php echo json_encode(__('reservation.form.max_guests_limit_error')); ?>;
+            if (adultosError) adultosError.textContent = message;
+            if (ninosError) ninosError.textContent = message;
+            adultosInput.classList.add('error');
+            ninosInput.classList.add('error');
+            return false;
+        }
+
+        if (adultosError) adultosError.textContent = '';
+        if (ninosError) ninosError.textContent = '';
+        adultosInput.classList.remove('error');
+        ninosInput.classList.remove('error');
+        return true;
+    }
 
     // Funciones para navegación entre secciones del formulario de reserva
     function nextReservationSection(sectionNumber) {
@@ -7383,11 +7462,13 @@ License URL: http://creativecommons.org/licenses/by/3.0/
                 }
             }
         } else if (sectionNumber === 2) {
-            // Validar adultos
+            // Validar adultos y total de huéspedes
             const adultos = document.getElementById('adultos').value;
             if (!adultos) {
                 document.getElementById('adultosError').textContent = 'El número de adultos es requerido';
                 document.getElementById('adultos').classList.add('error');
+                isValid = false;
+            } else if (!validateReservationGuestCount()) {
                 isValid = false;
             }
         } else if (sectionNumber === 3) {
@@ -7944,6 +8025,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         // Validaciones básicas
         if (!form.checkValidity()) {
             form.reportValidity();
+            return;
+        }
+
+        if (!validateReservationGuestCount()) {
             return;
         }
 

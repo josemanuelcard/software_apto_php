@@ -465,15 +465,15 @@ License URL: http://creativecommons.org/licenses/by/3.0/
     <div class="modal-dialog">
         <div class="modal-content" style="background-color: #ffffff; border: none; border-radius: 0; box-shadow: none; font-family: 'Oxygen', sans-serif;">
             <div class="modal-header" style="background: #ffffff; border: none; border-bottom: 1px solid #e1e5e9; border-radius: 0; padding: 30px 40px 20px 40px;">
-                <h5 class="modal-title" id="rangeErrorModalLabel" style="font-family: 'Oxygen', sans-serif; font-size: 1.5rem; font-weight: 400; color: #333; margin: 0;">⚠️ <?php echo __('modal.range_error_title'); ?></h5>
+                <h5 class="modal-title" id="rangeErrorModalLabel" style="font-family: 'Oxygen', sans-serif; font-size: 1.5rem; font-weight: 400; color: #333; margin: 0;" data-default="⚠️ <?php echo __('modal.range_error_title'); ?>">⚠️ <?php echo __('modal.range_error_title'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background: transparent; border: none; border-bottom: 1px solid #e1e5e9; color: #333; font-size: 1.5rem; padding: 0; width: auto; height: auto; opacity: 1;"></button>
             </div>
             <div class="modal-body" style="padding: 30px 40px; background: #ffffff;">
                 <div class="text-center">
                     <div style="font-size: 3rem; margin-bottom: 1.5rem;">⚠️</div>
-                    <h6 style="font-family: 'Oxygen', sans-serif; font-size: 1.25rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_message'); ?></h6>
-                    <p style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_explanation'); ?></p>
-                    <p style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 0;"><?php echo __('modal.range_error_action'); ?></p>
+                    <h6 id="rangeErrorMessage" style="font-family: 'Oxygen', sans-serif; font-size: 1.25rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_message'); ?></h6>
+                    <p id="rangeErrorExplanation" style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 15px;"><?php echo __('modal.range_error_explanation'); ?></p>
+                    <p id="rangeErrorAction" style="font-family: 'Oxygen', sans-serif; font-size: 1rem; font-weight: 400; color: #333; margin-bottom: 0;"><?php echo __('modal.range_error_action'); ?></p>
                 </div>
             </div>
             <div class="modal-footer" style="background: #ffffff; border: none; border-top: 1px solid #e1e5e9; border-radius: 0; padding: 20px 40px 30px 40px;">
@@ -2493,13 +2493,23 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			border-bottom: 1px solid #e1e5e9 !important;
 			box-shadow: none !important;
 		}
-        /* ── Día que es CHECK-OUT de reserva existente ──
-   Mañana ocupada (sale a las 11:00), tarde disponible para nuevo check-in (15:00)
-   Visual: triángulo rojo en esquina superior izquierda */
+
+        /* Evitar que el borde de selección cambie el tamaño del día
+   cuando el día ya tiene clases especiales de check-in/checkout */
+        .calendar-day.day-checkout-available.checkin,
+        .calendar-day.day-checkin-only.checkin,
+        .calendar-day.day-checkout-available.checkout,
+        .calendar-day.day-checkin-only.checkout {
+            box-sizing: border-box !important;
+            border: 3px solid #FFC107 !important;
+        }
+
+        /* Triángulo superior izquierdo - día de checkout disponible */
         .calendar-day.day-checkout-available {
             background: #ffffff !important;
             cursor: pointer !important;
             border-bottom: 1px solid #e1e5e9 !important;
+            overflow: visible !important;
         }
 
         .calendar-day.day-checkout-available::before {
@@ -2513,19 +2523,67 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             border-width: 18px 18px 0 0;
             border-color: #e57373 transparent transparent transparent;
             z-index: 2;
+            pointer-events: none;
         }
 
-        .calendar-day.day-checkout-available:hover {
-            border-bottom: 1px solid #333 !important;
-        }
-
-        /* ── Día que es CHECK-IN de reserva existente ──
-           Mañana libre (puede recibir check-out hasta 11:00), tarde ocupada (entra a las 15:00)
-           Visual: triángulo rojo en esquina inferior derecha */
+        /* Triángulo inferior derecho - día de checkin ocupado */
         .calendar-day.day-checkin-only {
             background: #ffffff !important;
             cursor: pointer !important;
             border-bottom: 1px solid #e1e5e9 !important;
+            overflow: visible !important;
+        }
+
+        /* IMPORTANTE: usar un pseudo-elemento que no conflictúe con selected-day-price */
+        .calendar-day.day-checkin-only::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 0 18px 18px;
+            border-color: transparent transparent #e57373 transparent;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Día completamente bloqueado (checkout + checkin el mismo día) */
+        .calendar-day.day-checkin-checkout {
+            background: #ffffff !important;
+            cursor: not-allowed !important;
+            opacity: 0.5;
+            border-bottom: 1px solid #e1e5e9 !important;
+        }
+
+        .calendar-day.day-checkin-checkout::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 18px 18px 0 0;
+            border-color: #e57373 transparent transparent transparent;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Mantener números y precios por encima de los triángulos */
+        .calendar-day.day-checkout-available .day-number,
+        .calendar-day.day-checkout-available .day-price,
+        .calendar-day.day-checkin-only .day-number,
+        .calendar-day.day-checkin-only .day-price,
+        .calendar-day.day-checkin-checkout .day-number,
+        .calendar-day.day-checkin-checkout .day-price {
+            position: relative;
+            z-index: 3;
+        }
+
+        .calendar-day.day-checkout-available:hover {
+            border-bottom: 1px solid #333 !important;
         }
 
         .calendar-day.day-checkin-only::after {
@@ -2545,29 +2603,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             border-bottom: 1px solid #333 !important;
         }
 
-        /* ── Día que es CHECK-OUT y CHECK-IN a la vez (reservas consecutivas) ──
-           Completamente ocupado todo el día
-           Visual: triángulo rojo en esquina superior izquierda Y inferior derecha */
-        .calendar-day.day-checkin-checkout {
-            background: #ffffff !important;
-            cursor: not-allowed !important;
-            opacity: 0.6;
-            border-bottom: 1px solid #e1e5e9 !important;
-        }
-
-        .calendar-day.day-checkin-checkout::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            border-style: solid;
-            border-width: 18px 18px 0 0;
-            border-color: #e57373 transparent transparent transparent;
-            z-index: 2;
-        }
-
         .calendar-day.day-checkin-checkout::after {
             content: '';
             position: absolute;
@@ -2581,16 +2616,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
             z-index: 2;
         }
 
-        /* Asegurar que el número y precio queden por encima de los triángulos */
-        .calendar-day.day-checkout-available .day-number,
-        .calendar-day.day-checkout-available .day-price,
-        .calendar-day.day-checkin-only .day-number,
-        .calendar-day.day-checkin-only .day-price,
-        .calendar-day.day-checkin-checkout .day-number,
-        .calendar-day.day-checkin-checkout .day-price {
-            position: relative;
-            z-index: 3;
-        }
 		.calendar-day.available:hover {
 			background: #ffffff !important;
 			border-bottom: 1px solid #333 !important;
@@ -5279,104 +5304,124 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			}
 		}
 
+        // Textos por defecto del modal (para restaurar después)
+        const rangeErrorDefaults = {
+            title:       document.getElementById('rangeErrorModalLabel')?.dataset.default || translations.calendar.range_default_title,
+            message:     document.getElementById('rangeErrorMessage')?.textContent        || '',
+            explanation: document.getElementById('rangeErrorExplanation')?.textContent    || '',
+            action:      document.getElementById('rangeErrorAction')?.textContent         || ''
+        };
+
+        function setRangeErrorContent(title, message, explanation, action) {
+            const titleEl       = document.getElementById('rangeErrorModalLabel');
+            const messageEl     = document.getElementById('rangeErrorMessage');
+            const explanationEl = document.getElementById('rangeErrorExplanation');
+            const actionEl      = document.getElementById('rangeErrorAction');
+
+            if (titleEl)       titleEl.textContent      = title;
+            if (messageEl)     messageEl.textContent    = message;
+            if (explanationEl) explanationEl.textContent = explanation;
+            if (actionEl)      actionEl.textContent    = action;
+        }
+
+        function restoreRangeErrorDefaults() {
+            const titleEl       = document.getElementById('rangeErrorModalLabel');
+            const messageEl     = document.getElementById('rangeErrorMessage');
+            const explanationEl = document.getElementById('rangeErrorExplanation');
+            const actionEl      = document.getElementById('rangeErrorAction');
+
+            if (titleEl)       titleEl.textContent      = rangeErrorDefaults.title;
+            if (messageEl)     messageEl.textContent    = rangeErrorDefaults.message;
+            if (explanationEl) explanationEl.textContent = rangeErrorDefaults.explanation;
+            if (actionEl)      actionEl.textContent    = rangeErrorDefaults.action;
+        }
+
         function showCheckinBlockedError(date) {
             const fechaFormateada = formatearFecha(date);
-            const modalElement = document.getElementById('rangeErrorModal');
-            const title = modalElement.querySelector('.modal-title');
-            const msg   = modalElement.querySelector('#rangeErrorModal h6');
-            const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = translations.calendar.checkin_blocked_title;
-            if (msg)   msg.textContent   = translations.calendar.checkin_blocked_msg.replace('{date}', fechaFormateada);
-            if (exp)   exp.textContent   = translations.calendar.checkin_blocked_exp;
+            setRangeErrorContent(
+                translations.calendar.checkin_blocked_title,
+                translations.calendar.checkin_blocked_msg.replace('{date}', fechaFormateada),
+                translations.calendar.checkin_blocked_exp,
+                translations.calendar.checkin_blocked_action
+            );
 
             showRangeError();
         }
 
         function showCheckoutBlockedError(date) {
             const fechaFormateada = formatearFecha(date);
-            const modalElement = document.getElementById('rangeErrorModal');
-            const title = modalElement.querySelector('.modal-title');
-            const msg   = modalElement.querySelector('#rangeErrorModal h6');
-            const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = translations.calendar.checkout_blocked_title;
-            if (msg)   msg.textContent   = translations.calendar.checkout_blocked_msg.replace('{date}', fechaFormateada);
-            if (exp)   exp.textContent   = translations.calendar.checkout_blocked_exp;
+            setRangeErrorContent(
+                translations.calendar.checkout_blocked_title,
+                translations.calendar.checkout_blocked_msg.replace('{date}', fechaFormateada),
+                translations.calendar.checkout_blocked_exp,
+                translations.calendar.checkout_blocked_action
+            );
 
             showRangeError();
         }
 
         function showOverlapError(date) {
             const fechaFormateada = formatearFecha(date);
-            const modalElement = document.getElementById('rangeErrorModal');
-            const title = modalElement.querySelector('.modal-title');
-            const msg   = modalElement.querySelector('#rangeErrorModal h6');
-            const exp   = modalElement.querySelector('#rangeErrorModal p');
 
-            if (title) title.textContent = translations.calendar.range_overlap_title;
-            if (msg)   msg.textContent   = translations.calendar.range_overlap_msg.replace('{date}', fechaFormateada);
-            if (exp)   exp.textContent   = translations.calendar.range_overlap_exp;
+            setRangeErrorContent(
+                translations.calendar.range_overlap_title,
+                translations.calendar.range_overlap_msg.replace('{date}', fechaFormateada),
+                translations.calendar.range_overlap_exp,
+                translations.calendar.range_overlap_action
+            );
 
             showRangeError();
         }
 
 		// Mostrar error de rango
-		function showRangeError() {
-			const modalElement = document.getElementById('rangeErrorModal');
-			if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-				// Bootstrap 5
-				const modal = new bootstrap.Modal(modalElement);
-				modal.show();
-				
-				// Asegurar z-index después de que Bootstrap muestre el modal
-				setTimeout(() => {
-					modalElement.style.zIndex = '1050';
-					if (modalElement.querySelector('.modal-dialog')) {
-						modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
-					}
-					// Ajustar backdrop si existe
-					const existingBackdrop = document.querySelector('.modal-backdrop');
-					if (existingBackdrop) {
-						existingBackdrop.style.zIndex = '1040';
-					}
-				}, 100);
-			} else if (typeof $ !== 'undefined' && $.fn.modal) {
-				// Bootstrap 4 con jQuery
-				$(modalElement).modal('show');
-				
-				// Asegurar z-index después de que jQuery muestre el modal
-				setTimeout(() => {
-					modalElement.style.zIndex = '1050';
-					if (modalElement.querySelector('.modal-dialog')) {
-						modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
-					}
-					// Ajustar backdrop si existe
-					const existingBackdrop = document.querySelector('.modal-backdrop');
-					if (existingBackdrop) {
-						existingBackdrop.style.zIndex = '1040';
-					}
-				}, 100);
-			} else {
-				// Fallback manual
-				modalElement.style.display = 'block';
-				modalElement.classList.add('show');
-				document.body.classList.add('modal-open');
-				
-				// Crear backdrop
-				const backdrop = document.createElement('div');
-				backdrop.className = 'modal-backdrop fade show';
-				backdrop.id = 'rangeErrorBackdrop';
-				backdrop.style.zIndex = '1040';
-				document.body.appendChild(backdrop);
-				
-				// Asegurar que el modal esté por encima
-				modalElement.style.zIndex = '1050';
-				if (modalElement.querySelector('.modal-dialog')) {
-					modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
-				}
-			}
-		}
+        function showRangeError() {
+            const modalElement = document.getElementById('rangeErrorModal');
+
+            // Restaurar textos por defecto cuando se cierre el modal
+            modalElement.addEventListener('hidden.bs.modal', restoreRangeErrorDefaults, { once: true });
+
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                setTimeout(() => {
+                    modalElement.style.zIndex = '1050';
+                    if (modalElement.querySelector('.modal-dialog')) {
+                        modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
+                    }
+                    const existingBackdrop = document.querySelector('.modal-backdrop');
+                    if (existingBackdrop) {
+                        existingBackdrop.style.zIndex = '1040';
+                    }
+                }, 100);
+            } else if (typeof $ !== 'undefined' && $.fn.modal) {
+                $(modalElement).modal('show');
+                setTimeout(() => {
+                    modalElement.style.zIndex = '1050';
+                    if (modalElement.querySelector('.modal-dialog')) {
+                        modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
+                    }
+                    const existingBackdrop = document.querySelector('.modal-backdrop');
+                    if (existingBackdrop) {
+                        existingBackdrop.style.zIndex = '1040';
+                    }
+                }, 100);
+            } else {
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                document.body.classList.add('modal-open');
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.id = 'rangeErrorBackdrop';
+                backdrop.style.zIndex = '1040';
+                document.body.appendChild(backdrop);
+                modalElement.style.zIndex = '1050';
+                if (modalElement.querySelector('.modal-dialog')) {
+                    modalElement.querySelector('.modal-dialog').style.zIndex = '1051';
+                }
+            }
+        }
 		
 		// Actualizar estados visuales de selección
 		function updateSelectionStates() {

@@ -281,54 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->rowCount() > 0) {
             // Determinar el mensaje según el cambio realizado
             if ($estado_actual === 'aprobada' && $estado_pago_actual === 'pendiente') {
-                // Se cambió de aprobada a abonada - enviar correo de abono
-                // Obtener datos de la reserva para enviar el correo
-                $query_reserva = "SELECT r.*, 
-                                u.id_usuario AS usuario_id,
-                                u.nombre AS usuario_nombre,
-                                u.apellido AS usuario_apellido,
-                                u.telefono AS usuario_telefono,
-                                u.correo AS usuario_correo
-                                FROM reservas r 
-                                LEFT JOIN usuarios u ON r.id_usuario = u.id_usuario 
-                                WHERE r.id_reserva = ?";
-                $stmt_reserva = $db->prepare($query_reserva);
-                $stmt_reserva->execute([$reserva_id]);
-                $reserva = $stmt_reserva->fetch(PDO::FETCH_ASSOC);
-                
-                // Usar el correo de la reserva (r.correo) que siempre existe
-                $correo_cliente = !empty($reserva['correo']) ? $reserva['correo'] : null;
-                
-                if ($reserva && $correo_cliente && filter_var($correo_cliente, FILTER_VALIDATE_EMAIL)) {
-                    // Enviar correo de abono
-                     try {
-                        $gmail = new GmailSender();
-
-                        // Enviar el email de SALDO/ABONO (80% pendiente) usando las plantillas nuevas
-                        $metodo = strtolower(trim($reserva['metodo_pago'] ?? 'transferencia'));
-                        if ($metodo === 'tarjeta' || $metodo === 'card' || $metodo === 'tarjeta_credito') {
-                            $sent = $gmail->sendSaldoTarjeta80($reserva, false);
-                        } else {
-                            // Por defecto tratar como transferencia/efectivo
-                            $sent = $gmail->sendSaldoTransferencia80($reserva, false);
-                        }
-
-                        if ($sent) {
-                            error_log("Email de saldo 80% (plantilla) enviado a: " . $correo_cliente . " para reserva #" . $reserva_id);
-                            $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente y correo de saldo enviado';
-                        } else {
-                            error_log("Error enviando email de saldo 80% (plantilla) a: " . $correo_cliente);
-                            $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente (error al enviar correo)';
-                        }
-
-                    } catch (Exception $e) {
-                        error_log("Error enviando correo de saldo: " . $e->getMessage());
-                        $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente (error al enviar correo)';
-                    }
-                } else {
-                    $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente (correo no disponible)';
-                }
-                
+                // Se cambió de aprobada a abonada - NO ENVIAR CORREO DE SALDO AQUÍ
+                $mensaje_respuesta = 'Reserva marcada como ABONADA exitosamente.';
                 error_log("Reserva $reserva_id cambiada de aprobada a abonada");
             } elseif ($estado_actual === 'abonada') {
                 // Se cambió de abonada a pagada - enviar correo

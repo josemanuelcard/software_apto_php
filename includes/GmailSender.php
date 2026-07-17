@@ -344,10 +344,10 @@ class GmailSender {
     /**
      * Enviar email de aprobación de reserva - Transferencia 20%
      */
-    public function sendReservaAprobadaTransferencia20($reserva, $addCC = false) {
+    public function sendReservaAprobadaTransferencia20($reserva, $addCC = true) {
         $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
         $total = (float)$reserva['total'];
@@ -358,20 +358,20 @@ class GmailSender {
         $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
 
         $message = $this->getEmailTemplateTransferencia20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $saldo_restante, $manillas, $early_checkin, $late_checkout);
-        
+
         // Guardar HTML a archivo de debug
         $this->saveDebugHTML($message, $reserva['id_reserva'], 'Transferencia20');
-        
-        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
 
     /**
      * Enviar email de aprobación de reserva - Tarjeta de Crédito 20%
      */
-    public function sendReservaAprobadaTarjeta20($reserva, $addCC = false) {
+    public function sendReservaAprobadaTarjeta20($reserva, $addCC = true) {
         $subject = "✅ Reserva Aprobada - My Suite In Cartagena #" . $reserva['id_reserva'];
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
         $total = (float)$reserva['total'];
@@ -381,20 +381,20 @@ class GmailSender {
         $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
 
         $message = $this->getEmailTemplateTarjeta20($reserva, $fecha_entrada, $fecha_salida, $anticipo_20, $manillas, $early_checkin, $late_checkout);
-        
+
         // Guardar HTML a archivo de debug
         $this->saveDebugHTML($message, $reserva['id_reserva'], 'Tarjeta20');
-        
-        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
 
     /**
      * Enviar email de saldo pendiente - Transferencia 80%
      */
-    public function sendSaldoTransferencia80($reserva, $addCC = false) {
+    public function sendSaldoTransferencia80($reserva, $addCC = true) {
         $subject = "💰 Saldo Pendiente - My Suite In Cartagena #" . $reserva['id_reserva'];
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
         $total = (float)$reserva['total'];
@@ -404,20 +404,20 @@ class GmailSender {
         $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
 
         $message = $this->getEmailTemplateTransferencia80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout);
-        
+
         // Guardar HTML a archivo de debug
         $this->saveDebugHTML($message, $reserva['id_reserva'], 'Transferencia80');
-        
-        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
 
     /**
      * Enviar email de saldo pendiente - Tarjeta de Crédito 80%
      */
-    public function sendSaldoTarjeta80($reserva, $addCC = false) {
+    public function sendSaldoTarjeta80($reserva, $addCC = true) {
         $subject = "💳 Saldo Pendiente - My Suite In Cartagena #" . $reserva['id_reserva'];
         $hotel_image_path = $this->getHotelImagePath();
-        
+
         $fecha_entrada = date('d/m/Y', strtotime($reserva['fecha_entrada']));
         $fecha_salida = date('d/m/Y', strtotime($reserva['fecha_salida']));
         $total = (float)$reserva['total'];
@@ -427,7 +427,7 @@ class GmailSender {
         $late_checkout = $this->getPrecioServicioAdicional('late_checkout');
 
         $message = $this->getEmailTemplateTarjeta80($reserva, $fecha_entrada, $fecha_salida, $saldo_80, $manillas, $early_checkin, $late_checkout);
-        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path, $addCC);
+        return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
 
     /**
@@ -455,7 +455,7 @@ class GmailSender {
         try {
             require_once __DIR__ . '/../config/database.php';
             $db = (new \Database())->getConnection();
-            
+
             // Buscar el rango que aplique (tabla: manillas_tarifas)
             $query = "SELECT precio FROM manillas_tarifas 
                       WHERE personas_desde <= ? 
@@ -466,7 +466,7 @@ class GmailSender {
             $stmt = $db->prepare($query);
             $stmt->execute([$cantidad_personas, $cantidad_personas]);
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            
+
             if ($result) {
                 error_log("✅ Precio de manillas encontrado para $cantidad_personas personas: " . $result['precio']);
                 return (float)$result['precio'];
@@ -582,6 +582,102 @@ class GmailSender {
 
         return $this->sendEmail($reserva['correo'], $subject, $message, true, $hotel_image_path);
     }
+
+    /**
+     * Enviar aviso a gerencia cuando se crea una reserva pendiente
+     */
+    public function sendReservaPendienteGerencia($reserva) {
+        $subject = "🕒 Reserva Pendiente por Aprobar - My Suite In Cartagena #" . $reserva['id_reserva'];
+        $hotel_image_path = $this->getHotelImagePath();
+        $message = $this->getEmailTemplateReservaPendienteGerencia($reserva);
+
+        return $this->sendEmail('gerencia@mysuiteincartagena.com.co', $subject, $message, true, $hotel_image_path, false);
+    }
+
+    /**
+     * Template HTML para notificar a gerencia una reserva pendiente
+     */
+    private function getEmailTemplateReservaPendienteGerencia($reserva) {
+        $nombre_completo = trim(($reserva['nombre'] ?? '') . ' ' . ($reserva['apellido'] ?? ''));
+        $fecha_entrada = !empty($reserva['fecha_entrada']) ? date('d/m/Y', strtotime($reserva['fecha_entrada'])) : 'N/A';
+        $fecha_salida = !empty($reserva['fecha_salida']) ? date('d/m/Y', strtotime($reserva['fecha_salida'])) : 'N/A';
+        $fecha_nacimiento = !empty($reserva['fecha_nacimiento']) ? date('d/m/Y', strtotime($reserva['fecha_nacimiento'])) : 'N/A';
+        $vive_palmira = !empty($reserva['vive_palmira']) ? 'Sí' : 'No';
+        $metodo_pago = isset($reserva['metodo_pago']) ? ucfirst(str_replace('_', ' ', strtolower($reserva['metodo_pago']))) : 'N/A';
+        $total = isset($reserva['total']) ? number_format((float)$reserva['total'], 0, ',', '.') : '0';
+        $costo_base = isset($reserva['costo_base']) ? number_format((float)$reserva['costo_base'], 0, ',', '.') : '0';
+        $descuento_fidelizacion = isset($reserva['descuento_fidelizacion']) ? number_format((float)$reserva['descuento_fidelizacion'], 0, ',', '.') : '0';
+        $descuento_cumpleanios = isset($reserva['descuento_cumpleanios']) ? number_format((float)$reserva['descuento_cumpleanios'], 0, ',', '.') : '0';
+        $descuento_promocional = isset($reserva['descuento_promocional']) ? number_format((float)$reserva['descuento_promocional'], 0, ',', '.') : '0';
+        $fecha_solicitud = date('d/m/Y H:i');
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f8f9fa; }
+                .container { max-width: 720px; margin: 0 auto; background: #ffffff; }
+                .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 24px; text-align: center; }
+                .content { padding: 30px; }
+                .highlight { background: #e3f2fd; padding: 18px; border-left: 4px solid #2196f3; border-radius: 8px; margin: 20px 0; }
+                .info-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                .info-table td { padding: 10px 12px; border-bottom: 1px solid #e9ecef; vertical-align: top; }
+                .info-table td:first-child { width: 220px; font-weight: bold; color: #1f2d3d; background: #f8f9fa; }
+                .footer { background: #f8f9fa; padding: 16px 30px; text-align: center; color: #6c757d; font-size: 13px; }
+                .badge { display: inline-block; background: #ffc107; color: #212529; padding: 6px 12px; border-radius: 999px; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <img src='https://raw.githubusercontent.com/josemanuelcard/software_apto_php/main/assets/shared/HOTEL_CARTAGENA_silueta%5B1%5D.png' alt='My Suite In Cartagena' style='width: 70px; height: 70px; display: block; margin: 0 auto 12px auto;'>
+                    <h2 style='margin: 0;'>Nueva reserva pendiente por aprobar</h2>
+                    <div class='badge'>Reserva #" . htmlspecialchars((string)($reserva['id_reserva'] ?? 'N/A')) . "</div>
+                </div>
+                <div class='content'>
+                    <p>Hola gerencia,</p>
+                    <p>Se ha creado una nueva reserva que queda <strong>pendiente por aprobar</strong>. A continuación tienes los datos principales para su revisión:</p>
+
+                    <div class='highlight'>
+                        <strong>Resumen rápido</strong><br>
+                        Cliente: <strong>" . htmlspecialchars($nombre_completo) . "</strong><br>
+                        Fechas: <strong>" . htmlspecialchars($fecha_entrada) . "</strong> a <strong>" . htmlspecialchars($fecha_salida) . "</strong><br>
+                        Total: <strong>$" . htmlspecialchars($total) . " COP</strong>
+                    </div>
+
+                    <table class='info-table'>
+                        <tr><td>ID de reserva</td><td>" . htmlspecialchars((string)($reserva['id_reserva'] ?? 'N/A')) . "</td></tr>
+                        <tr><td>Nombre completo</td><td>" . htmlspecialchars($nombre_completo) . "</td></tr>
+                        <tr><td>Correo</td><td>" . htmlspecialchars($reserva['correo'] ?? 'N/A') . "</td></tr>
+                        <tr><td>Teléfono</td><td>" . htmlspecialchars($reserva['telefono'] ?? 'N/A') . "</td></tr>
+                        <tr><td>Fecha de nacimiento</td><td>" . htmlspecialchars($fecha_nacimiento) . "</td></tr>
+                        <tr><td>Fecha de entrada</td><td>" . htmlspecialchars($fecha_entrada) . "</td></tr>
+                        <tr><td>Fecha de salida</td><td>" . htmlspecialchars($fecha_salida) . "</td></tr>
+                        <tr><td>Adultos</td><td>" . htmlspecialchars((string)($reserva['num_adultos'] ?? '0')) . "</td></tr>
+                        <tr><td>Niños</td><td>" . htmlspecialchars((string)($reserva['num_ninos'] ?? '0')) . "</td></tr>
+                        <tr><td>¿Vive en Palmira?</td><td>" . htmlspecialchars($vive_palmira) . "</td></tr>
+                        <tr><td>Método de pago</td><td>" . htmlspecialchars($metodo_pago) . "</td></tr>
+                        <tr><td>Costo base</td><td>$" . htmlspecialchars($costo_base) . " COP</td></tr>
+                        <tr><td>Descuento fidelidad</td><td>$" . htmlspecialchars($descuento_fidelizacion) . " COP</td></tr>
+                        <tr><td>Descuento cumpleaños</td><td>$" . htmlspecialchars($descuento_cumpleanios) . " COP</td></tr>
+                        <tr><td>Descuento promocional</td><td>$" . htmlspecialchars($descuento_promocional) . " COP</td></tr>
+                        <tr><td>Total</td><td><strong>$" . htmlspecialchars($total) . " COP</strong></td></tr>
+                        <tr><td>Fecha de solicitud</td><td>" . htmlspecialchars($fecha_solicitud) . "</td></tr>
+                    </table>
+
+                    <p style='margin-top: 24px;'>Por favor revisar y aprobar o rechazar esta reserva desde el panel administrativo.</p>
+                </div>
+                <div class='footer'>
+                    Mensaje automático del sistema de reservas - My Suite In Cartagena
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+    }
+
 
     /**
      * Template HTML - Carta modelo transferencia 20%
